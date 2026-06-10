@@ -2,19 +2,58 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+function createDummySupabaseClient() {
+  const dummyAuth = {
+    onAuthStateChange: (cb: any) => {
+      return {
+        data: {
+          subscription: {
+            unsubscribe: () => {}
+          }
+        }
+      };
+    },
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signInWithPassword: async () => ({ data: {}, error: new Error("Supabase is not configured.") }),
+    signUp: async () => ({ data: {}, error: new Error("Supabase is not configured.") }),
+    signInWithOAuth: async () => ({ data: {}, error: new Error("Supabase is not configured.") }),
+    signOut: async () => ({ error: null }),
+  };
+
+  const createMockChain = (): any => {
+    const chain = () => {};
+    chain.then = (resolve: any) => resolve({ data: [], error: new Error("Supabase is not configured.") });
+    
+    const methods = ['select', 'insert', 'update', 'delete', 'upsert', 'eq', 'neq', 'gt', 'lt', 'gte', 'lte', 'like', 'ilike', 'is', 'in', 'contains', 'containedBy', 'range', 'or', 'match', 'order', 'limit', 'single', 'maybeSingle', 'csv'];
+    for (const m of methods) {
+      (chain as any)[m] = () => createMockChain();
+    }
+    return chain;
+  };
+
+  const dummyFrom = () => createMockChain();
+
+  return new Proxy({} as any, {
+    get(target, prop) {
+      if (prop === 'auth') return dummyAuth;
+      if (prop === 'from') return dummyFrom;
+      return undefined;
+    }
+  });
+}
+
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.warn(
+      `[Supabase] Missing Supabase environment variable(s). Returning a dummy client. ` +
+      `Please configure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.`
+    );
+    return createDummySupabaseClient() as any;
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
