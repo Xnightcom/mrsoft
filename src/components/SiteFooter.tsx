@@ -3,44 +3,49 @@ import { Cpu } from "lucide-react";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-sidebar text-sidebar-foreground">
+    <footer className="border-t border-[#1A5C1A] bg-[#000000] text-white">
       <div className="container mx-auto grid gap-10 px-4 py-14 md:grid-cols-4">
         <div>
           <div className="flex justify-start">
-            <Link to="/" className="bg-white px-3 py-1.5 rounded-lg inline-flex items-center justify-center shadow-sm transition-transform duration-300 hover:scale-[1.03]">
-              <img src="/mrsoft-logo.png" alt="MRsoft Logo" className="h-6 w-auto object-contain" />
+            <Link to="/" className="inline-flex items-center justify-center transition-transform duration-300 hover:scale-[1.03]">
+              <img 
+                src="/mrsoft-logo-new.png" 
+                alt="MRsoft Logo" 
+                className="h-10 w-auto object-contain" 
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
             </Link>
           </div>
-          <p className="mt-3 text-sm text-sidebar-foreground/70 max-w-xs">
+          <p className="mt-3 text-sm text-white/70 max-w-xs">
             Enterprise software, ICT training, and digital transformation for ambitious organizations.
           </p>
         </div>
         <div>
-          <h4 className="font-semibold mb-3">Company</h4>
-          <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/services">Services</Link></li>
-            <li><Link to="/solutions">Solutions</Link></li>
-            <li><Link to="/contact">Contact</Link></li>
+          <h4 className="font-semibold mb-3 text-white">Company</h4>
+          <ul className="space-y-2 text-sm text-white/70">
+            <li><Link to="/about" className="hover:text-[#CC0000] transition-smooth">About</Link></li>
+            <li><Link to="/services" className="hover:text-[#CC0000] transition-smooth">Services</Link></li>
+            <li><Link to="/solutions" className="hover:text-[#CC0000] transition-smooth">Solutions</Link></li>
+            <li><Link to="/contact" className="hover:text-[#CC0000] transition-smooth">Contact</Link></li>
           </ul>
         </div>
         <div>
-          <h4 className="font-semibold mb-3">Platform</h4>
-          <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-            <li><Link to="/auth">Student portal</Link></li>
-            <li><Link to="/auth">Client portal</Link></li>
-            <li><Link to="/auth">Admin</Link></li>
+          <h4 className="font-semibold mb-3 text-white">Platform</h4>
+          <ul className="space-y-2 text-sm text-white/70">
+            <li><Link to="/auth" className="hover:text-[#CC0000] transition-smooth">Student portal</Link></li>
+            <li><Link to="/auth" className="hover:text-[#CC0000] transition-smooth">Client portal</Link></li>
+            <li><Link to="/auth" className="hover:text-[#CC0000] transition-smooth">Admin</Link></li>
           </ul>
         </div>
         <div>
-          <h4 className="font-semibold mb-3">Contact</h4>
-          <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-            <li>tambikingdavid@gmail.com</li>
-            <li>+2347047407360</li>
+          <h4 className="font-semibold mb-3 text-white">Contact</h4>
+          <ul className="space-y-2 text-sm text-white/70">
+            <li className="hover:text-[#CC0000] transition-smooth cursor-pointer">tambikingdavid@gmail.com</li>
+            <li className="hover:text-[#CC0000] transition-smooth cursor-pointer">+2347047407360</li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-sidebar-border py-5 text-center text-xs text-sidebar-foreground/60">
+      <div className="border-t border-white/5 py-5 text-center text-xs text-white/40">
         © {new Date().getFullYear()} M-R International. All rights reserved.
       </div>
     </footer>

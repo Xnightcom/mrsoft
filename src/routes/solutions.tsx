@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Building2, BarChart3, GraduationCap, HeartPulse, School, MapPin, Fuel, CheckCircle2 } from "lucide-react";
+import { useEffect } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { createRipple } from "@/lib/utils";
 
 export const Route = createFileRoute("/solutions")({
   head: () => ({
@@ -26,35 +28,90 @@ const solutions = [
 ];
 
 function SolutionsPage() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("reveal-active");
+          }
+        });
+      },
+      { threshold: 0.08 }
+    );
+
+    const revealables = document.querySelectorAll(".reveal-fade-up");
+    revealables.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleCardTilt = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    const dx = x - xc;
+    const dy = y - yc;
+    const tiltX = (dy / yc) * -7;
+    const tiltY = (dx / xc) * 7;
+    el.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`;
+  };
+
+  const handleCardReset = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    el.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#0A0A0A]">
       <SiteHeader />
-      <section className="gradient-hero text-primary-foreground py-20 md:py-28">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold">Solutions</h1>
-          <p className="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">Battle-tested platforms powering critical operations across industries.</p>
+      
+      <section className="relative overflow-hidden bg-[#0a0a0a] border-b border-white/5 py-20 md:py-28 text-center text-white">
+        <div className="absolute inset-0">
+          <div className="radar-beam-green opacity-30" />
+        </div>
+        <div className="container relative mx-auto px-4 z-10">
+          <h1 className="text-4xl md:text-5xl font-bold heading-accent-center-green">Solutions</h1>
+          <p className="mt-6 text-lg text-white/70 max-w-2xl mx-auto">Battle-tested platforms powering critical operations across industries.</p>
         </div>
       </section>
-      <section className="container mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-6">
+
+      <section className="container mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-6 reveal-fade-up">
         {solutions.map(s => (
-          <Card key={s.title} className="overflow-hidden card-interactive-accent">
-            <div className="h-36 gradient-hero relative">
-              <s.icon className="absolute right-6 bottom-6 h-20 w-20 text-white/20" />
-              <div className="absolute left-6 bottom-6 text-primary-foreground">
-                <div className="text-xs uppercase tracking-wider opacity-80">Platform</div>
+          <Card 
+            key={s.title} 
+            className="mrsoft-card overflow-hidden"
+            onMouseMove={handleCardTilt}
+            onMouseLeave={handleCardReset}
+          >
+            <div className="h-36 bg-gradient-to-r from-[#1A5C1A]/20 to-[#CC0000]/10 border-b border-white/5 relative">
+              <s.icon className="absolute right-6 bottom-6 h-20 w-20 text-white/5" />
+              <div className="absolute left-6 bottom-6 text-white">
+                <div className="text-xs uppercase tracking-wider opacity-60">Platform</div>
                 <div className="text-xl font-bold">{s.title}</div>
               </div>
             </div>
             <CardContent className="p-8">
-              <p className="text-muted-foreground">{s.desc}</p>
+              <p className="text-white/60">{s.desc}</p>
               <ul className="mt-5 space-y-2">
-                {s.features.map(f => <li key={f} className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary" /> {f}</li>)}
+                {s.features.map(f => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-white/80">
+                    <CheckCircle2 className="h-4 w-4 text-[#1A5C1A]" /> 
+                    {f}
+                  </li>
+                ))}
               </ul>
-              <Button asChild variant="hero" size="sm" className="mt-6"><Link to="/contact">Request demo</Link></Button>
+              <Button asChild className="ripple-btn mt-6 bg-[#CC0000] hover:bg-[#AA0000] text-white border-none font-semibold transition-smooth" size="sm" onClick={createRipple}>
+                <Link to="/contact">Request demo</Link>
+              </Button>
             </CardContent>
           </Card>
         ))}
       </section>
+      
       <SiteFooter />
     </div>
   );

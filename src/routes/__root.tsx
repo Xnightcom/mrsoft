@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BackgroundCanvas } from "@/components/BackgroundCanvas";
 
 function NotFoundComponent() {
   return (
@@ -83,7 +84,12 @@ function RootComponent() {
   }, [router, queryClient]);
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <div className="relative min-h-screen text-foreground selection:bg-[#CC0000]/30 selection:text-white">
+        <BackgroundCanvas />
+        <div className="relative z-10">
+          <Outlet />
+        </div>
+      </div>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
