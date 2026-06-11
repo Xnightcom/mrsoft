@@ -107,10 +107,18 @@ function AuthPage() {
           <CardContent className="p-0">
             <div className="flex flex-col items-center mb-6">
               <img
-                src="/mrsoft-logo.png"
+                src="/mrsoft-logo-new.png"
                 alt="MRsoft Logo"
                 className="object-contain mb-4 animate-float logo-blend"
-                style={{ height: 80, width: "auto" }}
+                style={{
+                  height: 80,
+                  width: "auto",
+                  mixBlendMode: "screen",
+                  background: "transparent",
+                  filter: "contrast(1.1) brightness(1.05)",
+                  border: "none",
+                  boxShadow: "none"
+                }}
               />
               <h1 className="text-2xl font-bold text-white">Welcome to MRsoft</h1>
               <p className="text-sm text-white/60 mt-1">Sign in to access your portal</p>
@@ -119,11 +127,7 @@ function AuthPage() {
             <Button
               onClick={handleGoogle}
               variant="outline"
-              className="w-full mb-4 text-white transition-all duration-300"
-              style={{
-                border: "1px solid rgba(26,107,26,0.6)",
-                background: "rgba(26,107,26,0.08)",
-              }}
+              className="w-full mb-4 text-white google-btn-glow"
               disabled={loading}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .5 4.1 1.5l3-3C17.2 1.8 14.8.8 12 .8 7.3.8 3.3 3.5 1.4 7.5l3.5 2.7C5.8 7.2 8.7 5 12 5z"/><path fill="#34A853" d="M23 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h6.2c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.6-4.8 3.6-8.2z"/><path fill="#4A90E2" d="M5 14.2c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L1.4 7.5C.5 9 0 10.4 0 12s.5 3 1.4 4.5L5 14.2z"/><path fill="#FBBC05" d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3.3 0-6.2-2.2-7.1-5.3L1.4 16.5C3.3 20.5 7.3 23.2 12 23.2z"/></svg>
@@ -136,9 +140,19 @@ function AuthPage() {
             </div>
 
             <Tabs defaultValue="signin">
-              <TabsList className="grid grid-cols-2 w-full bg-white/5">
-                <TabsTrigger value="signin" className="data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none" style={{ borderBottom: "2px solid transparent" }}>Sign in</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none" style={{ borderBottom: "2px solid transparent" }}>Sign up</TabsTrigger>
+              <TabsList className="grid grid-cols-2 w-full bg-white/5 p-1 rounded-lg border border-white/5">
+                <TabsTrigger
+                  value="signin"
+                  className="cursor-pointer text-white/50 data-[state=active]:text-white data-[state=active]:border-[#CC0000] border-b-2 border-transparent rounded-none bg-transparent transition-all duration-300 py-2 font-medium"
+                >
+                  Sign in
+                </TabsTrigger>
+                <TabsTrigger
+                  value="signup"
+                  className="cursor-pointer text-white/50 data-[state=active]:text-white data-[state=active]:border-[#1A6B1A] border-b-2 border-transparent rounded-none bg-transparent transition-all duration-300 py-2 font-medium"
+                >
+                  Sign up
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-3 mt-3">

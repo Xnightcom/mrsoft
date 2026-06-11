@@ -18,7 +18,7 @@ export function TiltCard({ children, className = "" }: TiltCardProps) {
     const tiltX = (mouseY - rect.height / 2) / 10;
     const tiltY = (mouseX - rect.width / 2) / 10;
 
-    el.style.transition = "transform 0.1s ease-out";
+    el.style.transition = "none";
     el.style.transform = `perspective(800px) rotateX(${-tiltX}deg) rotateY(${tiltY}deg) translateZ(8px)`;
 
     if (shineRef.current) {

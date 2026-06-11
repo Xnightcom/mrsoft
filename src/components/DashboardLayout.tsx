@@ -64,7 +64,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               src="/mrsoft-logo-new.png"
               alt="MRsoft Logo"
               className="object-contain logo-blend"
-              style={{ height: 32, width: "auto", mixBlendMode: "screen", background: "transparent", filter: "contrast(1.1) brightness(1.05)" }}
+              style={{
+                height: 36,
+                width: "auto",
+                mixBlendMode: "screen",
+                background: "transparent",
+                filter: "contrast(1.1) brightness(1.05)",
+                border: "none",
+                boxShadow: "none"
+              }}
             />
           </Link>
         </div>
@@ -97,7 +105,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               src="/mrsoft-logo-new.png"
               alt="MRsoft Logo"
               className="object-contain logo-blend"
-              style={{ height: 28, width: "auto", mixBlendMode: "screen", background: "transparent", filter: "contrast(1.1) brightness(1.05)" }}
+              style={{
+                height: 36,
+                width: "auto",
+                mixBlendMode: "screen",
+                background: "transparent",
+                filter: "contrast(1.1) brightness(1.05)",
+                border: "none",
+                boxShadow: "none"
+              }}
             />
           </Link>
           <Button onClick={signOut} variant="ghost" size="sm" className="text-white"><LogOut className="h-4 w-4" /></Button>

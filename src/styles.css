@@ -155,6 +155,7 @@
   animation: rotateBg 25s linear infinite;
   opacity: 0.8;
   pointer-events: none;
+  will-change: transform;
 }
 
 /* ─── Perspective Grid (hero only) ─── */
@@ -333,8 +334,22 @@
   color: rgba(255,255,255,0.3);
 }
 
+/* ─── Google Button Glow ─── */
+.google-btn-glow {
+  border: 1px solid rgba(26,107,26,0.6) !important;
+  background: rgba(26,107,26,0.08) !important;
+  color: white !important;
+  transition: all 0.3s ease-in-out !important;
+}
+.google-btn-glow:hover {
+  border-color: #CC0000 !important;
+  box-shadow: var(--glow-red) !important;
+}
+
 /* ─── Primary Action Button ─── */
 .btn-primary-gradient {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, #CC0000, #990000) !important;
   color: white !important;
   font-weight: 700;
@@ -347,6 +362,32 @@
 }
 .btn-primary-gradient:active {
   transform: translateY(0);
+}
+.btn-primary-gradient::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+.btn-primary-gradient:active::after {
+  animation: ripple-click 0.5s ease-out;
+}
+@keyframes ripple-click {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
 }
 
 /* ─── Heading Accents ─── */

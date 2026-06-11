@@ -78,7 +78,7 @@ function Home() {
             {[["500", "+", "Enterprise clients"], ["25", "k+", "Trained students"], ["99.9", "%", "Uptime SLA"]].map(([num, suffix, label]) => (
               <div key={num}>
                 <div className="text-3xl font-bold text-[#CC0000]">
-                  <span data-count-to={num.replace(".", "")} data-count-suffix={suffix}>{num}{suffix}</span>
+                  <span data-count-to={num} data-count-suffix={suffix}>{num}{suffix}</span>
                 </div>
                 <div className="text-sm text-white/60">{label}</div>
               </div>

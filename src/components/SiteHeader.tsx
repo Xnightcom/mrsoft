@@ -30,7 +30,15 @@ export function SiteHeader() {
             src="/mrsoft-logo-new.png"
             alt="MRsoft Logo"
             className="object-contain logo-blend animate-logo-pulse"
-            style={{ height: 36, width: "auto" }}
+            style={{
+              height: 36,
+              width: "auto",
+              mixBlendMode: "screen",
+              background: "transparent",
+              filter: "contrast(1.1) brightness(1.05)",
+              border: "none",
+              boxShadow: "none"
+            }}
           />
         </Link>
 
