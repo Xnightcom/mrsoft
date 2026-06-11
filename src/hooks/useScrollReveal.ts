@@ -47,8 +47,22 @@ export function useScrollReveal() {
     observeElements();
 
     // Use MutationObserver to watch for route transitions and lazy-loaded nodes
-    const mutationObserver = new MutationObserver(() => {
-      observeElements();
+    const mutationObserver = new MutationObserver((mutations) => {
+      let hasNewElements = false;
+      for (const m of mutations) {
+        if (m.addedNodes.length > 0) {
+          for (let i = 0; i < m.addedNodes.length; i++) {
+            if (m.addedNodes[i].nodeType === 1) { // Node.ELEMENT_NODE
+              hasNewElements = true;
+              break;
+            }
+          }
+        }
+        if (hasNewElements) break;
+      }
+      if (hasNewElements) {
+        observeElements();
+      }
     });
     mutationObserver.observe(document.body, {
       childList: true,
