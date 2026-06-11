@@ -37,7 +37,7 @@ function SolutionsPage() {
       </section>
       <section className="container mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-6">
         {solutions.map(s => (
-          <Card key={s.title} className="overflow-hidden hover:shadow-elegant transition-smooth">
+          <Card key={s.title} className="overflow-hidden card-interactive-accent">
             <div className="h-36 gradient-hero relative">
               <s.icon className="absolute right-6 bottom-6 h-20 w-20 text-white/20" />
               <div className="absolute left-6 bottom-6 text-primary-foreground">

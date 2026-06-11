@@ -110,9 +110,9 @@ function AuthPage() {
         <Card className="w-full max-w-md shadow-elegant">
           <CardContent className="p-8">
             <div className="flex flex-col items-center mb-6">
-              <span className="grid h-12 w-12 place-items-center rounded-xl gradient-primary shadow-glow"><Cpu className="h-6 w-6 text-primary-foreground" /></span>
-              <h1 className="mt-4 text-2xl font-bold">Welcome to MRsoft</h1>
-              <p className="text-sm text-muted-foreground">Sign in to access your portal</p>
+              <img src="/mrsoft-logo.png" alt="MRsoft Logo" className="h-12 w-auto object-contain mb-4 animate-float" />
+              <h1 className="text-2xl font-bold">Welcome to MRsoft</h1>
+              <p className="text-sm text-muted-foreground mt-1">Sign in to access your portal</p>
             </div>
 
             <Button onClick={handleGoogle} variant="outline" className="w-full mb-4" disabled={loading}>

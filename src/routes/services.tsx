@@ -36,7 +36,7 @@ function ServicesPage() {
       </section>
       <section className="container mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-6">
         {services.map(s => (
-          <Card key={s.title} className="hover:shadow-elegant transition-smooth">
+          <Card key={s.title} className="card-interactive">
             <CardContent className="p-8">
               <div className="grid h-12 w-12 place-items-center rounded-xl gradient-primary text-primary-foreground shadow-glow">
                 <s.icon className="h-6 w-6" />

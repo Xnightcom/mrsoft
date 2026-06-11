@@ -58,10 +58,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex w-full bg-muted/20">
       <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col fixed inset-y-0 z-30 hidden md:flex">
-        <div className="p-6 border-b border-sidebar-border">
-          <Link to="/" className="flex items-center gap-2 font-bold">
-            <span className="grid h-9 w-9 place-items-center rounded-lg gradient-primary"><Cpu className="h-5 w-5" /></span>
-            MRsoft
+        <div className="p-5 border-b border-sidebar-border flex justify-start">
+          <Link to="/" className="bg-white px-3 py-1.5 rounded-lg inline-flex items-center justify-center shadow-sm transition-transform duration-300 hover:scale-[1.03]">
+            <img src="/mrsoft-logo.png" alt="MRsoft Logo" className="h-6 w-auto object-contain" />
           </Link>
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -88,7 +87,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
       <main className="flex-1 md:ml-64 min-w-0">
         <div className="md:hidden flex items-center justify-between p-4 border-b bg-card">
-          <Link to="/" className="flex items-center gap-2 font-bold"><Cpu className="h-5 w-5 text-primary" /> MRsoft</Link>
+          <Link to="/" className="flex items-center">
+            <img src="/mrsoft-logo.png" alt="MRsoft Logo" className="h-7 w-auto object-contain" />
+          </Link>
           <Button onClick={signOut} variant="ghost" size="sm"><LogOut className="h-4 w-4" /></Button>
         </div>
         {children}

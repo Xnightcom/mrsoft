@@ -6,9 +6,10 @@ export function SiteFooter() {
     <footer className="border-t border-border bg-sidebar text-sidebar-foreground">
       <div className="container mx-auto grid gap-10 px-4 py-14 md:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2 font-bold text-lg">
-            <span className="grid h-9 w-9 place-items-center rounded-lg gradient-primary"><Cpu className="h-5 w-5" /></span>
-            MRsoft
+          <div className="flex justify-start">
+            <Link to="/" className="bg-white px-3 py-1.5 rounded-lg inline-flex items-center justify-center shadow-sm transition-transform duration-300 hover:scale-[1.03]">
+              <img src="/mrsoft-logo.png" alt="MRsoft Logo" className="h-6 w-auto object-contain" />
+            </Link>
           </div>
           <p className="mt-3 text-sm text-sidebar-foreground/70 max-w-xs">
             Enterprise software, ICT training, and digital transformation for ambitious organizations.

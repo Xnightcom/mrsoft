@@ -25,11 +25,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <span className="grid h-9 w-9 place-items-center rounded-lg gradient-primary shadow-glow">
-            <Cpu className="h-5 w-5 text-primary-foreground" />
-          </span>
-          <span>MRsoft</span>
+        <Link to="/" className="flex items-center justify-start">
+          <img src="/mrsoft-logo.png" alt="MRsoft Logo" className="h-8 w-auto object-contain transition-transform duration-300 hover:scale-105" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">

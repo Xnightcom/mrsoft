@@ -120,7 +120,7 @@ function Home() {
           </div>
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map(s => (
-              <Card key={s.title} className="group hover:shadow-elegant transition-smooth hover:-translate-y-1 border-border/60">
+              <Card key={s.title} className="card-interactive border-border/60">
                 <CardContent className="p-6">
                   <div className="grid h-12 w-12 place-items-center rounded-xl gradient-primary text-primary-foreground shadow-glow">
                     <s.icon className="h-6 w-6" />
@@ -144,7 +144,7 @@ function Home() {
         </div>
         <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {solutions.map(s => (
-            <Card key={s.title} className="overflow-hidden group hover:shadow-elegant transition-smooth">
+            <Card key={s.title} className="overflow-hidden card-interactive-accent">
               <div className="h-32 gradient-hero relative overflow-hidden">
                 <s.icon className="absolute right-4 bottom-4 h-16 w-16 text-white/20" />
               </div>
