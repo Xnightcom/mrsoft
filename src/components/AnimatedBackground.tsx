@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 
 interface Particle {
   x: number;
@@ -23,6 +24,8 @@ export function AnimatedBackground() {
   });
 
   const [isMobile, setIsMobile] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isContactPage = pathname === "/contact";
 
   useEffect(() => {
     // 1. Setup mobile detection
@@ -43,9 +46,11 @@ export function AnimatedBackground() {
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current.x = e.clientX;
       mouseRef.current.y = e.clientY;
-      // Mouse move speed boost
-      speedRef.current.current = 4.0;
-      speedRef.current.decayFrames = 60;
+      // Mouse move speed boost (only active if not on contact page)
+      if (!isContactPage) {
+        speedRef.current.current = 4.0;
+        speedRef.current.decayFrames = 60;
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -63,7 +68,7 @@ export function AnimatedBackground() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("touchmove", handleTouchMove);
     };
-  }, []);
+  }, [isContactPage]);
 
   useEffect(() => {
     let animId: number;
@@ -118,6 +123,14 @@ export function AnimatedBackground() {
               rgba(26,107,26,0.06) 35%,
               transparent 65%)
           `;
+        } else if (isContactPage) {
+          // Static soft glow for white contact page
+          parallax.style.background = `
+            radial-gradient(circle 600px at 50% 50%,
+              rgba(204,0,0,0.05) 0%,
+              rgba(26,107,26,0.03) 35%,
+              transparent 65%)
+          `;
         } else {
           parallax.style.background = `
             radial-gradient(circle 600px at ${m.lerpX}px ${m.lerpY}px,
@@ -138,17 +151,21 @@ export function AnimatedBackground() {
           const w = canvas.width;
           const h = canvas.height;
 
-          // Speed boost decay back to 1.5 over 60 frames
-          if (sp.decayFrames > 0) {
-            sp.decayFrames--;
-            sp.current = 1.5 + (2.5 * sp.decayFrames) / 60;
+          // Speed boost decay back to 1.5 over 60 frames (0 on contact page for no movement)
+          if (isContactPage) {
+            sp.current = 0;
           } else {
-            sp.current = 1.5;
+            if (sp.decayFrames > 0) {
+              sp.decayFrames--;
+              sp.current = 1.5 + (2.5 * sp.decayFrames) / 60;
+            } else {
+              sp.current = 1.5;
+            }
           }
 
-          // Smooth origin offset based on mouse tilt
-          const originOffsetX = (m.lerpX - w / 2) * 0.08;
-          const originOffsetY = (m.lerpY - h / 2) * 0.08;
+          // Smooth origin offset based on mouse tilt (0 on contact page for no movement)
+          const originOffsetX = isContactPage ? 0 : (m.lerpX - w / 2) * 0.08;
+          const originOffsetY = isContactPage ? 0 : (m.lerpY - h / 2) * 0.08;
 
           ctx.clearRect(0, 0, w, h);
 
@@ -157,11 +174,15 @@ export function AnimatedBackground() {
 
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
-            p.z -= sp.current;
-            if (p.z < 1) {
-              p.z = 1500;
-              p.x = (Math.random() - 0.5) * 1600;
-              p.y = (Math.random() - 0.5) * 1200;
+            
+            // Only update z if not on contact page (stops movement)
+            if (!isContactPage) {
+              p.z -= sp.current;
+              if (p.z < 1) {
+                p.z = 1500;
+                p.x = (Math.random() - 0.5) * 1600;
+                p.y = (Math.random() - 0.5) * 1200;
+              }
             }
 
             const scale = FOCAL_LENGTH / p.z;
@@ -188,7 +209,8 @@ export function AnimatedBackground() {
 
               if (dist < 80) {
                 const opacity = (1 - dist / 80) * 0.3;
-                ctx.strokeStyle = `rgba(204,0,0,${opacity})`;
+                // Render slightly softer lines on contact page
+                ctx.strokeStyle = isContactPage ? `rgba(204,0,0,${opacity * 0.4})` : `rgba(204,0,0,${opacity})`;
                 ctx.beginPath();
                 ctx.moveTo(p1.sx, p1.sy);
                 ctx.lineTo(p2.sx, p2.sy);
@@ -204,11 +226,12 @@ export function AnimatedBackground() {
 
             if (p.z < 300) {
               const alpha = 1 - p.z / 300;
-              color = `rgba(255,255,255,${alpha.toFixed(2)})`;
+              // On white contact page, white particles would be invisible, draw them as soft neutral dark gray/black
+              color = isContactPage ? `rgba(0,0,0,${(alpha * 0.2).toFixed(2)})` : `rgba(255,255,255,${alpha.toFixed(2)})`;
             } else if (p.z < 700) {
-              color = "rgba(204,0,0,0.8)";
+              color = isContactPage ? "rgba(204,0,0,0.6)" : "rgba(204,0,0,0.8)";
             } else {
-              color = "rgba(26,107,26,0.6)";
+              color = isContactPage ? "rgba(26,107,26,0.4)" : "rgba(26,107,26,0.6)";
             }
 
             ctx.fillStyle = color;
@@ -228,12 +251,27 @@ export function AnimatedBackground() {
       cancelAnimationFrame(animId);
       resizeObs?.disconnect();
     };
-  }, [isMobile]);
+  }, [isMobile, isContactPage]);
 
   return (
     <>
       {/* Layer 1: Deep rotating conic gradient (CSS) */}
-      <div className="animated-bg-gradient" />
+      <div
+        className="animated-bg-gradient"
+        style={isContactPage ? {
+          background: `conic-gradient(
+            from 0deg at 50% 50%,
+            #FFFFFF 0deg,
+            rgba(204,0,0,0.05) 60deg,
+            #FFFFFF 120deg,
+            rgba(26,107,26,0.05) 180deg,
+            #FFFFFF 240deg,
+            rgba(204,0,0,0.03) 300deg,
+            #FFFFFF 360deg
+          )`,
+          animation: "none",
+        } : undefined}
+      />
 
       {/* Layer 2: Mouse parallax radial glow */}
       <div
