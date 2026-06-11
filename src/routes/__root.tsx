@@ -12,7 +12,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { BackgroundCanvas } from "@/components/BackgroundCanvas";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 function NotFoundComponent() {
   return (
@@ -85,8 +85,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="relative min-h-screen text-foreground selection:bg-[#CC0000]/30 selection:text-white">
-        <BackgroundCanvas />
-        <div className="relative z-10">
+        <AnimatedBackground />
+        <div className="relative" style={{ zIndex: 10 }}>
           <Outlet />
         </div>
       </div>

@@ -1,18 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { Cpu } from "lucide-react";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-[#1A5C1A] bg-[#000000] text-white">
+    <footer className="border-t bg-[#060606] text-white" style={{ borderTopColor: "rgba(26,107,26,0.4)" }}>
       <div className="container mx-auto grid gap-10 px-4 py-14 md:grid-cols-4">
         <div>
           <div className="flex justify-start">
             <Link to="/" className="inline-flex items-center justify-center transition-transform duration-300 hover:scale-[1.03]">
-              <img 
-                src="/mrsoft-logo-new.png" 
-                alt="MRsoft Logo" 
-                className="h-10 w-auto object-contain" 
-                style={{ filter: "brightness(0) invert(1)" }}
+              <img
+                src="/mrsoft-logo-new.png"
+                alt="MRsoft Logo"
+                className="object-contain logo-blend animate-logo-pulse"
+                style={{ height: 36, width: "auto" }}
               />
             </Link>
           </div>
@@ -45,7 +44,7 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-white/5 py-5 text-center text-xs text-white/40">
+      <div className="border-t py-5 text-center text-xs text-white/40" style={{ borderTopColor: "rgba(255,255,255,0.05)" }}>
         © {new Date().getFullYear()} M-R International. All rights reserved.
       </div>
     </footer>

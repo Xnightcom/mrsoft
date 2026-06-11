@@ -67,8 +67,8 @@ export function BackgroundCanvas() {
     const updateSpotlight = () => {
       const mouse = mouseRef.current;
       // Linear interpolation: smoothly move 8% towards the target position each frame
-      mouse.x += (mouse.targetX - mouse.x) * 0.08;
-      mouse.y += (mouse.targetY - mouse.y) * 0.08;
+      mouse.x += (mouse.targetX - mouse.x) * 0.05;
+      mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
       if (spotlight) {
         spotlight.style.setProperty("--mouse-x", `${mouse.x}px`);
@@ -102,11 +102,11 @@ export function BackgroundCanvas() {
         particles.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: (Math.random() - 0.5) * 0.6,
-          size: Math.random() * 3 + 1, // 1 to 4px
+          vx: (Math.random() - 0.5) * 0.35,
+          vy: (Math.random() - 0.5) * 0.35,
+          size: Math.random() * 2.5 + 0.8, // 0.8 to 3.3px
           color: particleColors[Math.floor(Math.random() * particleColors.length)],
-          alpha: Math.random() * 0.6 + 0.2, // 0.2 to 0.8 opacity
+          alpha: Math.random() * 0.5 + 0.15, // 0.15 to 0.65 opacity
         });
       }
     };
@@ -144,10 +144,10 @@ export function BackgroundCanvas() {
           const dy = p1.y - p2.y;
           const distSq = dx * dx + dy * dy;
 
-          if (distSq < 80 * 80) { // Within 80px
+          if (distSq < 100 * 100) { // Within 100px
             const dist = Math.sqrt(distSq);
             // Higher opacity for closer particles
-            const opacity = (1 - dist / 80) * 0.12;
+            const opacity = (1 - dist / 100) * 0.1;
             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
@@ -171,17 +171,17 @@ export function BackgroundCanvas() {
         if (p.y < 0) p.y = height;
         if (p.y > height) p.y = 0;
 
-        // Repel from mouse proximity (within 100px)
+        // Repel from mouse proximity (within 120px)
         const dx = p.x - mouse.x;
         const dy = p.y - mouse.y;
         const distSq = dx * dx + dy * dy;
 
-        if (distSq < 100 * 100) {
+        if (distSq < 120 * 120) {
           const dist = Math.sqrt(distSq);
           if (dist > 0) {
             const forceX = dx / dist;
             const forceY = dy / dist;
-            const strength = (100 - dist) * 0.08; // Stronger closer to cursor
+            const strength = (120 - dist) * 0.03; // Much gentler push
             
             // Push particle away
             p.x += forceX * strength;
