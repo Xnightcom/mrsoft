@@ -48,7 +48,26 @@ function AuthCallbackPage() {
         await supabase.auth.getSession();
       }
 
-      navigate({ to: "/dashboard" });
+      const { data: { session } } = await supabase.auth.getSession();
+      let targetPath = "/dashboard/client";
+      
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        
+        if (profile?.role === "admin") {
+          targetPath = "/dashboard/admin";
+        } else if (profile?.role === "student") {
+          targetPath = "/dashboard/student";
+        } else if (profile?.role === "client") {
+          targetPath = "/dashboard/client";
+        }
+      }
+
+      navigate({ to: targetPath });
     };
 
     handle();

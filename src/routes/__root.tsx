@@ -71,6 +71,8 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { ProfileProvider } from "@/hooks/useProfile";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
@@ -84,13 +86,15 @@ function RootComponent() {
   }, [router, queryClient]);
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="relative min-h-screen text-foreground selection:bg-[#CC0000]/30 selection:text-white">
-        <AnimatedBackground />
-        <div className="relative" style={{ zIndex: 10 }}>
-          <Outlet />
+      <ProfileProvider>
+        <div className="relative min-h-screen text-foreground selection:bg-[#CC0000]/30 selection:text-white">
+          <AnimatedBackground />
+          <div className="relative" style={{ zIndex: 10 }}>
+            <Outlet />
+          </div>
         </div>
-      </div>
-      <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" />
+      </ProfileProvider>
     </QueryClientProvider>
   );
 }
