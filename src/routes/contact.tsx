@@ -74,7 +74,7 @@ function ContactPage() {
             { icon: MapPin, title: "HQ", value: "Lagos · Nairobi · London" },
           ].map(c => (
             <div key={c.title} className="reveal-fade-up">
-              <TiltCard className="tilt-card-light">
+              <div className="tilt-card-light relative overflow-hidden rounded-xl">
                 <CardContent className="p-6 flex items-start gap-4">
                   <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#1A6B1A]/10 text-[#1A6B1A] border" style={{ borderColor: "rgba(26,107,26,0.3)" }}>
                     <c.icon className="h-5 w-5" />
@@ -84,12 +84,12 @@ function ContactPage() {
                     <div className="text-sm text-neutral-600">{c.value}</div>
                   </div>
                 </CardContent>
-              </TiltCard>
+              </div>
             </div>
           ))}
         </div>
 
-        <TiltCard className="md:col-span-2 tilt-card-light">
+        <div className="md:col-span-2 tilt-card-light relative overflow-hidden rounded-xl">
           <CardContent className="p-8">
             <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -137,7 +137,7 @@ function ContactPage() {
               </div>
             </form>
           </CardContent>
-        </TiltCard>
+        </div>
       </section>
 
       <SiteFooter />
