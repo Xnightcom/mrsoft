@@ -45,13 +45,28 @@ function createDummySupabaseClient() {
 
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || (typeof process !== 'undefined' && process.env ? process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL : undefined);
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || (typeof process !== 'undefined' && process.env ? process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY : undefined);
+  // Support both key names: PUBLISHABLE_KEY (Lovable) and ANON_KEY (standard Supabase)
+  const SUPABASE_URL =
+    import.meta.env.VITE_SUPABASE_URL ||
+    (typeof process !== 'undefined' && process.env
+      ? process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+      : undefined);
+
+  const SUPABASE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    (typeof process !== 'undefined' && process.env
+      ? process.env.SUPABASE_PUBLISHABLE_KEY ||
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.VITE_SUPABASE_ANON_KEY
+      : undefined);
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    console.warn(
-      `[Supabase] Missing Supabase environment variable(s). Returning a dummy client. ` +
-      `Please configure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.`
+    console.error(
+      `[Supabase] CRITICAL: Missing Supabase environment variable(s). ` +
+      `Returning a dummy client that will NOT connect to the database. ` +
+      `Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY).`
     );
     return createDummySupabaseClient() as any;
   }
