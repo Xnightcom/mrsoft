@@ -97,9 +97,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         "User",
       avatar_url: session.user.user_metadata?.avatar_url ?? null,
       role: "client" as const,
-      company: null,
-      phone: null,
-      bio: null,
     };
 
     const { data: inserted, error: insertError } = await supabase
