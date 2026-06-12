@@ -255,7 +255,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     />
                     <div className="absolute right-0 mt-2 z-50 w-48 rounded-xl border border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] p-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                       <Link
-                        to={role === "admin" ? "/dashboard/admin/settings" : `/dashboard/${role}/profile`}
+                        to={role === "admin" ? "/dashboard/admin/settings" : role === "student" ? "/dashboard/student/profile" : "/dashboard/client/profile"}
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white"
                       >

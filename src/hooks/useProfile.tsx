@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Profile {
@@ -29,10 +29,17 @@ const ProfileContext = createContext<ProfileContextType>({
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (isInitial = false) => {
+    // Guard against concurrent fetches
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
     try {
-      setLoading(true);
+      // Only show loading spinner on initial fetch, not on refetch/auth-change
+      if (isInitial) setLoading(true);
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
         setProfile(null);
@@ -40,6 +47,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Use maybeSingle — does NOT throw if row is missing (returns null)
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -48,24 +56,65 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error("Error fetching profile:", error);
-      } else if (data) {
+        // Still set loading false so UI doesn't hang
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
         setProfile(data as Profile);
+        setLoading(false);
+        return;
+      }
+
+      // ---------- PROFILE DOES NOT EXIST — auto-create ----------
+      console.warn("[useProfile] No profile row found, auto-creating default profile for", session.user.id);
+      const defaultProfile = {
+        id: session.user.id,
+        full_name: session.user.user_metadata?.full_name ?? session.user.email?.split("@")[0] ?? "User",
+        avatar_url: session.user.user_metadata?.avatar_url ?? null,
+        role: "client" as const, // default role
+        company: null,
+        phone: null,
+        bio: null,
+      };
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("profiles")
+        .upsert(defaultProfile, { onConflict: "id" })
+        .select("*")
+        .maybeSingle();
+
+      if (insertError) {
+        console.error("[useProfile] Failed to auto-create profile:", insertError);
+        // Even on insert failure, create a local-only profile so the UI doesn't hang
+        setProfile({
+          ...defaultProfile,
+          created_at: new Date().toISOString(),
+        } as Profile);
+      } else if (inserted) {
+        setProfile(inserted as Profile);
       } else {
-        setProfile(null);
+        // Upsert succeeded but returned no data — use local fallback
+        setProfile({
+          ...defaultProfile,
+          created_at: new Date().toISOString(),
+        } as Profile);
       }
     } catch (err) {
       console.error("Profile fetch error:", err);
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   };
 
   useEffect(() => {
-    fetchProfile();
+    fetchProfile(true);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string) => {
       if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        fetchProfile();
+        fetchProfile(false);
       } else if (event === "SIGNED_OUT") {
         setProfile(null);
         setLoading(false);
@@ -83,7 +132,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         profile,
         role: profile?.role ?? null,
         loading,
-        refetch: fetchProfile,
+        refetch: () => fetchProfile(false),
       }}
     >
       {children}
