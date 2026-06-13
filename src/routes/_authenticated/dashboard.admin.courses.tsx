@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, BookOpen, Clock, Users, Play, Trash2 } from "lucide-react";
+import { Plus, BookOpen, Clock, Users, Play, Trash2, X, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/courses")({
   component: AdminCoursesPage,
@@ -21,11 +21,13 @@ interface Course {
   id: string;
   title: string;
   description: string | null;
-  thumbnail_url: string | null;
   duration_hours: number | null;
   level: string;
   is_published: boolean;
   created_at: string;
+  instructor_id: string | null;
+  max_students: number;
+  class_schedule: any;
 }
 
 interface Enrollment {
@@ -42,10 +44,13 @@ function AdminCoursesPage() {
   const [courseForm, setCourseForm] = useState({
     title: "",
     description: "",
-    thumbnail_url: "",
     duration_hours: "10",
     level: "beginner",
+    max_students: 30,
+    instructor_id: "unassigned",
     is_published: false,
+    class_schedule: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
+    books: [] as { title: string; description: string; file: File | null }[]
   });
 
   const [lessonForm, setLessonForm] = useState({
@@ -54,6 +59,18 @@ function AdminCoursesPage() {
     duration_minutes: "30",
     order_index: "1",
     is_published: true,
+  });
+
+  const { data: instructors = [] } = useQuery({
+    queryKey: ["admin-instructors"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("role", "instructor");
+      if (error) throw error;
+      return data as { id: string; full_name: string }[];
+    },
   });
 
   // Query Courses & Enrollments count
@@ -100,15 +117,42 @@ function AdminCoursesPage() {
   // Create Course
   const createCourse = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("courses").insert({
+      const { data: newCourse, error } = await supabase.from("courses").insert({
         title: courseForm.title,
         description: courseForm.description,
-        thumbnail_url: courseForm.thumbnail_url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80",
         duration_hours: parseInt(courseForm.duration_hours) || 10,
         level: courseForm.level,
         is_published: courseForm.is_published,
-      });
+        max_students: courseForm.max_students,
+        instructor_id: courseForm.instructor_id === "unassigned" ? null : courseForm.instructor_id,
+        class_schedule: courseForm.class_schedule,
+      }).select().single();
+      
       if (error) throw error;
+      const courseId = newCourse.id;
+
+      // Upload books
+      for (let i = 0; i < courseForm.books.length; i++) {
+        const book = courseForm.books[i];
+        if (!book.file) continue;
+        const fileExt = book.file.name.split(".").pop();
+        const bookId = crypto.randomUUID();
+        const filePath = `${courseId}/${bookId}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("course-books")
+          .upload(filePath, book.file);
+
+        if (uploadError) throw uploadError;
+
+        await supabase.from("course_books").insert({
+          course_id: courseId,
+          title: book.title,
+          description: book.description,
+          pdf_url: filePath,
+          order_index: i,
+        });
+      }
     },
     onSuccess: () => {
       toast.success("Course created successfully!");
@@ -116,10 +160,13 @@ function AdminCoursesPage() {
       setCourseForm({
         title: "",
         description: "",
-        thumbnail_url: "",
         duration_hours: "10",
         level: "beginner",
+        max_students: 30,
+        instructor_id: "unassigned",
         is_published: false,
+        class_schedule: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
+        books: []
       });
       qc.invalidateQueries({ queryKey: ["admin-courses-grid"] });
     },
@@ -161,7 +208,6 @@ function AdminCoursesPage() {
 
   const deleteCourse = useMutation({
     mutationFn: async (id: string) => {
-      // Delete any dependent lessons and enrollments first (cascade in SQL editor should handle it, but RLS/references checks might throw if not cleared)
       const { error } = await supabase.from("courses").delete().eq("id", id);
       if (error) throw error;
     },
@@ -181,7 +227,7 @@ function AdminCoursesPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Courses Management</h1>
             <p className="text-white/50 text-sm mt-1">
-              Add courses, build learning lessons, and publish them live.
+              Add courses, assign instructors, and manage schedules.
             </p>
           </div>
           <Button
@@ -197,7 +243,7 @@ function AdminCoursesPage() {
         {isLoading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-80 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
+              <div key={i} className="h-48 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
@@ -213,21 +259,11 @@ function AdminCoursesPage() {
                   className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] hover:border-[#CC0000]/50 rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-[0_0_15px_rgba(204,0,0,0.15)] flex flex-col justify-between"
                 >
                   <div>
-                    {/* Thumbnail */}
-                    <div className="h-40 w-full relative">
-                      <img
-                        src={course.thumbnail_url}
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 text-[10px] font-bold text-white uppercase tracking-wider">
+                    <div className="p-4 space-y-2 relative">
+                      <span className="absolute top-4 right-4 px-2 py-0.5 rounded bg-[#1A6B1A]/20 text-[#1A6B1A] text-[10px] font-bold uppercase tracking-wider">
                         {course.level}
                       </span>
-                    </div>
-
-                    {/* Body */}
-                    <div className="p-4 space-y-2">
-                      <h4 className="font-bold text-white text-lg line-clamp-1">{course.title}</h4>
+                      <h4 className="font-bold text-white text-lg pr-16 line-clamp-1">{course.title}</h4>
                       <p className="text-white/60 text-xs line-clamp-2">{course.description}</p>
 
                       <div className="flex items-center gap-4 text-xs text-white/50 pt-2">
@@ -237,7 +273,7 @@ function AdminCoursesPage() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          {course.enrolledCount} enrolled
+                          {course.enrolledCount} / {course.max_students}
                         </span>
                       </div>
                     </div>
@@ -301,7 +337,7 @@ function AdminCoursesPage() {
             e.preventDefault();
             createCourse.mutate();
           }}
-          className="space-y-4 text-xs"
+          className="space-y-4 text-xs max-h-[70vh] overflow-y-auto pr-2"
         >
           <div className="space-y-1">
             <Label className="text-white/70">Title</Label>
@@ -352,17 +388,181 @@ function AdminCoursesPage() {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-white/70">Thumbnail URL</Label>
-            <Input
-              placeholder="https://..."
-              value={courseForm.thumbnail_url}
-              onChange={(e) => setCourseForm({ ...courseForm, thumbnail_url: e.target.value })}
-              className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-white/70">Max Students</Label>
+              <Input
+                type="number"
+                value={courseForm.max_students}
+                onChange={(e) => setCourseForm({ ...courseForm, max_students: parseInt(e.target.value) || 30 })}
+                className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-white/70">Assign Instructor</Label>
+              <Select
+                value={courseForm.instructor_id}
+                onValueChange={(val) => setCourseForm({ ...courseForm, instructor_id: val })}
+              >
+                <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0F0F0F] border-[rgba(26,107,26,0.3)] text-white">
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {instructors.map(inst => (
+                    <SelectItem key={inst.id} value={inst.id}>{inst.full_name || 'Unnamed'}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-2">
+          {/* Class Schedule */}
+          <div className="space-y-3 pt-2 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <Label className="text-white/90 font-bold">Class Schedule</Label>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
+                onClick={() => setCourseForm({
+                  ...courseForm, 
+                  class_schedule: [...courseForm.class_schedule, { day: "Monday", time: "10:00 AM", duration_mins: 90 }]
+                })}
+              >
+                <Plus className="w-3 h-3 mr-1" /> Add Session
+              </Button>
+            </div>
+            {courseForm.class_schedule.map((session, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Select
+                  value={session.day}
+                  onValueChange={(val) => {
+                    const newSch = [...courseForm.class_schedule];
+                    newSch[i].day = val;
+                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                  }}
+                >
+                  <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0F0F0F] text-white border-[rgba(26,107,26,0.3)]">
+                    {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input 
+                  placeholder="10:00 AM" 
+                  value={session.time} 
+                  onChange={(e) => {
+                    const newSch = [...courseForm.class_schedule];
+                    newSch[i].time = e.target.value;
+                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                  }} 
+                  className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[100px]" 
+                />
+                <Input 
+                  type="number" 
+                  placeholder="90" 
+                  value={session.duration_mins} 
+                  onChange={(e) => {
+                    const newSch = [...courseForm.class_schedule];
+                    newSch[i].duration_mins = parseInt(e.target.value) || 90;
+                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                  }} 
+                  className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[80px]" 
+                />
+                <span className="text-white/50 text-[10px]">mins</span>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-500/10 ml-auto"
+                  onClick={() => {
+                    const newSch = courseForm.class_schedule.filter((_, idx) => idx !== i);
+                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {/* Course Books */}
+          <div className="space-y-3 pt-2 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <Label className="text-white/90 font-bold">Course Books (PDF)</Label>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
+                onClick={() => setCourseForm({
+                  ...courseForm, 
+                  books: [...courseForm.books, { title: "", description: "", file: null }]
+                })}
+              >
+                <Plus className="w-3 h-3 mr-1" /> Add Book
+              </Button>
+            </div>
+            {courseForm.books.map((book, i) => (
+              <div key={i} className="space-y-2 p-3 bg-white/5 rounded-lg border border-white/10 relative">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-1 right-1 h-6 w-6 text-white/50 hover:text-red-500"
+                  onClick={() => {
+                    const newBooks = courseForm.books.filter((_, idx) => idx !== i);
+                    setCourseForm({ ...courseForm, books: newBooks });
+                  }}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+                <div>
+                  <Input 
+                    placeholder="Book Title" 
+                    value={book.title}
+                    onChange={(e) => {
+                      const newBooks = [...courseForm.books];
+                      newBooks[i].title = e.target.value;
+                      setCourseForm({ ...courseForm, books: newBooks });
+                    }}
+                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
+                  />
+                </div>
+                <div>
+                  <Input 
+                    placeholder="Short description" 
+                    value={book.description}
+                    onChange={(e) => {
+                      const newBooks = [...courseForm.books];
+                      newBooks[i].description = e.target.value;
+                      setCourseForm({ ...courseForm, books: newBooks });
+                    }}
+                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
+                  />
+                </div>
+                <div>
+                  <Input 
+                    type="file" 
+                    accept="application/pdf"
+                    onChange={(e) => {
+                      const newBooks = [...courseForm.books];
+                      newBooks[i].file = e.target.files?.[0] || null;
+                      setCourseForm({ ...courseForm, books: newBooks });
+                    }}
+                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs file:text-xs file:text-white/70" 
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 pt-2 border-t border-white/10">
             <Switch
               checked={courseForm.is_published}
               onCheckedChange={(checked) => setCourseForm({ ...courseForm, is_published: checked })}

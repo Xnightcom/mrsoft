@@ -49,6 +49,16 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       { to: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart },
       { to: '/dashboard/admin/settings', label: 'Settings', icon: Settings },
     ]
+  } else if (profile?.role === 'instructor') {
+    links = [
+      { to: '/dashboard/instructor', label: 'Overview', icon: LayoutDashboard },
+      { to: '/dashboard/instructor/courses', label: 'My Courses', icon: BookOpen },
+      { to: '/dashboard/instructor/students', label: 'Students', icon: Users },
+      { to: '/dashboard/instructor/attendance', label: 'Attendance', icon: Calendar },
+      { to: '/dashboard/instructor/assignments', label: 'Assignments', icon: CheckSquare },
+      { to: '/dashboard/instructor/messages', label: 'Messages', icon: MessageSquare },
+      { to: '/dashboard/instructor/profile', label: 'Profile', icon: User },
+    ]
   } else if (profile?.role === 'student') {
     links = [
       { to: '/dashboard/student', label: 'My Learning', icon: LayoutDashboard },
@@ -57,6 +67,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       { to: '/dashboard/student/attendance', label: 'Attendance', icon: Calendar },
       { to: '/dashboard/student/certificates', label: 'Certificates', icon: Award },
       { to: '/dashboard/student/announcements', label: 'Announcements', icon: Megaphone },
+      { to: '/dashboard/student/messages', label: 'Messages', icon: MessageSquare },
       { to: '/dashboard/student/profile', label: 'Profile', icon: User },
     ]
   } else {
@@ -73,6 +84,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
 
   const roleColors = {
     admin: { bg: '#CC0000', text: 'white' },
+    instructor: { bg: '#B30000', text: 'white' },
     student: { bg: '#1A6B1A', text: 'white' },
     client: { bg: '#1A3A6B', text: 'white' },
   }

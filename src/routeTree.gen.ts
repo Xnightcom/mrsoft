@@ -25,14 +25,18 @@ import { Route as AuthenticatedDashboardCoursesRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardCertificatesRouteImport } from './routes/_authenticated/dashboard.certificates'
 import { Route as AuthenticatedDashboardAssignmentsRouteImport } from './routes/_authenticated/dashboard.assignments'
 import { Route as AuthenticatedDashboardStudentIndexRouteImport } from './routes/_authenticated/dashboard.student.index'
+import { Route as AuthenticatedDashboardInstructorIndexRouteImport } from './routes/_authenticated/dashboard.instructor.index'
 import { Route as AuthenticatedDashboardClientIndexRouteImport } from './routes/_authenticated/dashboard.client/index'
 import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_authenticated/dashboard.admin.index'
 import { Route as AuthenticatedDashboardStudentProfileRouteImport } from './routes/_authenticated/dashboard.student.profile'
+import { Route as AuthenticatedDashboardStudentMessagesRouteImport } from './routes/_authenticated/dashboard.student.messages'
 import { Route as AuthenticatedDashboardStudentCoursesRouteImport } from './routes/_authenticated/dashboard.student.courses'
 import { Route as AuthenticatedDashboardStudentCertificatesRouteImport } from './routes/_authenticated/dashboard.student.certificates'
 import { Route as AuthenticatedDashboardStudentAttendanceRouteImport } from './routes/_authenticated/dashboard.student.attendance'
 import { Route as AuthenticatedDashboardStudentAssignmentsRouteImport } from './routes/_authenticated/dashboard.student.assignments'
 import { Route as AuthenticatedDashboardStudentAnnouncementsRouteImport } from './routes/_authenticated/dashboard.student.announcements'
+import { Route as AuthenticatedDashboardInstructorMessagesRouteImport } from './routes/_authenticated/dashboard.instructor.messages'
+import { Route as AuthenticatedDashboardInstructorCoursesRouteImport } from './routes/_authenticated/dashboard.instructor.courses'
 import { Route as AuthenticatedDashboardClientRequestsRouteImport } from './routes/_authenticated/dashboard.client/requests'
 import { Route as AuthenticatedDashboardClientProjectsRouteImport } from './routes/_authenticated/dashboard.client/projects'
 import { Route as AuthenticatedDashboardClientProfileRouteImport } from './routes/_authenticated/dashboard.client/profile'
@@ -43,6 +47,7 @@ import { Route as AuthenticatedDashboardAdminStudentsRouteImport } from './route
 import { Route as AuthenticatedDashboardAdminSettingsRouteImport } from './routes/_authenticated/dashboard.admin.settings'
 import { Route as AuthenticatedDashboardAdminRequestsRouteImport } from './routes/_authenticated/dashboard.admin.requests'
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
+import { Route as AuthenticatedDashboardAdminMessagesRouteImport } from './routes/_authenticated/dashboard.admin.messages'
 import { Route as AuthenticatedDashboardAdminCoursesRouteImport } from './routes/_authenticated/dashboard.admin.courses'
 import { Route as AuthenticatedDashboardAdminAnalyticsRouteImport } from './routes/_authenticated/dashboard.admin.analytics'
 
@@ -131,6 +136,12 @@ const AuthenticatedDashboardStudentIndexRoute =
     path: '/student/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardInstructorIndexRoute =
+  AuthenticatedDashboardInstructorIndexRouteImport.update({
+    id: '/instructor/',
+    path: '/instructor/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardClientIndexRoute =
   AuthenticatedDashboardClientIndexRouteImport.update({
     id: '/client/',
@@ -147,6 +158,12 @@ const AuthenticatedDashboardStudentProfileRoute =
   AuthenticatedDashboardStudentProfileRouteImport.update({
     id: '/student/profile',
     path: '/student/profile',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardStudentMessagesRoute =
+  AuthenticatedDashboardStudentMessagesRouteImport.update({
+    id: '/student/messages',
+    path: '/student/messages',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardStudentCoursesRoute =
@@ -177,6 +194,18 @@ const AuthenticatedDashboardStudentAnnouncementsRoute =
   AuthenticatedDashboardStudentAnnouncementsRouteImport.update({
     id: '/student/announcements',
     path: '/student/announcements',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardInstructorMessagesRoute =
+  AuthenticatedDashboardInstructorMessagesRouteImport.update({
+    id: '/instructor/messages',
+    path: '/instructor/messages',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardInstructorCoursesRoute =
+  AuthenticatedDashboardInstructorCoursesRouteImport.update({
+    id: '/instructor/courses',
+    path: '/instructor/courses',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardClientRequestsRoute =
@@ -239,6 +268,12 @@ const AuthenticatedDashboardAdminPaymentsRoute =
     path: '/admin/payments',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardAdminMessagesRoute =
+  AuthenticatedDashboardAdminMessagesRouteImport.update({
+    id: '/admin/messages',
+    path: '/admin/messages',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardAdminCoursesRoute =
   AuthenticatedDashboardAdminCoursesRouteImport.update({
     id: '/admin/courses',
@@ -269,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/requests': typeof AuthenticatedDashboardRequestsRoute
   '/dashboard/admin/analytics': typeof AuthenticatedDashboardAdminAnalyticsRoute
   '/dashboard/admin/courses': typeof AuthenticatedDashboardAdminCoursesRoute
+  '/dashboard/admin/messages': typeof AuthenticatedDashboardAdminMessagesRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/requests': typeof AuthenticatedDashboardAdminRequestsRoute
   '/dashboard/admin/settings': typeof AuthenticatedDashboardAdminSettingsRoute
@@ -279,14 +315,18 @@ export interface FileRoutesByFullPath {
   '/dashboard/client/profile': typeof AuthenticatedDashboardClientProfileRoute
   '/dashboard/client/projects': typeof AuthenticatedDashboardClientProjectsRoute
   '/dashboard/client/requests': typeof AuthenticatedDashboardClientRequestsRoute
+  '/dashboard/instructor/courses': typeof AuthenticatedDashboardInstructorCoursesRoute
+  '/dashboard/instructor/messages': typeof AuthenticatedDashboardInstructorMessagesRoute
   '/dashboard/student/announcements': typeof AuthenticatedDashboardStudentAnnouncementsRoute
   '/dashboard/student/assignments': typeof AuthenticatedDashboardStudentAssignmentsRoute
   '/dashboard/student/attendance': typeof AuthenticatedDashboardStudentAttendanceRoute
   '/dashboard/student/certificates': typeof AuthenticatedDashboardStudentCertificatesRoute
   '/dashboard/student/courses': typeof AuthenticatedDashboardStudentCoursesRoute
+  '/dashboard/student/messages': typeof AuthenticatedDashboardStudentMessagesRoute
   '/dashboard/student/profile': typeof AuthenticatedDashboardStudentProfileRoute
   '/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/client/': typeof AuthenticatedDashboardClientIndexRoute
+  '/dashboard/instructor/': typeof AuthenticatedDashboardInstructorIndexRoute
   '/dashboard/student/': typeof AuthenticatedDashboardStudentIndexRoute
 }
 export interface FileRoutesByTo {
@@ -306,6 +346,7 @@ export interface FileRoutesByTo {
   '/dashboard/requests': typeof AuthenticatedDashboardRequestsRoute
   '/dashboard/admin/analytics': typeof AuthenticatedDashboardAdminAnalyticsRoute
   '/dashboard/admin/courses': typeof AuthenticatedDashboardAdminCoursesRoute
+  '/dashboard/admin/messages': typeof AuthenticatedDashboardAdminMessagesRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/requests': typeof AuthenticatedDashboardAdminRequestsRoute
   '/dashboard/admin/settings': typeof AuthenticatedDashboardAdminSettingsRoute
@@ -316,14 +357,18 @@ export interface FileRoutesByTo {
   '/dashboard/client/profile': typeof AuthenticatedDashboardClientProfileRoute
   '/dashboard/client/projects': typeof AuthenticatedDashboardClientProjectsRoute
   '/dashboard/client/requests': typeof AuthenticatedDashboardClientRequestsRoute
+  '/dashboard/instructor/courses': typeof AuthenticatedDashboardInstructorCoursesRoute
+  '/dashboard/instructor/messages': typeof AuthenticatedDashboardInstructorMessagesRoute
   '/dashboard/student/announcements': typeof AuthenticatedDashboardStudentAnnouncementsRoute
   '/dashboard/student/assignments': typeof AuthenticatedDashboardStudentAssignmentsRoute
   '/dashboard/student/attendance': typeof AuthenticatedDashboardStudentAttendanceRoute
   '/dashboard/student/certificates': typeof AuthenticatedDashboardStudentCertificatesRoute
   '/dashboard/student/courses': typeof AuthenticatedDashboardStudentCoursesRoute
+  '/dashboard/student/messages': typeof AuthenticatedDashboardStudentMessagesRoute
   '/dashboard/student/profile': typeof AuthenticatedDashboardStudentProfileRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/client': typeof AuthenticatedDashboardClientIndexRoute
+  '/dashboard/instructor': typeof AuthenticatedDashboardInstructorIndexRoute
   '/dashboard/student': typeof AuthenticatedDashboardStudentIndexRoute
 }
 export interface FileRoutesById {
@@ -345,6 +390,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/requests': typeof AuthenticatedDashboardRequestsRoute
   '/_authenticated/dashboard/admin/analytics': typeof AuthenticatedDashboardAdminAnalyticsRoute
   '/_authenticated/dashboard/admin/courses': typeof AuthenticatedDashboardAdminCoursesRoute
+  '/_authenticated/dashboard/admin/messages': typeof AuthenticatedDashboardAdminMessagesRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/_authenticated/dashboard/admin/requests': typeof AuthenticatedDashboardAdminRequestsRoute
   '/_authenticated/dashboard/admin/settings': typeof AuthenticatedDashboardAdminSettingsRoute
@@ -355,14 +401,18 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/client/profile': typeof AuthenticatedDashboardClientProfileRoute
   '/_authenticated/dashboard/client/projects': typeof AuthenticatedDashboardClientProjectsRoute
   '/_authenticated/dashboard/client/requests': typeof AuthenticatedDashboardClientRequestsRoute
+  '/_authenticated/dashboard/instructor/courses': typeof AuthenticatedDashboardInstructorCoursesRoute
+  '/_authenticated/dashboard/instructor/messages': typeof AuthenticatedDashboardInstructorMessagesRoute
   '/_authenticated/dashboard/student/announcements': typeof AuthenticatedDashboardStudentAnnouncementsRoute
   '/_authenticated/dashboard/student/assignments': typeof AuthenticatedDashboardStudentAssignmentsRoute
   '/_authenticated/dashboard/student/attendance': typeof AuthenticatedDashboardStudentAttendanceRoute
   '/_authenticated/dashboard/student/certificates': typeof AuthenticatedDashboardStudentCertificatesRoute
   '/_authenticated/dashboard/student/courses': typeof AuthenticatedDashboardStudentCoursesRoute
+  '/_authenticated/dashboard/student/messages': typeof AuthenticatedDashboardStudentMessagesRoute
   '/_authenticated/dashboard/student/profile': typeof AuthenticatedDashboardStudentProfileRoute
   '/_authenticated/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/_authenticated/dashboard/client/': typeof AuthenticatedDashboardClientIndexRoute
+  '/_authenticated/dashboard/instructor/': typeof AuthenticatedDashboardInstructorIndexRoute
   '/_authenticated/dashboard/student/': typeof AuthenticatedDashboardStudentIndexRoute
 }
 export interface FileRouteTypes {
@@ -384,6 +434,7 @@ export interface FileRouteTypes {
     | '/dashboard/requests'
     | '/dashboard/admin/analytics'
     | '/dashboard/admin/courses'
+    | '/dashboard/admin/messages'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/requests'
     | '/dashboard/admin/settings'
@@ -394,14 +445,18 @@ export interface FileRouteTypes {
     | '/dashboard/client/profile'
     | '/dashboard/client/projects'
     | '/dashboard/client/requests'
+    | '/dashboard/instructor/courses'
+    | '/dashboard/instructor/messages'
     | '/dashboard/student/announcements'
     | '/dashboard/student/assignments'
     | '/dashboard/student/attendance'
     | '/dashboard/student/certificates'
     | '/dashboard/student/courses'
+    | '/dashboard/student/messages'
     | '/dashboard/student/profile'
     | '/dashboard/admin/'
     | '/dashboard/client/'
+    | '/dashboard/instructor/'
     | '/dashboard/student/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -421,6 +476,7 @@ export interface FileRouteTypes {
     | '/dashboard/requests'
     | '/dashboard/admin/analytics'
     | '/dashboard/admin/courses'
+    | '/dashboard/admin/messages'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/requests'
     | '/dashboard/admin/settings'
@@ -431,14 +487,18 @@ export interface FileRouteTypes {
     | '/dashboard/client/profile'
     | '/dashboard/client/projects'
     | '/dashboard/client/requests'
+    | '/dashboard/instructor/courses'
+    | '/dashboard/instructor/messages'
     | '/dashboard/student/announcements'
     | '/dashboard/student/assignments'
     | '/dashboard/student/attendance'
     | '/dashboard/student/certificates'
     | '/dashboard/student/courses'
+    | '/dashboard/student/messages'
     | '/dashboard/student/profile'
     | '/dashboard/admin'
     | '/dashboard/client'
+    | '/dashboard/instructor'
     | '/dashboard/student'
   id:
     | '__root__'
@@ -459,6 +519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/requests'
     | '/_authenticated/dashboard/admin/analytics'
     | '/_authenticated/dashboard/admin/courses'
+    | '/_authenticated/dashboard/admin/messages'
     | '/_authenticated/dashboard/admin/payments'
     | '/_authenticated/dashboard/admin/requests'
     | '/_authenticated/dashboard/admin/settings'
@@ -469,14 +530,18 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/client/profile'
     | '/_authenticated/dashboard/client/projects'
     | '/_authenticated/dashboard/client/requests'
+    | '/_authenticated/dashboard/instructor/courses'
+    | '/_authenticated/dashboard/instructor/messages'
     | '/_authenticated/dashboard/student/announcements'
     | '/_authenticated/dashboard/student/assignments'
     | '/_authenticated/dashboard/student/attendance'
     | '/_authenticated/dashboard/student/certificates'
     | '/_authenticated/dashboard/student/courses'
+    | '/_authenticated/dashboard/student/messages'
     | '/_authenticated/dashboard/student/profile'
     | '/_authenticated/dashboard/admin/'
     | '/_authenticated/dashboard/client/'
+    | '/_authenticated/dashboard/instructor/'
     | '/_authenticated/dashboard/student/'
   fileRoutesById: FileRoutesById
 }
@@ -605,6 +670,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardStudentIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/instructor/': {
+      id: '/_authenticated/dashboard/instructor/'
+      path: '/instructor'
+      fullPath: '/dashboard/instructor/'
+      preLoaderRoute: typeof AuthenticatedDashboardInstructorIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/client/': {
       id: '/_authenticated/dashboard/client/'
       path: '/client'
@@ -624,6 +696,13 @@ declare module '@tanstack/react-router' {
       path: '/student/profile'
       fullPath: '/dashboard/student/profile'
       preLoaderRoute: typeof AuthenticatedDashboardStudentProfileRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/student/messages': {
+      id: '/_authenticated/dashboard/student/messages'
+      path: '/student/messages'
+      fullPath: '/dashboard/student/messages'
+      preLoaderRoute: typeof AuthenticatedDashboardStudentMessagesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/student/courses': {
@@ -659,6 +738,20 @@ declare module '@tanstack/react-router' {
       path: '/student/announcements'
       fullPath: '/dashboard/student/announcements'
       preLoaderRoute: typeof AuthenticatedDashboardStudentAnnouncementsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/instructor/messages': {
+      id: '/_authenticated/dashboard/instructor/messages'
+      path: '/instructor/messages'
+      fullPath: '/dashboard/instructor/messages'
+      preLoaderRoute: typeof AuthenticatedDashboardInstructorMessagesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/instructor/courses': {
+      id: '/_authenticated/dashboard/instructor/courses'
+      path: '/instructor/courses'
+      fullPath: '/dashboard/instructor/courses'
+      preLoaderRoute: typeof AuthenticatedDashboardInstructorCoursesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/client/requests': {
@@ -731,6 +824,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminPaymentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/admin/messages': {
+      id: '/_authenticated/dashboard/admin/messages'
+      path: '/admin/messages'
+      fullPath: '/dashboard/admin/messages'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminMessagesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/admin/courses': {
       id: '/_authenticated/dashboard/admin/courses'
       path: '/admin/courses'
@@ -756,6 +856,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardRequestsRoute: typeof AuthenticatedDashboardRequestsRoute
   AuthenticatedDashboardAdminAnalyticsRoute: typeof AuthenticatedDashboardAdminAnalyticsRoute
   AuthenticatedDashboardAdminCoursesRoute: typeof AuthenticatedDashboardAdminCoursesRoute
+  AuthenticatedDashboardAdminMessagesRoute: typeof AuthenticatedDashboardAdminMessagesRoute
   AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
   AuthenticatedDashboardAdminRequestsRoute: typeof AuthenticatedDashboardAdminRequestsRoute
   AuthenticatedDashboardAdminSettingsRoute: typeof AuthenticatedDashboardAdminSettingsRoute
@@ -766,14 +867,18 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardClientProfileRoute: typeof AuthenticatedDashboardClientProfileRoute
   AuthenticatedDashboardClientProjectsRoute: typeof AuthenticatedDashboardClientProjectsRoute
   AuthenticatedDashboardClientRequestsRoute: typeof AuthenticatedDashboardClientRequestsRoute
+  AuthenticatedDashboardInstructorCoursesRoute: typeof AuthenticatedDashboardInstructorCoursesRoute
+  AuthenticatedDashboardInstructorMessagesRoute: typeof AuthenticatedDashboardInstructorMessagesRoute
   AuthenticatedDashboardStudentAnnouncementsRoute: typeof AuthenticatedDashboardStudentAnnouncementsRoute
   AuthenticatedDashboardStudentAssignmentsRoute: typeof AuthenticatedDashboardStudentAssignmentsRoute
   AuthenticatedDashboardStudentAttendanceRoute: typeof AuthenticatedDashboardStudentAttendanceRoute
   AuthenticatedDashboardStudentCertificatesRoute: typeof AuthenticatedDashboardStudentCertificatesRoute
   AuthenticatedDashboardStudentCoursesRoute: typeof AuthenticatedDashboardStudentCoursesRoute
+  AuthenticatedDashboardStudentMessagesRoute: typeof AuthenticatedDashboardStudentMessagesRoute
   AuthenticatedDashboardStudentProfileRoute: typeof AuthenticatedDashboardStudentProfileRoute
   AuthenticatedDashboardAdminIndexRoute: typeof AuthenticatedDashboardAdminIndexRoute
   AuthenticatedDashboardClientIndexRoute: typeof AuthenticatedDashboardClientIndexRoute
+  AuthenticatedDashboardInstructorIndexRoute: typeof AuthenticatedDashboardInstructorIndexRoute
   AuthenticatedDashboardStudentIndexRoute: typeof AuthenticatedDashboardStudentIndexRoute
 }
 
@@ -790,6 +895,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardAdminAnalyticsRoute,
     AuthenticatedDashboardAdminCoursesRoute:
       AuthenticatedDashboardAdminCoursesRoute,
+    AuthenticatedDashboardAdminMessagesRoute:
+      AuthenticatedDashboardAdminMessagesRoute,
     AuthenticatedDashboardAdminPaymentsRoute:
       AuthenticatedDashboardAdminPaymentsRoute,
     AuthenticatedDashboardAdminRequestsRoute:
@@ -810,6 +917,10 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardClientProjectsRoute,
     AuthenticatedDashboardClientRequestsRoute:
       AuthenticatedDashboardClientRequestsRoute,
+    AuthenticatedDashboardInstructorCoursesRoute:
+      AuthenticatedDashboardInstructorCoursesRoute,
+    AuthenticatedDashboardInstructorMessagesRoute:
+      AuthenticatedDashboardInstructorMessagesRoute,
     AuthenticatedDashboardStudentAnnouncementsRoute:
       AuthenticatedDashboardStudentAnnouncementsRoute,
     AuthenticatedDashboardStudentAssignmentsRoute:
@@ -820,12 +931,16 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardStudentCertificatesRoute,
     AuthenticatedDashboardStudentCoursesRoute:
       AuthenticatedDashboardStudentCoursesRoute,
+    AuthenticatedDashboardStudentMessagesRoute:
+      AuthenticatedDashboardStudentMessagesRoute,
     AuthenticatedDashboardStudentProfileRoute:
       AuthenticatedDashboardStudentProfileRoute,
     AuthenticatedDashboardAdminIndexRoute:
       AuthenticatedDashboardAdminIndexRoute,
     AuthenticatedDashboardClientIndexRoute:
       AuthenticatedDashboardClientIndexRoute,
+    AuthenticatedDashboardInstructorIndexRoute:
+      AuthenticatedDashboardInstructorIndexRoute,
     AuthenticatedDashboardStudentIndexRoute:
       AuthenticatedDashboardStudentIndexRoute,
   }

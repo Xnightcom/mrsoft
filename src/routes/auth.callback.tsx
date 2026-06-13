@@ -54,12 +54,26 @@ function AuthCallbackPage() {
       if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, is_suspended, suspended_reason")
           .eq("id", session.user.id)
           .maybeSingle();
+
+        if (profile?.is_suspended) {
+          await supabase.auth.signOut();
+          navigate({ 
+            to: '/auth',
+            search: { 
+              error: 'suspended',
+              reason: profile.suspended_reason 
+            }
+          });
+          return;
+        }
         
         if (profile?.role === "admin") {
           targetPath = "/dashboard/admin";
+        } else if (profile?.role === "instructor") {
+          targetPath = "/dashboard/instructor";
         } else if (profile?.role === "student") {
           targetPath = "/dashboard/student";
         } else if (profile?.role === "client") {

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -124,63 +124,92 @@ function AuthPage() {
               <p className="text-sm text-white/60 mt-1">Sign in to access your portal</p>
             </div>
 
-            <Button
-              onClick={handleGoogle}
-              variant="outline"
-              className="w-full mb-4 text-white google-btn-glow"
-              disabled={loading}
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .5 4.1 1.5l3-3C17.2 1.8 14.8.8 12 .8 7.3.8 3.3 3.5 1.4 7.5l3.5 2.7C5.8 7.2 8.7 5 12 5z"/><path fill="#34A853" d="M23 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h6.2c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.6-4.8 3.6-8.2z"/><path fill="#4A90E2" d="M5 14.2c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L1.4 7.5C.5 9 0 10.4 0 12s.5 3 1.4 4.5L5 14.2z"/><path fill="#FBBC05" d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3.3 0-6.2-2.2-7.1-5.3L1.4 16.5C3.3 20.5 7.3 23.2 12 23.2z"/></svg>
-              Continue with Google
-            </Button>
+            {(() => {
+              const searchParams = new URLSearchParams(window.location.search);
+              const error = searchParams.get("error");
+              const reason = searchParams.get("reason");
 
-            <div className="relative my-4 text-center text-xs text-white/40">
-              <span className="px-2 relative z-10" style={{ background: "rgba(8,8,8,0.88)" }}>or with email</span>
-              <span className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
-            </div>
-
-            <Tabs defaultValue="signin">
-              <TabsList className="grid grid-cols-2 w-full bg-white/5 p-1 rounded-lg border border-white/5">
-                <TabsTrigger
-                  value="signin"
-                  className="cursor-pointer text-white/50 data-[state=active]:text-white data-[state=active]:border-[#CC0000] border-b-2 border-transparent rounded-none bg-transparent transition-all duration-300 py-2 font-medium"
-                >
-                  Sign in
-                </TabsTrigger>
-                <TabsTrigger
-                  value="signup"
-                  className="cursor-pointer text-white/50 data-[state=active]:text-white data-[state=active]:border-[#1A6B1A] border-b-2 border-transparent rounded-none bg-transparent transition-all duration-300 py-2 font-medium"
-                >
-                  Sign up
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-3 mt-3">
-                  <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signIn.email} onChange={(e) => setSignIn({ ...signIn, email: e.target.value })} /></div>
-                  <div><Label className="text-white/80">Password</Label><Input type="password" required className="auth-input" value={signIn.password} onChange={(e) => setSignIn({ ...signIn, password: e.target.value })} /></div>
-                  <Button type="submit" className="ripple-btn w-full btn-primary-gradient" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</Button>
-                </form>
-              </TabsContent>
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-3 mt-3">
-                  <div><Label className="text-white/80">Full name</Label><Input required className="auth-input" value={signUp.full_name} onChange={(e) => setSignUp({ ...signUp, full_name: e.target.value })} /></div>
-                  <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signUp.email} onChange={(e) => setSignUp({ ...signUp, email: e.target.value })} /></div>
-                  <div><Label className="text-white/80">Password</Label><Input type="password" required minLength={6} className="auth-input" value={signUp.password} onChange={(e) => setSignUp({ ...signUp, password: e.target.value })} /></div>
-                  <div>
-                    <Label className="text-white/80">I am a...</Label>
-                    <Select value={signUp.role} onValueChange={(v) => setSignUp({ ...signUp, role: v })}>
-                      <SelectTrigger className="auth-input"><SelectValue /></SelectTrigger>
-                      <SelectContent className="bg-[#111111] border-white/10 text-white">
-                        <SelectItem value="student">Student</SelectItem>
-                        <SelectItem value="client">Client / Business</SelectItem>
-                        <SelectItem value="instructor">Instructor</SelectItem>
-                      </SelectContent>
-                    </Select>
+              if (error === "suspended") {
+                return (
+                  <div className="bg-[#CC0000]/10 border border-[#CC0000]/30 rounded-xl p-6 text-center space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-[#CC0000]/20 flex items-center justify-center mx-auto text-[#CC0000]">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-red-500">Your account has been suspended</h2>
+                      <p className="text-sm text-red-400 mt-1">Reason: {reason || "Violation of terms"}</p>
+                    </div>
+                    <p className="text-xs text-white/50">
+                      Please contact support at <a href="mailto:tambikingdavid@gmail.com" className="text-white underline">tambikingdavid@gmail.com</a>
+                    </p>
                   </div>
-                  <Button type="submit" className="ripple-btn w-full btn-primary-gradient" disabled={loading}>{loading ? "Creating..." : "Create account"}</Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+                );
+              }
+
+              return (
+                <>
+                  <Button
+                    onClick={handleGoogle}
+                    variant="outline"
+                    className="w-full mb-4 text-white google-btn-glow"
+                    disabled={loading}
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .5 4.1 1.5l3-3C17.2 1.8 14.8.8 12 .8 7.3.8 3.3 3.5 1.4 7.5l3.5 2.7C5.8 7.2 8.7 5 12 5z"/><path fill="#34A853" d="M23 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h6.2c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.6-4.8 3.6-8.2z"/><path fill="#4A90E2" d="M5 14.2c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L1.4 7.5C.5 9 0 10.4 0 12s.5 3 1.4 4.5L5 14.2z"/><path fill="#FBBC05" d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3.3 0-6.2-2.2-7.1-5.3L1.4 16.5C3.3 20.5 7.3 23.2 12 23.2z"/></svg>
+                    Continue with Google
+                  </Button>
+
+                  <div className="relative my-4 text-center text-xs text-white/40">
+                    <span className="px-2 relative z-10" style={{ background: "rgba(8,8,8,0.88)" }}>or with email</span>
+                    <span className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
+                  </div>
+
+                  <Tabs defaultValue="signin">
+                    <TabsList className="grid grid-cols-2 w-full bg-white/5 p-1 rounded-lg border border-white/5">
+                      <TabsTrigger
+                        value="signin"
+                        className="cursor-pointer text-white/50 data-[state=active]:text-white data-[state=active]:border-[#CC0000] border-b-2 border-transparent rounded-none bg-transparent transition-all duration-300 py-2 font-medium"
+                      >
+                        Sign in
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="signup"
+                        className="cursor-pointer text-white/50 data-[state=active]:text-white data-[state=active]:border-[#1A6B1A] border-b-2 border-transparent rounded-none bg-transparent transition-all duration-300 py-2 font-medium"
+                      >
+                        Sign up
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="signin">
+                      <form onSubmit={handleSignIn} className="space-y-3 mt-3">
+                        <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signIn.email} onChange={(e) => setSignIn({ ...signIn, email: e.target.value })} /></div>
+                        <div><Label className="text-white/80">Password</Label><Input type="password" required className="auth-input" value={signIn.password} onChange={(e) => setSignIn({ ...signIn, password: e.target.value })} /></div>
+                        <Button type="submit" className="ripple-btn w-full btn-primary-gradient" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</Button>
+                      </form>
+                    </TabsContent>
+                    <TabsContent value="signup">
+                      <form onSubmit={handleSignUp} className="space-y-3 mt-3">
+                        <div><Label className="text-white/80">Full name</Label><Input required className="auth-input" value={signUp.full_name} onChange={(e) => setSignUp({ ...signUp, full_name: e.target.value })} /></div>
+                        <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signUp.email} onChange={(e) => setSignUp({ ...signUp, email: e.target.value })} /></div>
+                        <div><Label className="text-white/80">Password</Label><Input type="password" required minLength={6} className="auth-input" value={signUp.password} onChange={(e) => setSignUp({ ...signUp, password: e.target.value })} /></div>
+                        <div>
+                          <Label className="text-white/80">I am a...</Label>
+                          <Select value={signUp.role} onValueChange={(v) => setSignUp({ ...signUp, role: v })}>
+                            <SelectTrigger className="auth-input"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-[#111111] border-white/10 text-white">
+                              <SelectItem value="student">Student</SelectItem>
+                              <SelectItem value="client">Client / Business</SelectItem>
+                              <SelectItem value="instructor">Instructor</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button type="submit" className="ripple-btn w-full btn-primary-gradient" disabled={loading}>{loading ? "Creating..." : "Create account"}</Button>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
+                </>
+              );
+            })()}
+
+
 
             <p className="mt-6 text-center text-xs text-white/40">
               <Link to="/" className="hover:underline hover:text-white/70 transition-smooth">← Back to website</Link>
