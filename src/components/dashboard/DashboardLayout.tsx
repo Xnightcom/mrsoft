@@ -84,7 +84,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
   const pageTitle = currentLink ? currentLink.label : 'Dashboard'
 
   return (
-    <div className="flex min-h-screen bg-[#060606] text-white font-sans">
+    <div className="min-h-screen bg-[#060606] text-white font-sans">
       
       {/* Mobile overlay */}
       {mobileMenuOpen && (
@@ -178,7 +178,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       </aside>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col md:ml-[240px] min-h-screen">
+      <div className="flex flex-col md:ml-[240px] min-h-screen">
         
         {/* Topbar */}
         <header className="h-[60px] fixed top-0 right-0 left-0 md:left-[240px] bg-[#060606]/95 backdrop-blur border-b border-[#1a6b1a]/30 z-30 flex items-center justify-between px-6">
@@ -203,7 +203,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 pt-[60px] p-6 md:p-8 overflow-x-hidden">
+        <main className="flex-1 pt-[60px] p-6 md:p-8">
           {children}
         </main>
         
