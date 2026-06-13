@@ -7,6 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Send, User, MessageSquare } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/student/messages")({
   component: StudentMessagesPage,
@@ -113,6 +114,10 @@ function StudentMessagesPage() {
     },
     onSuccess: () => {
       setMessageText("");
+    },
+    onError: (e: any) => {
+      console.error("Message send error:", e);
+      toast.error(e.message || "Failed to send message");
     },
   });
 
