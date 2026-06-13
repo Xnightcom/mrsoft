@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useRouter, useLocation, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/integrations/supabase/client'
+import { useQuery } from '@tanstack/react-query'
 import { 
   LayoutDashboard, Users, FileText, BookOpen, BarChart, Settings,
   GraduationCap, CheckSquare, Calendar, Award, Megaphone, User,
@@ -12,10 +13,24 @@ interface Props {
   children: React.ReactNode
 }
 
-export function DashboardLayout({ profile, children }: Props) {
+export function DashboardLayout({ profile: propProfile, children }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+
+  const { data: fetchedProfile } = useQuery({
+    queryKey: ['current-profile-layout'],
+    queryFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const user = sessionData?.session?.user
+      if (!user) return null
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      return data || { role: 'client', full_name: user.email }
+    },
+    enabled: !propProfile
+  })
+
+  const profile = propProfile || fetchedProfile
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
