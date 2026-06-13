@@ -118,6 +118,15 @@ function AdminUsersPage() {
           is_read: false
         });
       if (notifError) throw notifError;
+
+      // Send the email via Edge Function (non-blocking)
+      supabase.functions.invoke('send-approval-email', {
+        body: { userId }
+      }).then(({ error }) => {
+        if (error) {
+          console.error("Failed to trigger approval email function:", error);
+        }
+      });
     },
     onSuccess: () => {
       toast.success("User approved successfully!");
