@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
+import { useNavigate } from "@tanstack/react-router";
 
 export function NotificationBell() {
   const { profile } = useProfile();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const { data: notifications = [] } = useQuery({
@@ -25,6 +27,23 @@ export function NotificationBell() {
     },
     enabled: !!profile?.id,
   });
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel("notifications_channel")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${profile.id}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["notifications", profile?.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id, qc]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -46,7 +65,7 @@ export function NotificationBell() {
     },
   });
 
-  const handleMarkAsRead = async (id: string) => {
+  const handleMarkAsRead = async (id: string, link?: string | null) => {
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
@@ -55,6 +74,10 @@ export function NotificationBell() {
       toast.error(error.message);
     } else {
       qc.invalidateQueries({ queryKey: ["notifications", profile?.id] });
+    }
+    if (link) {
+      setOpen(false);
+      navigate({ to: link });
     }
   };
 
@@ -101,7 +124,7 @@ export function NotificationBell() {
                 notifications.map((notif) => (
                   <div
                     key={notif.id}
-                    onClick={() => handleMarkAsRead(notif.id)}
+                    onClick={() => handleMarkAsRead(notif.id, notif.link)}
                     className={`rounded-lg p-2.5 text-xs transition-colors cursor-pointer ${
                       notif.is_read
                         ? "bg-[#111] hover:bg-white/5"

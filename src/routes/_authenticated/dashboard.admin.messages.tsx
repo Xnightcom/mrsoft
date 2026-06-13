@@ -70,6 +70,25 @@ function AdminMessagesPage() {
     enabled: !!profile?.id && !!selectedUser?.id,
   });
 
+  const { data: unreadCounts = {} } = useQuery({
+    queryKey: ["unread-messages", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return {};
+      const { data, error } = await supabase
+        .from("messages")
+        .select("sender_id")
+        .eq("receiver_id", profile.id)
+        .eq("is_read", false);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      data.forEach((m) => {
+        counts[m.sender_id] = (counts[m.sender_id] || 0) + 1;
+      });
+      return counts;
+    },
+    enabled: !!profile?.id,
+  });
+
   // Real-time subscription
   useEffect(() => {
     if (!profile?.id) return;
@@ -80,6 +99,7 @@ function AdminMessagesPage() {
         { event: "INSERT", schema: "public", table: "messages" },
         (payload) => {
           qc.invalidateQueries({ queryKey: ["messages", profile?.id, selectedUser?.id] });
+          qc.invalidateQueries({ queryKey: ["unread-messages", profile?.id] });
         }
       )
       .subscribe();
@@ -91,6 +111,24 @@ function AdminMessagesPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (profile?.id && selectedUser?.id) {
+      const markRead = async () => {
+        const { error } = await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("receiver_id", profile.id)
+          .eq("sender_id", selectedUser.id)
+          .eq("is_read", false);
+        if (!error) {
+          qc.invalidateQueries({ queryKey: ["unread-messages", profile?.id] });
+          qc.invalidateQueries({ queryKey: ["notifications", profile?.id] });
+        }
+      };
+      markRead();
+    }
+  }, [selectedUser?.id, profile?.id, qc]);
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
@@ -152,6 +190,11 @@ function AdminMessagesPage() {
                   <p className="text-sm font-medium text-white truncate">{u.full_name || "Unnamed User"}</p>
                   <p className="text-[10px] text-white/50 uppercase tracking-wider">{u.role}</p>
                 </div>
+                {unreadCounts[u.id] > 0 && (
+                  <div className="h-5 min-w-[20px] rounded-full bg-[#CC0000] flex items-center justify-center text-[10px] font-bold text-white px-1">
+                    {unreadCounts[u.id]}
+                  </div>
+                )}
               </button>
             ))}
           </div>
