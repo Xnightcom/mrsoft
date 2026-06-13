@@ -203,7 +203,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 pt-[60px] p-6 md:p-8">
+        <main className="flex-1 mt-[60px] p-6 md:p-8">
           {children}
         </main>
         
