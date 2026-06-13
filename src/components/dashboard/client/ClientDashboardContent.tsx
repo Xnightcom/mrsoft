@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import DashboardLayout from '../DashboardLayout'
+import { DashboardLayout } from '../DashboardLayout'
 
 export default function ClientDashboardContent() {
   const [profile, setProfile] = useState<any>(null)
