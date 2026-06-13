@@ -145,6 +145,15 @@ function InstructorMessagesPage() {
         content,
       });
       if (error) throw error;
+
+      // Notify the receiver
+      await supabase.from("notifications").insert({
+        user_id: selectedUser.id,
+        title: `New message from ${profile.full_name || profile.email}`,
+        body: content.length > 50 ? content.substring(0, 47) + "..." : content,
+        type: "info",
+        action_url: `/dashboard/${selectedUser.role}/messages`
+      });
     },
     onSuccess: () => {
       setMessageText("");

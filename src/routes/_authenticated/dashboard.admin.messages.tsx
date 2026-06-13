@@ -175,9 +175,8 @@ function AdminMessagesPage() {
               <button
                 key={u.id}
                 onClick={() => setSelectedUser(u)}
-                className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b border-white/5 hover:bg-white/5 ${
-                  selectedUser?.id === u.id ? "bg-[#CC0000]/10 border-l-2 border-l-[#CC0000]" : ""
-                }`}
+                className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b border-white/5 hover:bg-white/5 ${selectedUser?.id === u.id ? "bg-[#CC0000]/10 border-l-2 border-l-[#CC0000]" : ""
+                  }`}
               >
                 <div className="relative h-10 w-10 shrink-0 rounded-full bg-[#1A6B1A]/20 flex items-center justify-center border border-[#1A6B1A]/30 overflow-hidden">
                   {u.avatar_url ? (
@@ -206,7 +205,7 @@ function AdminMessagesPage() {
             <>
               {/* Chat Header */}
               <div className="h-16 flex items-center gap-3 px-4 md:px-6 border-b border-white/5 shrink-0 bg-[#0A0A0A]">
-                <button 
+                <button
                   onClick={() => setSelectedUser(null)}
                   className="md:hidden p-2 -ml-2 text-white/70 hover:text-white"
                 >
@@ -241,11 +240,10 @@ function AdminMessagesPage() {
                     return (
                       <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                         <div
-                          className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
-                            isMe
+                          className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${isMe
                               ? "bg-[#CC0000]/20 text-white border border-[#CC0000]/30 rounded-br-sm"
                               : "bg-[#1A6B1A]/10 text-white border border-[#1A6B1A]/20 rounded-bl-sm"
-                          }`}
+                            }`}
                         >
                           {msg.content}
                           <div className={`text-[9px] mt-1 opacity-50 ${isMe ? "text-right" : "text-left"}`}>
