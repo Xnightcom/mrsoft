@@ -97,7 +97,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
   const currentLink = links.find(l => location.pathname === l.to || (l.to !== `/dashboard/${profile?.role || 'client'}` && location.pathname.startsWith(l.to)))
   const pageTitle = currentLink ? currentLink.label : 'Dashboard'
 
-  if (profile && profile.role !== 'admin' && !profile.is_approved) {
+  if (profile && !profile.is_approved) {
     return (
       <div className="min-h-screen bg-[#060606] text-white font-sans flex flex-col relative">
         <header className="h-[60px] border-b border-white/10 flex items-center px-6">

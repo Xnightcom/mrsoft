@@ -85,14 +85,7 @@ begin
       new.raw_user_meta_data->>'role',
       'client'
     ),
-    case 
-      when coalesce(
-        new.raw_user_meta_data->>'role', 
-        'client'
-      ) = 'admin' 
-      then true 
-      else false 
-    end,
+    false,
     now()
   );
   return new;
