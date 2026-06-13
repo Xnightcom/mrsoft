@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, User, MessageSquare } from "lucide-react";
+import { Search, Send, User, MessageSquare, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/instructor/messages")({
@@ -123,9 +123,9 @@ function InstructorMessagesPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-120px)] flex gap-6">
+      <div className="h-[calc(100vh-120px)] flex md:gap-6 relative">
         {/* Left Panel - Users List */}
-        <div className="w-80 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex flex-col overflow-hidden">
+        <div className={`w-full md:w-80 shrink-0 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex-col overflow-hidden ${selectedUser ? "hidden md:flex" : "flex h-full"}`}>
           <div className="p-4 border-b border-white/5">
             <h2 className="text-lg font-bold text-white mb-4">Conversations</h2>
             <div className="relative">
@@ -164,11 +164,17 @@ function InstructorMessagesPage() {
         </div>
 
         {/* Right Panel - Chat Thread */}
-        <div className="flex-1 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex flex-col overflow-hidden">
+        <div className={`flex-1 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex-col overflow-hidden ${selectedUser ? "flex h-full" : "hidden md:flex h-full"}`}>
           {selectedUser ? (
             <>
               {/* Chat Header */}
-              <div className="h-16 flex items-center gap-3 px-6 border-b border-white/5 shrink-0 bg-[#0A0A0A]">
+              <div className="h-16 flex items-center gap-3 px-4 md:px-6 border-b border-white/5 shrink-0 bg-[#0A0A0A]">
+                <button 
+                  onClick={() => setSelectedUser(null)}
+                  className="md:hidden p-2 -ml-2 text-white/70 hover:text-white"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
                 <div className="h-8 w-8 rounded-full bg-[#CC0000]/20 flex items-center justify-center border border-[#CC0000]/30 overflow-hidden">
                   {selectedUser.avatar_url ? (
                     <img src={selectedUser.avatar_url} alt="" className="h-full w-full object-cover" />
