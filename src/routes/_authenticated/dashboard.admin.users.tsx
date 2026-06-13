@@ -51,6 +51,21 @@ function AdminUsersPage() {
     },
   });
 
+  React.useEffect(() => {
+    const channel = supabase.channel('profiles-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        if (payload.eventType === 'INSERT' && !payload.new.is_approved) {
+          toast.info(`New user registered: ${payload.new.full_name || 'Unknown'}. Pending approval.`);
+        }
+        qc.invalidateQueries({ queryKey: ["admin-users"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
   const updateRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: "admin" | "instructor" | "student" | "client" }) => {
       const { error } = await supabase
@@ -148,13 +163,18 @@ function AdminUsersPage() {
     }
   };
 
-  const getFilteredUsers = (role: string) => {
+  const getFilteredUsers = (tab: string) => {
     return users.filter((u) => {
       const matchesSearch =
         (u.full_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
         (u.company ?? "").toLowerCase().includes(search.toLowerCase());
-      const matchesRole = role === "all" || u.role === role;
-      return matchesSearch && matchesRole;
+        
+      let matchesTab = false;
+      if (tab === "all") matchesTab = true;
+      else if (tab === "pending") matchesTab = !u.is_approved;
+      else matchesTab = u.role === tab;
+      
+      return matchesSearch && matchesTab;
     });
   };
 
@@ -295,6 +315,14 @@ function AdminUsersPage() {
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="bg-white/5 border border-white/10">
             <TabsTrigger value="all" className="data-[state=active]:bg-[#1A6B1A] data-[state=active]:text-white">All Users</TabsTrigger>
+            <TabsTrigger value="pending" className="data-[state=active]:bg-[#CC0000] data-[state=active]:text-white flex items-center gap-2">
+              Pending Approval 
+              {users.filter(u => !u.is_approved).length > 0 && (
+                <span className="bg-[#CC0000] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  {users.filter(u => !u.is_approved).length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="instructor" className="data-[state=active]:bg-[#1A6B1A] data-[state=active]:text-white">Instructors</TabsTrigger>
             <TabsTrigger value="student" className="data-[state=active]:bg-[#1A6B1A] data-[state=active]:text-white">Students</TabsTrigger>
             <TabsTrigger value="client" className="data-[state=active]:bg-[#1A6B1A] data-[state=active]:text-white">Clients</TabsTrigger>
@@ -306,6 +334,9 @@ function AdminUsersPage() {
             ) : (
               <DataTable columns={columns} data={getFilteredUsers("all")} />
             )}
+          </TabsContent>
+          <TabsContent value="pending" className="mt-4">
+            <DataTable columns={columns} data={getFilteredUsers("pending")} />
           </TabsContent>
           <TabsContent value="instructor" className="mt-4">
             <DataTable columns={columns} data={getFilteredUsers("instructor")} />

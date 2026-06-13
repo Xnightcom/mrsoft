@@ -2,6 +2,7 @@ import React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ProgressBar } from "@/components/dashboard/ProgressBar";
 import { Button } from "@/components/ui/button";
@@ -128,6 +129,7 @@ function StudentMyLearning() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <AnnouncementBanner />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Learning Dashboard</h1>
           <p className="text-white/50 text-sm mt-1">Welcome back! Check your progress and tasks.</p>

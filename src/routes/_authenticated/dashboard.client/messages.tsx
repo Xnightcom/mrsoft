@@ -239,8 +239,8 @@ function ClientMessagesPage() {
                         <div
                           className={`max-w-[70%] rounded-xl px-4 py-2.5 text-xs shadow-md border ${
                             isClient
-                              ? "bg-[#CC0000]/15 text-white border-[#CC0000]/30 rounded-tr-none"
-                              : "bg-[#1A6B1A]/10 text-white border-[#1A6B1A]/30 rounded-tl-none"
+                              ? "bg-[#1A6B1A] text-white border-transparent rounded-tr-none"
+                              : "bg-[#111] text-white border-white/10 rounded-tl-none"
                           }`}
                         >
                           <p className="leading-relaxed break-words whitespace-pre-wrap">{msg.content}</p>

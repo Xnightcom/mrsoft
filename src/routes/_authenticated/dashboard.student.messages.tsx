@@ -251,8 +251,8 @@ function StudentMessagesPage() {
                       <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${isMe
-                              ? "bg-[#1A6B1A]/20 text-white border border-[#1A6B1A]/30 rounded-br-sm"
-                              : "bg-white/5 text-white border border-white/10 rounded-bl-sm"
+                              ? "bg-[#1A6B1A] text-white rounded-br-sm"
+                              : "bg-[#111] text-white rounded-bl-sm"
                             }`}
                         >
                           {msg.content}

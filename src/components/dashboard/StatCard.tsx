@@ -6,9 +6,10 @@ interface StatCardProps {
   value: string | number;
   icon: LucideIcon;
   color?: "red" | "green" | "blue" | "yellow";
+  index?: number;
 }
 
-export function StatCard({ title, value, icon: Icon, color = "red" }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, color = "red", index = 0 }: StatCardProps) {
   const colorMap = {
     red: "bg-[#CC0000]/10 text-[#CC0000] border-[#CC0000]/30 hover:border-[#CC0000] hover:shadow-[0_0_15px_rgba(204,0,0,0.25)]",
     green: "bg-[#1A6B1A]/10 text-[#1A6B1A] border-[#1A6B1A]/30 hover:border-[#1A6B1A] hover:shadow-[0_0_15px_rgba(26,107,26,0.25)]",
@@ -17,7 +18,10 @@ export function StatCard({ title, value, icon: Icon, color = "red" }: StatCardPr
   };
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] p-6 transition-all duration-300 hover:border-[#CC0000]/50 hover:shadow-[0_0_20px_rgba(204,0,0,0.15)] group">
+    <div 
+      className="relative overflow-hidden rounded-xl border border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] p-6 transition-all duration-300 hover:border-[#CC0000]/50 hover:shadow-[0_0_20px_rgba(204,0,0,0.15)] hover:-translate-y-0.5 group animate-card-in opacity-0"
+      style={{ animationDelay: `${index * 0.08}s` }}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-white/50">{title}</p>

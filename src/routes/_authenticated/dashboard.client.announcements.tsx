@@ -3,11 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AnnouncementsView } from "@/components/dashboard/AnnouncementsView";
 
-export const Route = createFileRoute("/_authenticated/dashboard/student/announcements")({
-  component: StudentAnnouncementsPage,
+export const Route = createFileRoute("/_authenticated/dashboard/client/announcements")({
+  component: ClientAnnouncementsPage,
 });
 
-function StudentAnnouncementsPage() {
+function ClientAnnouncementsPage() {
   return (
     <DashboardLayout>
       <AnnouncementsView />

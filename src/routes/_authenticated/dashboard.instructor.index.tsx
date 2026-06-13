@@ -2,6 +2,7 @@ import React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +53,7 @@ function InstructorOverviewPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <AnnouncementBanner />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Instructor Overview</h1>
           <p className="text-white/50 text-sm mt-1">

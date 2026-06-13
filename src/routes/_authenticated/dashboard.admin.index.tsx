@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Modal } from "@/components/dashboard/Modal";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
 import { Users, GraduationCap, Mail, Briefcase } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
@@ -96,6 +97,7 @@ function AdminOverview() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
+        <AnnouncementBanner />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
           <p className="text-white/50 text-sm mt-1">
@@ -120,24 +122,28 @@ function AdminOverview() {
               value={stats?.totalUsers ?? 0}
               icon={Users}
               color="blue"
+              index={0}
             />
             <StatCard
               title="Active Students"
               value={stats?.activeStudents ?? 0}
               icon={GraduationCap}
               color="green"
+              index={1}
             />
             <StatCard
               title="Pending Requests"
               value={stats?.pendingRequests ?? 0}
               icon={Mail}
               color="yellow"
+              index={2}
             />
             <StatCard
               title="Active Projects"
               value={stats?.activeProjects ?? 0}
               icon={Briefcase}
               color="red"
+              index={3}
             />
           </div>
         )}

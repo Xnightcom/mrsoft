@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { Link, useRouter, useLocation, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/integrations/supabase/client'
 import { useQuery } from '@tanstack/react-query'
@@ -16,6 +17,7 @@ interface Props {
 
 export function DashboardLayout({ profile: propProfile, children }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isMobile = useIsMobile()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -25,7 +27,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       const { data: sessionData } = await supabase.auth.getSession()
       const user = sessionData?.session?.user
       if (!user) return null
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
       return data || { role: 'client', full_name: user.email }
     },
     enabled: !propProfile
@@ -38,6 +40,25 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
     navigate({ to: '/auth', replace: true })
   }
 
+  const { data: unreadAnnouncementsCount = 0 } = useQuery({
+    queryKey: ['unread-announcements', profile?.id],
+    queryFn: async () => {
+      if (!profile?.role) return 0;
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const { count } = await supabase
+        .from('announcements')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', yesterday.toISOString())
+        .contains('target_roles', [profile.role]);
+        
+      return count ?? 0;
+    },
+    enabled: !!profile?.role,
+    refetchInterval: 60000 // every minute
+  });
+
   // Determine sidebar links based on role
   let links: { to: string; label: string; icon: React.FC<any> }[] = []
   if (profile?.role === 'admin') {
@@ -48,9 +69,10 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       { to: '/dashboard/admin/students', label: 'Students', icon: GraduationCap },
       { to: '/dashboard/admin/courses', label: 'Courses', icon: BookOpen },
       { to: '/dashboard/admin/messages', label: 'Messages', icon: MessageSquare },
+      { to: '/dashboard/admin/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart },
       { to: '/dashboard/admin/settings', label: 'Settings', icon: Settings },
-    ]
+    ];
   } else if (profile?.role === 'instructor') {
     links = [
       { to: '/dashboard/instructor', label: 'Overview', icon: LayoutDashboard },
@@ -58,6 +80,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       { to: '/dashboard/instructor/students', label: 'Students', icon: Users },
       { to: '/dashboard/instructor/attendance', label: 'Attendance', icon: Calendar },
       { to: '/dashboard/instructor/assignments', label: 'Assignments', icon: CheckSquare },
+      { to: '/dashboard/instructor/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/dashboard/instructor/messages', label: 'Messages', icon: MessageSquare },
       { to: '/dashboard/instructor/profile', label: 'Profile', icon: User },
     ]
@@ -79,6 +102,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       { to: '/dashboard/client/projects', label: 'My Projects', icon: Briefcase },
       { to: '/dashboard/client/requests', label: 'Service Requests', icon: FileText },
       { to: '/dashboard/client/invoices', label: 'Invoices', icon: FileDigit },
+      { to: '/dashboard/client/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/dashboard/client/messages', label: 'Messages', icon: MessageSquare },
       { to: '/dashboard/client/profile', label: 'Profile', icon: User },
     ]
@@ -209,7 +233,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       )}
 
       {/* Sidebar */}
-      <aside className={`
+      <aside className={`dashboard-sidebar 
         fixed top-0 left-0 h-screen w-[240px] bg-[#0A0A0A] border-r border-[#1a6b1a]/30 z-50
         flex flex-col transition-transform duration-300 ease-in-out
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
@@ -273,7 +297,12 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
                 `}
               >
                 <Icon size={18} className={isActive ? 'text-[#CC0000]' : 'text-white/50'} />
-                {link.label}
+                <span className="flex-1">{link.label}</span>
+                {link.label === 'Announcements' && unreadAnnouncementsCount > 0 && (
+                  <span className="bg-[#CC0000] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {unreadAnnouncementsCount}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -303,6 +332,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
             >
               <Menu size={24} />
             </button>
+
             <h1 className="text-lg font-semibold tracking-tight">{pageTitle}</h1>
           </div>
 
@@ -313,7 +343,9 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
 
         {/* Page Content */}
         <main className="flex-1 mt-[60px] p-6 md:p-8">
-          {children}
+          <div key={location.pathname} className="animate-page-in">
+            {children}
+          </div>
         </main>
         
       </div>

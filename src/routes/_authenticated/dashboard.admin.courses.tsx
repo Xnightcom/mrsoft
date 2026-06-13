@@ -126,7 +126,7 @@ function AdminCoursesPage() {
         max_students: courseForm.max_students,
         instructor_id: courseForm.instructor_id === "unassigned" ? null : courseForm.instructor_id,
         class_schedule: courseForm.class_schedule,
-      }).select().single();
+      }).select().maybeSingle();
       
       if (error) throw error;
       const courseId = newCourse.id;

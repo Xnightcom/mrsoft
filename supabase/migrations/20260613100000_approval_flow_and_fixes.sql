@@ -1,105 +1,114 @@
--- Step 1: Add approval system to profiles
-alter table public.profiles
-add column if not exists is_approved boolean default false,
-add column if not exists approved_at timestamp with time zone,
-add column if not exists approved_by uuid references public.profiles(id),
-add column if not exists approval_requested_at timestamp with time zone default now();
+-- STEP 1 – DATABASE UPDATES
 
--- Auto-approve admins
-update public.profiles 
-set is_approved = true 
-where role = 'admin';
-
--- Notifications table (in case it doesn't exist or is missing the `type` and `action_url` columns)
-create table if not exists public.notifications (
+-- ANNOUNCEMENTS TABLE
+create table if not exists public.announcements (
   id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.profiles(id) on delete cascade,
   title text not null,
-  body text,
-  type text default 'info',
-  is_read boolean default false,
-  action_url text,
+  body text not null,
+  created_by uuid references public.profiles(id),
+  target_roles text[] default '{admin,instructor,student,client}',
+  is_pinned boolean default false,
+  expires_at timestamp with time zone,
   created_at timestamp with time zone default now()
 );
+alter table public.announcements enable row level security;
 
--- Add missing columns if table already existed without them
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notifications' AND column_name='type') THEN
-    ALTER TABLE public.notifications ADD COLUMN type text default 'info';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notifications' AND column_name='action_url') THEN
-    ALTER TABLE public.notifications ADD COLUMN action_url text;
-  END IF;
-END $$;
-
-alter table public.notifications enable row level security;
-
-drop policy if exists "Users read own notifications" on public.notifications;
-create policy "Users read own notifications"
-  on public.notifications for select
-  using (auth.uid() = user_id);
-
-drop policy if exists "Anyone inserts notifications" on public.notifications;
-create policy "Anyone inserts notifications"
-  on public.notifications for insert
-  with check (true);
-
-drop policy if exists "Users mark read" on public.notifications;
-create policy "Users mark read"
-  on public.notifications for update
-  using (auth.uid() = user_id);
-
-drop policy if exists "User updates own notifications" on public.notifications;
-
--- Refresh schema
-notify pgrst, 'reload schema';
-
--- Approve all existing users so they are not locked out
-update public.profiles
-set is_approved = true
-where is_approved is null or is_approved = false;
-
-
--- Step 2 Part A: Update handle_new_user trigger to handle roles correctly and set approval
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (
-    id, 
-    full_name, 
-    avatar_url, 
-    role,
-    is_approved,
-    approval_requested_at
-  )
-  values (
-    new.id,
-    coalesce(
-      new.raw_user_meta_data->>'full_name',
-      new.email,
-      'User'
-    ),
-    new.raw_user_meta_data->>'avatar_url',
-    coalesce(
-      new.raw_user_meta_data->>'role',
-      'client'
-    ),
-    false,
-    now()
+create policy "Everyone reads announcements"
+  on public.announcements for select
+  using (
+    auth.uid() is not null
+    and (
+      expires_at is null or expires_at > now()
+    )
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+        and role = any(announcements.target_roles)
+    )
   );
-  return new;
-end;
-$$ language plpgsql security definer;
 
+create policy "Admin manages announcements"
+  on public.announcements for all
+  using (exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  ));
 
--- Step 8: Add unique constraint for attendance
-alter table public.attendance
-drop constraint if exists attendance_student_course_date_unique;
+-- FIX MESSAGES TABLE POLICIES (Unified)
+DROP POLICY IF EXISTS "Admin sends messages" ON public.messages;
+DROP POLICY IF EXISTS "Instructor sends messages" ON public.messages;
+DROP POLICY IF EXISTS "Student messages instructor" ON public.messages;
+DROP POLICY IF EXISTS "Users read own messages" ON public.messages;
 
-alter table public.attendance
-add constraint attendance_student_course_date_unique
-unique (student_id, course_id, session_date);
+create policy "Authenticated users send messages"
+  on public.messages for insert
+  with check (
+    auth.uid() = sender_id
+    and (
+      -- Admin can message anyone
+      exists (
+        select 1 from public.profiles
+        where id = auth.uid() and role = 'admin'
+      )
+      or
+      -- Instructor messages their students or admins
+      (
+        exists (
+          select 1 from public.profiles
+          where id = auth.uid() and role = 'instructor'
+        )
+        and (
+          exists (
+            select 1 from public.profiles
+            where id = receiver_id and role = 'admin'
+          )
+          or exists (
+            select 1 from public.courses c
+            join public.enrollments e on e.course_id = c.id
+            where c.instructor_id = auth.uid()
+              and e.student_id = receiver_id
+          )
+          or exists (
+            select 1 from public.profiles
+            where id = receiver_id and role = 'instructor'
+          )
+        )
+      )
+      or
+      -- Student messages only their instructor
+      (
+        exists (
+          select 1 from public.profiles
+          where id = auth.uid() and role = 'student'
+        )
+        and exists (
+          select 1 from public.courses c
+          join public.enrollments e on e.course_id = c.id
+          where e.student_id = auth.uid()
+            and c.instructor_id = receiver_id
+        )
+      )
+    )
+  );
 
--- Make sure publication is set for realtime
+create policy "Users read own messages"
+  on public.messages for select
+  using (
+    auth.uid() = sender_id or auth.uid() = receiver_id
+  );
+
+create policy "Users update own messages"
+  on public.messages for update
+  using (auth.uid() = receiver_id);
+
+-- UNIQUE CONSTRAINT FOR ATTENDANCE
+alter table public.attendance drop constraint if exists attendance_student_course_date_unique;
+alter table public.attendance add constraint attendance_student_course_date_unique unique (student_id, course_id, session_date);
+
+-- ENABLE REALTIME PUBLICATION
+alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.notifications;
+alter publication supabase_realtime add table public.announcements;
+
+-- REFRESH SCHEMA
+notify pgrst, 'reload schema';

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { supabase } from '@/integrations/supabase/client'
 import { DashboardLayout } from '../DashboardLayout'
+import { AnnouncementBanner } from '../AnnouncementBanner'
 import { Briefcase, FileDigit, MessageSquare, Plus, ArrowRight, CheckCircle2, Clock } from 'lucide-react'
 import { StatCard } from '../StatCard'
 
@@ -100,6 +101,7 @@ export default function ClientDashboardContent() {
   return (
     <DashboardLayout profile={profile}>
       <div className="max-w-6xl mx-auto flex flex-col gap-8">
+        <AnnouncementBanner />
         
         {/* Welcome Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#0F0F0F] to-[#1A0A0A] p-8 rounded-2xl border border-[#cc0000]/20">

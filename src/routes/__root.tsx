@@ -72,6 +72,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 import { ProfileProvider } from "@/hooks/useProfile";
+import { ToastProvider } from "@/components/ui/Toast";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -90,10 +91,13 @@ function RootComponent() {
         <div className="relative min-h-screen text-foreground selection:bg-[#CC0000]/30 selection:text-white">
           <AnimatedBackground />
           <div className="relative" style={{ zIndex: 10 }}>
+            <div className="animate-page-in">
             <Outlet />
+          </div>
           </div>
         </div>
         <Toaster richColors position="top-right" />
+        <ToastProvider />
       </ProfileProvider>
     </QueryClientProvider>
   );

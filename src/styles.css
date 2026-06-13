@@ -133,6 +133,42 @@
 }
 
 /* ─── Animated Background Layers ─── */
+
+/* ─── Page Transition Animations ─── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bellShake {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-10deg); }
+  80% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Utility classes */
+.animate-page-in { animation: pageIn 0.3s ease-out forwards; }
+.animate-card-in { animation: cardIn 0.4s ease-out forwards; }
+.animate-bell-shake { animation: bellShake 0.6s ease-in-out; }
+.animate-toast-in { animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes toastIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @keyframes rotateBg {
   from { transform: rotate(0deg) scale(2); }
   to   { transform: rotate(360deg) scale(2); }
@@ -499,4 +535,75 @@
 }
 .contact-input::placeholder {
   color: rgba(6,6,6,0.4);
+}
+
+/* ─── Mobile Responsiveness ─── */
+@media (max-width: 767px) {
+  .dashboard-sidebar {
+    position: fixed !important;
+    transform: translateX(-100%);
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+  .dashboard-main {
+    margin-left: 0 !important;
+  }
+  .dashboard-topbar {
+    padding: 0 16px !important;
+  }
+  .mobile-hamburger {
+    display: flex !important;
+  }
+  .stat-cards-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .data-table {
+    font-size: 12px !important;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 8px 6px !important;
+  }
+  .modal-content {
+    width: 95vw !important;
+    margin: 16px !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .chart-container {
+    height: 200px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+  h1.page-title {
+    font-size: 20px !important;
+  }
+}
+
+/* ─── Animations & Hover Effects ─── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+tr:hover {
+  background: rgba(204,0,0,0.06) !important;
+  transition: background 0.15s ease;
 }
