@@ -1,11 +1,11 @@
 import React from "react";
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  component: DashboardRedirect,
+  beforeLoad: ({ location }) => {
+    if (location.pathname === '/dashboard' || location.pathname === '/dashboard/') {
+      throw redirect({ to: '/dashboard/client' })
+    }
+  },
+  component: () => <Outlet />
 });
-
-// Minimal redirect without any loading spinners to avoid infinite loops
-function DashboardRedirect() {
-  return <Navigate to="/dashboard/client" replace />;
-}
