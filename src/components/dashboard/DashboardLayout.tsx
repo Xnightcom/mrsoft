@@ -46,6 +46,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       { to: '/dashboard/admin/requests', label: 'Service Requests', icon: FileText },
       { to: '/dashboard/admin/students', label: 'Students', icon: GraduationCap },
       { to: '/dashboard/admin/courses', label: 'Courses', icon: BookOpen },
+      { to: '/dashboard/admin/messages', label: 'Messages', icon: MessageSquare },
       { to: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart },
       { to: '/dashboard/admin/settings', label: 'Settings', icon: Settings },
     ]
