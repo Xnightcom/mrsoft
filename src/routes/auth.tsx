@@ -26,7 +26,18 @@ function AuthPage() {
     ?? window.location.origin
   );
   const [signIn, setSignIn] = useState({ email: "", password: "" });
-  const [signUp, setSignUp] = useState({ email: "", password: "", full_name: "", role: "student" });
+  const [signUp, setSignUp] = useState({ email: "", password: "", confirm_password: "", full_name: "", role: "student" });
+  
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignUpConfirm, setShowSignUpConfirm] = useState(false);
+  
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const [pendingApproval, setPendingApproval] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -44,7 +55,11 @@ function AuthPage() {
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault(); setLoading(true);
+    e.preventDefault(); 
+    if (signUp.password !== signUp.confirm_password) {
+      return toast.error("Passwords do not match");
+    }
+    setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: signUp.email,
       password: signUp.password,
@@ -53,9 +68,32 @@ function AuthPage() {
         data: { full_name: signUp.full_name, role: signUp.role },
       },
     });
+    
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
+
+    // Notify admins
+    const { data: admins } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'admin');
+      
+    if (admins && admins.length > 0) {
+      const notifications = admins.map(admin => ({
+        user_id: admin.id,
+        title: 'New User Signup',
+        body: `${signUp.full_name} (${signUp.role}) has signed up and is awaiting approval.`,
+        type: 'new_user',
+        action_url: '/dashboard/admin/users',
+        is_read: false
+      }));
+      await supabase.from('notifications').insert(notifications);
+    }
+    
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created. Check your email to confirm.");
+    setPendingApproval(true);
   };
 
   const handleGoogle = async () => {
@@ -146,6 +184,22 @@ function AuthPage() {
                 );
               }
 
+              if (pendingApproval) {
+                return (
+                  <div className="text-center py-6 animate-in fade-in zoom-in duration-500">
+                    <div className="text-6xl mb-6 animate-pulse flex justify-center">⏳</div>
+                    <h2 className="text-2xl font-bold text-white mb-3">Account Created Successfully!</h2>
+                    <p className="text-white/80 mb-6 text-sm">Hi {signUp.full_name}! Your account is pending admin approval.</p>
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-6 text-amber-500 text-xs text-left leading-relaxed">
+                      📧 We've sent a confirmation email to {signUp.email}. Please check your inbox and click the link to verify your email address.
+                      <br/><br/>
+                      Once verified and approved by our admin team, you'll have full access to the platform.
+                    </div>
+                    <Button onClick={() => navigate({ to: '/dashboard' })} className="btn-primary-gradient w-full">Go to Dashboard</Button>
+                  </div>
+                );
+              }
+
               return (
                 <>
                   <Button
@@ -181,15 +235,43 @@ function AuthPage() {
                     <TabsContent value="signin">
                       <form onSubmit={handleSignIn} className="space-y-3 mt-3">
                         <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signIn.email} onChange={(e) => setSignIn({ ...signIn, email: e.target.value })} /></div>
-                        <div><Label className="text-white/80">Password</Label><Input type="password" required className="auth-input" value={signIn.password} onChange={(e) => setSignIn({ ...signIn, password: e.target.value })} /></div>
-                        <Button type="submit" className="ripple-btn w-full btn-primary-gradient" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</Button>
+                        <div>
+                          <Label className="text-white/80">Password</Label>
+                          <div className="relative">
+                            <Input type={showSignInPassword ? 'text' : 'password'} required className="auth-input pr-10" value={signIn.password} onChange={(e) => setSignIn({ ...signIn, password: e.target.value })} />
+                            <button type="button" onClick={() => setShowSignInPassword(!showSignInPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
+                              {showSignInPassword ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                            </button>
+                          </div>
+                          <div className="text-right mt-1">
+                            <span onClick={() => { setResetEmail(signIn.email); setForgotOpen(true); }} className="text-[#CC0000] text-xs cursor-pointer hover:underline">Forgot password?</span>
+                          </div>
+                        </div>
+                        <Button type="submit" className="ripple-btn w-full btn-primary-gradient mt-2" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</Button>
                       </form>
                     </TabsContent>
                     <TabsContent value="signup">
                       <form onSubmit={handleSignUp} className="space-y-3 mt-3">
                         <div><Label className="text-white/80">Full name</Label><Input required className="auth-input" value={signUp.full_name} onChange={(e) => setSignUp({ ...signUp, full_name: e.target.value })} /></div>
                         <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signUp.email} onChange={(e) => setSignUp({ ...signUp, email: e.target.value })} /></div>
-                        <div><Label className="text-white/80">Password</Label><Input type="password" required minLength={6} className="auth-input" value={signUp.password} onChange={(e) => setSignUp({ ...signUp, password: e.target.value })} /></div>
+                        <div>
+                          <Label className="text-white/80">Password</Label>
+                          <div className="relative">
+                            <Input type={showSignUpPassword ? 'text' : 'password'} required minLength={6} className="auth-input pr-10" value={signUp.password} onChange={(e) => setSignUp({ ...signUp, password: e.target.value })} />
+                            <button type="button" onClick={() => setShowSignUpPassword(!showSignUpPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
+                              {showSignUpPassword ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-white/80">Confirm Password</Label>
+                          <div className="relative">
+                            <Input type={showSignUpConfirm ? 'text' : 'password'} required minLength={6} className="auth-input pr-10" value={signUp.confirm_password} onChange={(e) => setSignUp({ ...signUp, confirm_password: e.target.value })} />
+                            <button type="button" onClick={() => setShowSignUpConfirm(!showSignUpConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
+                              {showSignUpConfirm ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                            </button>
+                          </div>
+                        </div>
                         <div>
                           <Label className="text-white/80">I am a...</Label>
                           <Select value={signUp.role} onValueChange={(v) => setSignUp({ ...signUp, role: v })}>
@@ -201,10 +283,59 @@ function AuthPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <Button type="submit" className="ripple-btn w-full btn-primary-gradient" disabled={loading}>{loading ? "Creating..." : "Create account"}</Button>
+                        <Button type="submit" className="ripple-btn w-full btn-primary-gradient mt-2" disabled={loading}>{loading ? "Creating..." : "Create account"}</Button>
                       </form>
                     </TabsContent>
                   </Tabs>
+
+                  {/* Forgot Password Modal */}
+                  {forgotOpen && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                      <div className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl p-6 w-full max-w-sm">
+                        {!resetSent ? (
+                          <>
+                            <h3 className="text-lg font-bold text-white mb-2">Reset your password</h3>
+                            <p className="text-xs text-white/60 mb-4">Enter your email and we'll send you a reset link.</p>
+                            <Input 
+                              type="email" 
+                              placeholder="Email address"
+                              value={resetEmail} 
+                              onChange={e => setResetEmail(e.target.value)} 
+                              className="auth-input mb-4" 
+                            />
+                            <div className="flex gap-3">
+                              <Button variant="ghost" onClick={() => { setForgotOpen(false); setResetSent(false); setResetEmail(''); }} className="flex-1 text-white/60 hover:text-white hover:bg-white/5">Cancel</Button>
+                              <Button 
+                                onClick={async () => {
+                                  if (!resetEmail) return;
+                                  setResetLoading(true);
+                                  const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                                    redirectTo: `${publicBase}/auth/reset-password`
+                                  });
+                                  setResetLoading(false);
+                                  if (error) toast.error(error.message);
+                                  else setResetSent(true);
+                                }} 
+                                disabled={resetLoading}
+                                className="flex-1 bg-[#CC0000] hover:bg-[#CC0000]/80 text-white"
+                              >
+                                {resetLoading ? "Sending..." : "Send Reset Link"}
+                              </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-center py-4">
+                            <div className="w-12 h-12 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center mx-auto mb-4">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Check your email!</h3>
+                            <p className="text-xs text-white/60 mb-6">We sent a password reset link to {resetEmail}. Click the link in the email to set a new password.</p>
+                            <Button onClick={() => { setForgotOpen(false); setResetSent(false); setResetEmail(''); }} className="w-full bg-[#1A6B1A] hover:bg-[#1A6B1A]/80 text-white">Back to sign in</Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </>
               );
             })()}

@@ -28,6 +28,7 @@ interface UserProfile {
   created_at: string;
   is_suspended: boolean;
   suspended_reason: string | null;
+  is_approved: boolean;
 }
 
 function AdminUsersPage() {
@@ -91,6 +92,42 @@ function AdminUsersPage() {
     },
   });
 
+  const approveUser = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentAdminId = sessionData?.session?.user?.id;
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          is_approved: true,
+          approved_at: new Date().toISOString(),
+          approved_by: currentAdminId
+        })
+        .eq('id', userId);
+      
+      if (profileError) throw profileError;
+
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          title: 'Account Approved! 🎉',
+          body: 'Your MRsoft account has been approved. You now have full access to the platform.',
+          type: 'approval',
+          is_read: false
+        });
+      if (notifError) throw notifError;
+    },
+    onSuccess: () => {
+      toast.success("User approved successfully!");
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e: any) => {
+      toast.error(e.message);
+    },
+  });
+
   const handleSuspendClick = (user: UserProfile) => {
     setSelectedUser(user);
     setSuspendModalOpen(true);
@@ -147,6 +184,8 @@ function AdminUsersPage() {
       render: (item: UserProfile) => (
         item.is_suspended 
           ? <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-500 border border-red-500/20">Suspended</span>
+          : !item.is_approved
+          ? <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">Pending Approval</span>
           : <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-500 border border-green-500/20">Active</span>
       )
     },
@@ -183,6 +222,19 @@ function AdminUsersPage() {
               <SelectItem value="client">Client</SelectItem>
             </SelectContent>
           </Select>
+
+          {!item.is_approved && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-white"
+              onClick={() => approveUser.mutate({ userId: item.id })}
+              disabled={approveUser.isPending}
+            >
+              <UserCheck className="w-3.5 h-3.5 mr-1" />
+              Approve
+            </Button>
+          )}
 
           {item.is_suspended ? (
             <Button

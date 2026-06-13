@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardRequestsRouteImport } from './routes/_authenticated/dashboard.requests'
@@ -89,6 +90,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/solutions': typeof SolutionsRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/dashboard/assignments': typeof AuthenticatedDashboardAssignmentsRoute
   '/dashboard/certificates': typeof AuthenticatedDashboardCertificatesRoute
   '/dashboard/courses': typeof AuthenticatedDashboardCoursesRoute
@@ -339,6 +346,7 @@ export interface FileRoutesByTo {
   '/solutions': typeof SolutionsRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/dashboard/assignments': typeof AuthenticatedDashboardAssignmentsRoute
   '/dashboard/certificates': typeof AuthenticatedDashboardCertificatesRoute
   '/dashboard/courses': typeof AuthenticatedDashboardCoursesRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/solutions': typeof SolutionsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/dashboard/assignments': typeof AuthenticatedDashboardAssignmentsRoute
   '/_authenticated/dashboard/certificates': typeof AuthenticatedDashboardCertificatesRoute
   '/_authenticated/dashboard/courses': typeof AuthenticatedDashboardCoursesRoute
@@ -427,6 +436,7 @@ export interface FileRouteTypes {
     | '/solutions'
     | '/dashboard'
     | '/auth/callback'
+    | '/auth/reset-password'
     | '/dashboard/assignments'
     | '/dashboard/certificates'
     | '/dashboard/courses'
@@ -469,6 +479,7 @@ export interface FileRouteTypes {
     | '/solutions'
     | '/dashboard'
     | '/auth/callback'
+    | '/auth/reset-password'
     | '/dashboard/assignments'
     | '/dashboard/certificates'
     | '/dashboard/courses'
@@ -512,6 +523,7 @@ export interface FileRouteTypes {
     | '/solutions'
     | '/_authenticated/dashboard'
     | '/auth/callback'
+    | '/auth/reset-password'
     | '/_authenticated/dashboard/assignments'
     | '/_authenticated/dashboard/certificates'
     | '/_authenticated/dashboard/courses'
@@ -613,6 +625,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -963,10 +982,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

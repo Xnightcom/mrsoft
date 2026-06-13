@@ -23,6 +23,11 @@ function InstructorCoursesPage() {
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [manageModalOpen, setManageModalOpen] = useState(false);
 
+  // Attendance state
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceState, setAttendanceState] = useState<Record<string, boolean>>({});
+  const [savingAttendance, setSavingAttendance] = useState(false);
+
   // New assignment form state
   const [assignmentForm, setAssignmentForm] = useState({
     title: "",
@@ -95,19 +100,27 @@ function InstructorCoursesPage() {
   });
 
   const { data: attendance = [] } = useQuery({
-    queryKey: ["course-attendance", selectedCourse?.id],
+    queryKey: ["course-attendance", selectedCourse?.id, selectedDate],
     queryFn: async () => {
       if (!selectedCourse?.id) return [];
       const { data, error } = await supabase
         .from("attendance")
-        .select("*, student:profiles!attendance_student_id_fkey(id, full_name)")
+        .select("student_id, attended")
         .eq("course_id", selectedCourse.id)
-        .order("date", { ascending: false });
+        .eq("session_date", selectedDate);
       if (error) throw error;
       return data;
     },
     enabled: !!selectedCourse?.id,
   });
+
+  React.useEffect(() => {
+    const map: Record<string, boolean> = {};
+    attendance.forEach((a: any) => {
+      map[a.student_id] = a.attended;
+    });
+    setAttendanceState(map);
+  }, [attendance]);
 
   // Mutations
   const updateProgress = useMutation({
@@ -177,21 +190,27 @@ function InstructorCoursesPage() {
     },
   });
 
-  const markAttendance = useMutation({
-    mutationFn: async ({ studentId, date, status }: { studentId: string; date: string; status: "present" | "absent" | "late" }) => {
-      const { error } = await supabase.from("attendance").insert({
-        course_id: selectedCourse?.id,
-        student_id: studentId,
-        date,
-        status,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Attendance marked");
-      qc.invalidateQueries({ queryKey: ["course-attendance", selectedCourse?.id] });
-    },
-  });
+  const saveAttendance = async () => {
+    setSavingAttendance(true);
+    const records = enrollments.map((enr: any) => ({
+      student_id: enr.student_id,
+      course_id: selectedCourse?.id,
+      session_date: selectedDate,
+      attended: attendanceState[enr.student_id] ?? false
+    }));
+    
+    const { error } = await supabase
+      .from('attendance')
+      .upsert(records, { onConflict: 'student_id,course_id,session_date' });
+      
+    setSavingAttendance(false);
+    if (error) {
+      toast.error('Failed to save attendance');
+    } else {
+      toast.success('Attendance saved!');
+      qc.invalidateQueries({ queryKey: ["course-attendance"] });
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -334,36 +353,71 @@ function InstructorCoursesPage() {
 
           {/* ATTENDANCE TAB */}
           <TabsContent value="attendance" className="mt-4 space-y-4">
-             <div className="grid grid-cols-2 gap-4 h-[60vh]">
-                <div className="border border-white/10 rounded-lg p-4 bg-[#0A0A0A] overflow-y-auto">
-                  <h3 className="font-bold text-white mb-4 text-sm border-b border-white/10 pb-2">Mark Today's Attendance</h3>
-                  <div className="space-y-3">
-                    {enrollments.map((enr: any) => (
-                      <div key={enr.id} className="flex flex-col gap-2 p-3 bg-white/5 rounded">
-                        <p className="text-sm text-white font-medium">{enr.student?.full_name}</p>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="h-7 text-[10px] border-green-500/30 text-green-500 hover:bg-green-500 hover:text-white" onClick={() => markAttendance.mutate({ studentId: enr.student_id, date: new Date().toISOString().split('T')[0], status: "present" })}>Present</Button>
-                          <Button size="sm" variant="outline" className="h-7 text-[10px] border-yellow-500/30 text-yellow-500 hover:bg-yellow-500 hover:text-white" onClick={() => markAttendance.mutate({ studentId: enr.student_id, date: new Date().toISOString().split('T')[0], status: "late" })}>Late</Button>
-                          <Button size="sm" variant="outline" className="h-7 text-[10px] border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white" onClick={() => markAttendance.mutate({ studentId: enr.student_id, date: new Date().toISOString().split('T')[0], status: "absent" })}>Absent</Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="border border-white/10 rounded-lg p-4 bg-[#0A0A0A] overflow-y-auto">
-                  <h3 className="font-bold text-white mb-4 text-sm border-b border-white/10 pb-2">Recent Records</h3>
-                  <div className="space-y-2">
-                    {attendance.map((rec: any) => (
-                      <div key={rec.id} className="flex justify-between items-center text-xs p-2 bg-white/5 rounded">
-                        <div>
-                          <span className="text-white/50 mr-2">{rec.date}</span>
-                          <span className="text-white">{rec.student?.full_name}</span>
-                        </div>
-                        <span className={`capitalize font-bold ${rec.status === 'present' ? 'text-green-500' : rec.status === 'late' ? 'text-yellow-500' : 'text-red-500'}`}>{rec.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+             <div className="border border-white/10 rounded-lg p-4 bg-[#0A0A0A]">
+               <div className="flex justify-between items-center mb-6">
+                 <h3 className="font-bold text-white text-sm">Attendance Register</h3>
+                 <div className="flex items-center gap-3">
+                   <Label className="text-white/70 text-xs">Date:</Label>
+                   <Input 
+                     type="date" 
+                     value={selectedDate} 
+                     onChange={(e) => setSelectedDate(e.target.value)}
+                     className="bg-[#060606] border-white/20 text-white text-sm h-8 w-40"
+                   />
+                 </div>
+               </div>
+
+               <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto pr-2">
+                 {enrollments.map((enr: any) => (
+                   <div key={enr.id} className="flex justify-between items-center p-3 bg-white/5 border border-white/10 rounded-lg">
+                     <span className="text-sm text-white font-medium">{enr.student?.full_name}</span>
+                     <div className="flex gap-2">
+                       <Button 
+                         size="sm" 
+                         variant={attendanceState[enr.student_id] === true ? "default" : "outline"}
+                         className={`h-8 text-xs transition-colors ${attendanceState[enr.student_id] === true ? 'bg-green-600 hover:bg-green-700 text-white border-transparent' : 'border-green-500/30 text-green-500 hover:bg-green-500/10'}`}
+                         onClick={() => setAttendanceState(p => ({ ...p, [enr.student_id]: true }))}
+                       >
+                         ✓ Present
+                       </Button>
+                       <Button 
+                         size="sm" 
+                         variant={attendanceState[enr.student_id] === false ? "default" : "outline"}
+                         className={`h-8 text-xs transition-colors ${attendanceState[enr.student_id] === false ? 'bg-red-600 hover:bg-red-700 text-white border-transparent' : 'border-red-500/30 text-red-500 hover:bg-red-500/10'}`}
+                         onClick={() => setAttendanceState(p => ({ ...p, [enr.student_id]: false }))}
+                       >
+                         ✗ Absent
+                       </Button>
+                     </div>
+                   </div>
+                 ))}
+                 {enrollments.length === 0 && <p className="text-center text-white/50 text-sm">No students enrolled.</p>}
+               </div>
+
+               <div className="flex justify-between items-center border-t border-white/10 pt-4">
+                 <div className="flex gap-2">
+                   <Button size="sm" variant="outline" className="text-xs bg-white/5 border-white/10 text-white" onClick={() => {
+                     const map: any = {};
+                     enrollments.forEach((e: any) => map[e.student_id] = true);
+                     setAttendanceState(map);
+                   }}>Mark All Present</Button>
+                   <Button size="sm" variant="outline" className="text-xs bg-white/5 border-white/10 text-white" onClick={() => {
+                     const map: any = {};
+                     enrollments.forEach((e: any) => map[e.student_id] = false);
+                     setAttendanceState(map);
+                   }}>Mark All Absent</Button>
+                 </div>
+                 <Button onClick={saveAttendance} disabled={savingAttendance} className="bg-[#CC0000] hover:bg-[#CC0000]/80 text-white h-8 text-xs px-6">
+                   {savingAttendance ? "Saving..." : "Save Attendance"}
+                 </Button>
+               </div>
+
+               <div className="mt-4 p-3 bg-white/5 rounded flex justify-between text-xs text-white/70 border border-white/10">
+                 <span>Total Students: <strong className="text-white">{enrollments.length}</strong></span>
+                 <span>Present Today: <strong className="text-green-500">{Object.values(attendanceState).filter(v => v === true).length}</strong></span>
+                 <span>Absent Today: <strong className="text-red-500">{Object.values(attendanceState).filter(v => v === false).length}</strong></span>
+                 <span>Unmarked: <strong className="text-white">{enrollments.length - Object.values(attendanceState).length}</strong></span>
+               </div>
              </div>
           </TabsContent>
 

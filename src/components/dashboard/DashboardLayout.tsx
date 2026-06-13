@@ -7,6 +7,7 @@ import {
   GraduationCap, CheckSquare, Calendar, Award, Megaphone, User,
   Briefcase, FileDigit, MessageSquare, LogOut, Bell, Menu, X
 } from 'lucide-react'
+import { NotificationBell } from './NotificationBell'
 
 interface Props {
   profile?: any
@@ -93,8 +94,108 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
   const roleColor = roleColors[(profile?.role as keyof typeof roleColors) || 'client']
 
   // Get current page title
-  const currentLink = links.find(l => location.pathname === l.to || (l.to !== '/dashboard/client' && location.pathname.startsWith(l.to)))
+  const currentLink = links.find(l => location.pathname === l.to || (l.to !== `/dashboard/${profile?.role || 'client'}` && location.pathname.startsWith(l.to)))
   const pageTitle = currentLink ? currentLink.label : 'Dashboard'
+
+  if (profile && !profile.is_approved) {
+    return (
+      <div className="min-h-screen bg-[#060606] text-white font-sans flex flex-col relative">
+        <header className="h-[60px] border-b border-white/10 flex items-center px-6">
+          <img src="/mrsoft-logo.png" alt="MRsoft" className="h-8 object-contain mix-blend-screen" />
+        </header>
+        <div style={{ position: 'relative', flex: 1 }}>
+          {/* Normal dashboard behind overlay */}
+          <div style={{ 
+            filter: 'grayscale(100%) opacity(0.3)',
+            pointerEvents: 'none',
+            userSelect: 'none',
+            height: '100%'
+          }}>
+            <div className="p-8">
+              <div className="h-64 w-full bg-white/5 rounded-xl mb-4"></div>
+              <div className="h-32 w-full max-w-md bg-white/5 rounded-xl"></div>
+            </div>
+          </div>
+          
+          {/* Approval pending overlay */}
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(6,6,6,0.85)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{
+              background: '#0F0F0F',
+              border: '1px solid rgba(245,158,11,0.4)',
+              borderRadius: 16,
+              padding: 48,
+              maxWidth: 480,
+              textAlign: 'center',
+            }}>
+              <div style={{ 
+                fontSize: 64, 
+                marginBottom: 24,
+                animation: 'pulse 2s ease-in-out infinite'
+              }}>
+                ⏳
+              </div>
+              
+              <h2 style={{ 
+                color: 'white', 
+                fontSize: 24, 
+                fontWeight: 700,
+                marginBottom: 12
+              }}>
+                Awaiting Admin Approval
+              </h2>
+              
+              <p style={{ 
+                color: 'rgba(255,255,255,0.6)',
+                lineHeight: 1.6,
+                marginBottom: 24
+              }}>
+                Your account is being reviewed by our 
+                admin team. You'll receive an email 
+                notification once approved and will 
+                get full access to all features.
+              </p>
+              
+              <div style={{
+                background: 'rgba(245,158,11,0.1)',
+                border: '1px solid rgba(245,158,11,0.3)',
+                borderRadius: 8,
+                padding: 16,
+                marginBottom: 24,
+                color: 'rgba(245,158,11,0.9)',
+                fontSize: 14
+              }}>
+                📧 Check your email for a confirmation 
+                link if you haven't verified yet.
+              </div>
+              
+              <button
+                onClick={handleSignOut}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)',
+                  padding: '10px 24px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#060606] text-white font-sans">
@@ -206,12 +307,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Notification Bell */}
-            <button className="relative p-2 text-white/70 hover:text-white hover:bg-white/5 rounded-full transition-colors">
-              <Bell size={20} />
-              {/* Badge placeholder */}
-              <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#CC0000] rounded-full"></span>
-            </button>
+            <NotificationBell />
           </div>
         </header>
 
