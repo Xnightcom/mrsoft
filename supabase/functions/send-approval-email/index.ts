@@ -1,9 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import nodemailer from "npm:nodemailer@6.9.13";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+// SMTP Configuration from your environment
+const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
+const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "465");
+const SMTP_USER = Deno.env.get("SMTP_USER");
+const SMTP_PASS = Deno.env.get("SMTP_PASS");
+const SMTP_FROM = Deno.env.get("SMTP_FROM") || "tambikingdavid@gmail.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +18,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -23,8 +29,12 @@ serve(async (req) => {
       throw new Error("userId is required");
     }
 
-    if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Missing environment variables for Edge Function");
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Missing Supabase environment variables");
+    }
+
+    if (!SMTP_USER || !SMTP_PASS) {
+      throw new Error("Missing SMTP credentials");
     }
 
     // Initialize Supabase admin client to fetch user email
@@ -36,7 +46,7 @@ serve(async (req) => {
       throw new Error("Could not find user email");
     }
 
-    // Also get profile to see their name
+    // Get profile to see their name
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("full_name")
@@ -45,36 +55,37 @@ serve(async (req) => {
 
     const name = profile?.full_name || "User";
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+    // Configure Nodemailer
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465, // true for 465, false for other ports
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
       },
-      body: JSON.stringify({
-        from: "MRsoft Nexus <noreply@resend.dev>", // Replace with verified domain in production
-        to: [user.email],
-        subject: "Your Account has been Approved! 🎉",
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h1 style="color: #CC0000;">Welcome to MRsoft Nexus!</h1>
-            <p>Hi ${name},</p>
-            <p>Great news! Your account has been reviewed and <strong>approved</strong> by our admin team.</p>
-            <p>You now have full access to all features on the platform.</p>
-            <a href="https://mrsoft-pearl.vercel.app/auth" style="display: inline-block; background-color: #1A6B1A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px;">Login to Dashboard</a>
-            <p style="margin-top: 30px; font-size: 12px; color: #666;">If you have any questions, feel free to reply to this email.</p>
-          </div>
-        `,
-      }),
     });
 
-    const data = await res.json();
+    const htmlContent = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #CC0000;">Welcome to MRsoft Nexus!</h1>
+        <p>Hi ${name},</p>
+        <p>Great news! Your account has been reviewed and <strong>approved</strong> by our admin team.</p>
+        <p>You now have full access to all features on the platform.</p>
+        <a href="https://mrsoft-pearl.vercel.app/auth" style="display: inline-block; background-color: #1A6B1A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; color: white !important;">Login to Dashboard</a>
+        <p style="margin-top: 30px; font-size: 12px; color: #666;">If you have any questions, feel free to reply to this email.</p>
+      </div>
+    `;
 
-    if (!res.ok) {
-      throw new Error(JSON.stringify(data));
-    }
+    // Send email
+    const info = await transporter.sendMail({
+      from: `"MRsoft Nexus" <${SMTP_FROM}>`,
+      to: user.email,
+      subject: "Your Account has been Approved! 🎉",
+      html: htmlContent,
+    });
 
-    return new Response(JSON.stringify({ success: true, data }), {
+    return new Response(JSON.stringify({ success: true, messageId: info.messageId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
