@@ -12,14 +12,22 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.user) throw redirect({ to: "/auth" });
+      if (error || !session?.user) {
+        throw redirect({
+          to: "/auth",
+          search: { error: "session_expired" } as any,
+        });
+      }
       return { user: session.user };
     } catch (err: any) {
       // If it's already a redirect, re-throw it
       if (err?.to === "/auth" || err?.redirect) throw err;
       // Unexpected error — redirect to auth
       console.error("[_authenticated] Auth check failed:", err);
-      throw redirect({ to: "/auth" });
+      throw redirect({
+        to: "/auth",
+        search: { error: "session_expired" } as any,
+      });
     }
   },
   component: AuthenticatedLayout,

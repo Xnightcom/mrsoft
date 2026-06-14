@@ -1,5 +1,5 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Cpu, LogOut, LayoutDashboard, BookOpen, GraduationCap, ClipboardList, Award, CreditCard, User, Users, Mail, Settings, Shield, Briefcase, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: s => s.location.pathname });
+  const [profileApproved, setProfileApproved] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!user.userId) return;
@@ -54,16 +55,26 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         .eq('id', user.userId)
         .maybeSingle();
 
+      console.log('Dashboard init - user:', user.userId)
+      console.log('Profile loaded:', profile)
+      console.log('is_suspended:', profile?.is_suspended)
+      console.log('is_approved:', profile?.is_approved)
+      console.log('role:', profile?.role)
+
+      if (profile) {
+        setProfileApproved(profile.is_approved !== false);
+      }
+
       if (profile?.is_suspended) {
-        await supabase.auth.signOut();
-        queryClient.clear();
         router.navigate({ 
           to: '/auth',
           search: { 
             error: 'suspended',
-            reason: profile.suspended_reason ?? 'Contact admin for details'
-          }
+            reason: profile.suspended_reason ?? 'Your account has been suspended. Contact tambikingdavid@gmail.com'
+          } as any
         });
+        await supabase.auth.signOut();
+        queryClient.clear();
       }
     };
     checkSuspension();
@@ -79,6 +90,112 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     toast.success("Signed out");
     router.navigate({ to: "/auth", replace: true });
   };
+
+  if (profileApproved === false) {
+    const handleSignOut = async () => {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut();
+      toast.success("Signed out");
+      router.navigate({ to: "/auth", replace: true });
+    };
+
+    return (
+      <div className="min-h-screen bg-[#060606] text-white font-sans flex flex-col relative">
+        <header className="h-[60px] border-b border-white/10 flex items-center px-6">
+          <img src="/mrsoft-logo.png" alt="MRsoft" className="h-8 object-contain mix-blend-screen" />
+        </header>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <div style={{ 
+            filter: 'grayscale(100%) opacity(0.3)',
+            pointerEvents: 'none',
+            userSelect: 'none',
+            height: '100%'
+          }}>
+            <div className="p-8">
+              <div className="h-64 w-full bg-white/5 rounded-xl mb-4"></div>
+              <div className="h-32 w-full max-w-md bg-white/5 rounded-xl"></div>
+            </div>
+          </div>
+          
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(6,6,6,0.85)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{
+              background: '#0F0F0F',
+              border: '1px solid rgba(245,158,11,0.4)',
+              borderRadius: 16,
+              padding: 48,
+              maxWidth: 480,
+              textAlign: 'center',
+            }}>
+              <div style={{ 
+                fontSize: 64, 
+                marginBottom: 24,
+                animation: 'pulse 2s ease-in-out infinite'
+              }}>
+                ⏳
+              </div>
+              
+              <h2 style={{ 
+                color: 'white', 
+                fontSize: 24, 
+                fontWeight: 700,
+                marginBottom: 12
+              }}>
+                Awaiting Admin Approval
+              </h2>
+              
+              <p style={{ 
+                color: 'rgba(255,255,255,0.6)',
+                lineHeight: 1.6,
+                marginBottom: 24
+              }}>
+                Your account is being reviewed by our 
+                admin team. You'll receive an email 
+                notification once approved and will 
+                get full access to all features.
+              </p>
+              
+              <div style={{
+                background: 'rgba(245,158,11,0.1)',
+                border: '1px solid rgba(245,158,11,0.3)',
+                borderRadius: 8,
+                padding: 16,
+                marginBottom: 24,
+                color: 'rgba(245,158,11,0.9)',
+                fontSize: 14
+              }}>
+                📧 Check your email for a confirmation 
+                link if you haven't verified yet.
+              </div>
+              
+              <button
+                onClick={handleSignOut}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)',
+                  padding: '10px 24px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex w-full">

@@ -36,16 +36,26 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
   const profile = propProfile || fetchedProfile
 
   React.useEffect(() => {
+    if (profile) {
+      console.log('Dashboard init - user:', profile?.id)
+      console.log('Profile loaded:', profile)
+      console.log('is_suspended:', profile?.is_suspended)
+      console.log('is_approved:', profile?.is_approved)
+      console.log('role:', profile?.role)
+    }
+  }, [profile]);
+
+  React.useEffect(() => {
     if (profile?.is_suspended) {
       const handleSuspension = async () => {
-        await supabase.auth.signOut()
         navigate({ 
           to: '/auth',
           search: { 
             error: 'suspended',
-            reason: profile.suspended_reason ?? 'Contact admin for details'
-          }
+            reason: profile.suspended_reason ?? 'Your account has been suspended. Contact tambikingdavid@gmail.com'
+          } as any
         })
+        await supabase.auth.signOut()
       }
       handleSuspension()
     }

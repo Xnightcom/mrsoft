@@ -10,6 +10,9 @@ export interface Profile {
   phone: string | null;
   bio: string | null;
   created_at: string;
+  is_approved?: boolean;
+  is_suspended?: boolean;
+  suspended_reason?: string | null;
 }
 
 interface ProfileContextType {
@@ -97,6 +100,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         "User",
       avatar_url: session.user.user_metadata?.avatar_url ?? null,
       role: (session.user.user_metadata?.role as "admin" | "student" | "instructor" | "client") ?? "client",
+      is_approved: false,
+      is_suspended: false,
     };
 
     const { data: inserted, error: insertError } = await supabase

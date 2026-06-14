@@ -59,14 +59,14 @@ function AuthCallbackPage() {
           .maybeSingle();
 
         if (profile?.is_suspended) {
-          await supabase.auth.signOut();
           navigate({ 
             to: '/auth',
             search: { 
               error: 'suspended',
-              reason: profile.suspended_reason 
-            }
+              reason: profile.suspended_reason ?? 'Your account has been suspended. Contact tambikingdavid@gmail.com'
+            } as any
           });
+          await supabase.auth.signOut();
           return;
         }
         
