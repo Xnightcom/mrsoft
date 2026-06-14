@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Modal } from "@/components/dashboard/Modal";
 import { Button } from "@/components/ui/button";
@@ -11,219 +11,312 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, BookOpen, Clock, Users, Play, Trash2, X, FileText } from "lucide-react";
+import { Plus, BookOpen, Clock, Users, Play, Trash2, X, FileText, Edit } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/courses")({
   component: AdminCoursesPage,
 });
 
-interface Course {
-  id: string;
-  title: string;
-  description: string | null;
-  duration_hours: number | null;
-  level: string;
-  is_published: boolean;
-  created_at: string;
-  instructor_id: string | null;
-  max_students: number;
-  class_schedule: any;
-}
-
-interface Enrollment {
-  course_id: string;
-}
-
 function AdminCoursesPage() {
   const qc = useQueryClient();
-  const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
-  // Forms state
-  const [courseForm, setCourseForm] = useState({
+  // --- FIX 5: COURSE LIST DISPLAY ---
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const showToast = (msg: string, type: "success" | "error" | "warning") => {
+    if (type === "success") toast.success(msg);
+    else if (type === "error") toast.error(msg);
+    else toast.warning(msg);
+  };
+
+  async function fetchCourses() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('courses')
+      .select(`
+        id,
+        title,
+        description,
+        level,
+        is_published,
+        max_students,
+        class_schedule,
+        created_at,
+        instructor:profiles!instructor_id (
+          id,
+          full_name
+        ),
+        enrollments (id),
+        course_books (id, title)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Fetch courses error:', error);
+      showToast('Failed to load courses', 'error');
+    } else {
+      setCourses(data ?? []);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  // --- FIX 3: ASSIGN INSTRUCTOR DROPDOWN ---
+  const [instructors, setInstructors] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchInstructors();
+  }, []);
+
+  async function fetchInstructors() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('role', 'instructor')
+      .eq('is_suspended', false)
+      .order('full_name');
+    
+    console.log('Instructors:', data, error);
+    setInstructors(data ?? []);
+  }
+
+  // --- FIX 2: COURSE CREATION MUST WORK ---
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
     duration_hours: "10",
     level: "beginner",
     max_students: 30,
-    instructor_id: "unassigned",
+    instructor_id: "",
     is_published: false,
-    class_schedule: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
-    books: [] as { title: string; description: string; file: File | null }[]
+    sessions: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }] as any[],
+    books: [] as any[]
   });
+  const [saving, setSaving] = useState(false);
 
-  const [lessonForm, setLessonForm] = useState({
+  const resetForm = () => setFormData({
     title: "",
-    content_url: "",
-    duration_minutes: "30",
-    order_index: "1",
-    is_published: true,
+    description: "",
+    duration_hours: "10",
+    level: "beginner",
+    max_students: 30,
+    instructor_id: "",
+    is_published: false,
+    sessions: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
+    books: []
   });
 
-  const { data: instructors = [] } = useQuery({
-    queryKey: ["admin-instructors"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("role", "instructor");
-      if (error) throw error;
-      return data as { id: string; full_name: string }[];
-    },
-  });
+  async function handleCreateCourse() {
+    // Validate required fields
+    if (!formData.title?.trim()) {
+      showToast('Course title is required', 'error')
+      return
+    }
+    
+    setSaving(true)
+    
+    try {
+      const { data: { session } } = 
+        await supabase.auth.getSession()
+      
+      if (!session) {
+        showToast('Not authenticated', 'error')
+        return
+      }
 
-  // Query Courses & Enrollments count
-  const { data: courses = [], isLoading } = useQuery({
-    queryKey: ["admin-courses-grid"],
-    queryFn: async () => {
-      const [coursesRes, enrollsRes] = await Promise.all([
-        supabase.from("courses").select("*").order("created_at", { ascending: false }),
-        supabase.from("enrollments").select("course_id"),
-      ]);
+      // Build course object with only valid columns
+      const coursePayload = {
+        title: formData.title.trim(),
+        description: formData.description?.trim() 
+          ?? '',
+        level: formData.level ?? 'beginner',
+        duration_hours: Number(formData.duration_hours) 
+          || 0,
+        max_students: Number(formData.max_students) 
+          || 30,
+        instructor_id: formData.instructor_id 
+          || null,
+        class_schedule: formData.sessions ?? [],
+        is_published: formData.is_published ?? false,
+      }
 
-      if (coursesRes.error) throw coursesRes.error;
+      console.log('Creating course:', coursePayload)
 
-      const enrollList = (enrollsRes.data ?? []) as Enrollment[];
+      // Insert course
+      const { data: course, error: courseError } = 
+        await supabase
+          .from('courses')
+          .insert(coursePayload)
+          .select()
+          .maybeSingle()
 
-      return (coursesRes.data as Course[]).map((c) => {
-        const enrolledCount = enrollList.filter((e) => e.course_id === c.id).length;
-        return {
-          ...c,
-          enrolledCount,
-        };
-      }) as (Course & { enrolledCount: number })[];
-    },
-  });
+      if (courseError) {
+        console.error('Course error:', courseError)
+        showToast(
+          'Failed to create course: ' + 
+          courseError.message, 
+          'error'
+        )
+        return
+      }
 
-  // Toggle publish state
+      console.log('Course created:', course)
+
+      // Insert books if any
+      if (formData.books?.length > 0 && course?.id) {
+        const bookRecords = formData.books
+          .filter(b => b.title?.trim())
+          .map((book, i) => ({
+            course_id: course.id,
+            title: book.title.trim(),
+            description: book.description?.trim() 
+              ?? '',
+            pdf_url: book.pdf_url ?? '',
+            order_index: i
+          }))
+
+        if (bookRecords.length > 0) {
+          const { error: bookError } = await supabase
+            .from('course_books')
+            .insert(bookRecords)
+
+          if (bookError) {
+            console.error('Book error:', bookError)
+            showToast(
+              'Course created but books failed: ' + 
+              bookError.message, 
+              'warning'
+            )
+          }
+        }
+      }
+
+      // Success
+      showToast('Course created successfully! 🎉', 
+        'success')
+      setShowModal(false)
+      resetForm()
+      await fetchCourses()
+
+    } catch (err: any) {
+      console.error('Unexpected error:', err)
+      showToast('Unexpected error: ' + err.message, 
+        'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // --- FIX 4: ASSIGN COURSE TO STUDENT ---
+  const [enrollModal, setEnrollModal] = useState(false)
+  const [enrollCourseId, setEnrollCourseId] = useState<string | null>(null)
+  const [availableStudents, setAvailableStudents] = useState<any[]>([])
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([])
+  const [enrolling, setEnrolling] = useState(false)
+  const [search, setSearch] = useState("");
+
+  async function fetchAvailableStudents(courseId: string) {
+    // Get all students
+    const { data: allStudents } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('role', 'student')
+      .eq('is_suspended', false)
+    
+    // Get already enrolled
+    const { data: enrolled } = await supabase
+      .from('enrollments')
+      .select('student_id')
+      .eq('course_id', courseId)
+    
+    const enrolledIds = enrolled?.map(
+      (e: any) => e.student_id
+    ) ?? []
+    
+    // Filter out already enrolled
+    const available = allStudents?.filter(
+      (s: any) => !enrolledIds.includes(s.id)
+    ) ?? []
+    
+    setAvailableStudents(available)
+  }
+
+  async function enrollStudents() {
+    if (selectedStudents.length === 0) {
+      showToast('Select at least one student', 
+        'warning')
+      return
+    }
+    setEnrolling(true)
+    
+    const records = selectedStudents.map(sid => ({
+      student_id: sid,
+      course_id: enrollCourseId,
+      progress: 0
+    }))
+    
+    const { error } = await supabase
+      .from('enrollments')
+      .upsert(records, {
+        onConflict: 'student_id,course_id',
+        ignoreDuplicates: true
+      })
+    
+    setEnrolling(false)
+    
+    if (error) {
+      showToast('Enrollment failed: ' 
+        + error.message, 'error')
+    } else {
+      showToast(
+        `${selectedStudents.length} student(s) enrolled successfully! 🎉`,
+        'success'
+      )
+      setEnrollModal(false)
+      setSelectedStudents([])
+      fetchCourses()
+    }
+  }
+
+  // --- EXISTING MUTATIONS (Delete, Toggle, Lesson) ---
   const togglePublish = useMutation({
     mutationFn: async ({ id, is_published }: { id: string; is_published: boolean }) => {
-      const { error } = await supabase
-        .from("courses")
-        .update({ is_published })
-        .eq("id", id);
+      const { error } = await supabase.from("courses").update({ is_published }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Course status updated");
-      qc.invalidateQueries({ queryKey: ["admin-courses-grid"] });
+      fetchCourses();
     },
     onError: (e: any) => {
       toast.error(e.message);
     },
   });
 
-  // Create Course
-  const createCourse = useMutation({
-    mutationFn: async () => {
-      const formData = {
-        ...courseForm,
-        instructor_id: courseForm.instructor_id === "unassigned" ? null : courseForm.instructor_id,
-      };
-
-      const showToast = (msg: string, type: "success" | "error" | "warning") => {
-        if (type === "success") toast.success(msg);
-        else if (type === "error") toast.error(msg);
-        else toast.warning(msg);
-      };
-      const closeModal = () => {
-        setCourseModalOpen(false);
-        setCourseForm({
-          title: "",
-          description: "",
-          duration_hours: "10",
-          level: "beginner",
-          max_students: 30,
-          instructor_id: "unassigned",
-          is_published: false,
-          class_schedule: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
-          books: []
-        });
-      };
-      const refetchCourses = () => qc.invalidateQueries({ queryKey: ["admin-courses-grid"] });
-
-      // Make sure the Supabase storage bucket 'course-books' exists
-      try {
-        await supabase.storage.createBucket('course-books', { public: true });
-      } catch (err) {
-        console.error('Bucket creation/check failed', err);
-      }
-
-      const courseData = {
-        title: formData.title,
-        description: formData.description,
-        level: formData.level ?? 'beginner',
-        duration_hours: Number(formData.duration_hours) ?? 0,
-        max_students: Number(formData.max_students) ?? 30,
-        instructor_id: formData.instructor_id ?? null,
-        class_schedule: formData.class_schedule ?? [],
-        is_published: formData.is_published ?? false,
-      }
-
-      const { data: course, error } = await supabase
-        .from('courses')
-        .insert(courseData)
-        .select()
-        .single()
-
-      if (error) {
-        showToast(error.message, 'error')
-        return
-      }
-
-      // Insert books separately after course created
-      if (formData.books?.length > 0) {
-        const books = [];
-        for (let i = 0; i < formData.books.length; i++) {
-          const book = formData.books[i];
-          let pdf_url = (book as any).pdf_url ?? '';
-          
-          if (book.file) {
-            try {
-              const fileExt = book.file.name.split(".").pop();
-              const bookId = crypto.randomUUID();
-              const filePath = `${course.id}/${bookId}.${fileExt}`;
-              const { error: uploadError } = await supabase.storage
-                .from("course-books")
-                .upload(filePath, book.file);
-
-              if (uploadError) {
-                showToast(`PDF upload failed for "${book.title}": ${uploadError.message}`, 'warning');
-              } else {
-                pdf_url = filePath;
-              }
-            } catch (uploadErr: any) {
-              showToast(`PDF upload failed for "${book.title}": ${uploadErr.message || uploadErr}`, 'warning');
-            }
-          }
-
-          books.push({
-            course_id: course.id,
-            title: book.title,
-            description: book.description ?? '',
-            pdf_url: pdf_url,
-            order_index: i
-          });
-        }
-
-        if (books.length > 0) {
-          const { error: booksError } = await supabase
-            .from('course_books')
-            .insert(books)
-          if (booksError) {
-            showToast(`Failed to save books: ${booksError.message}`, 'error');
-          }
-        }
-      }
-
-      showToast('Course created successfully!', 'success')
-      closeModal()
-      refetchCourses()
-    }
+  const deleteCourse = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("courses").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Course deleted successfully");
+      fetchCourses();
+    },
+    onError: (e: any) => {
+      toast.error(e.message);
+    },
   });
 
-  // Create Lesson
+  const [lessonForm, setLessonForm] = useState({
+    title: "", content_url: "", duration_minutes: "30", order_index: "1", is_published: true,
+  });
   const createLesson = useMutation({
     mutationFn: async () => {
       if (!selectedCourse) return;
@@ -240,32 +333,10 @@ function AdminCoursesPage() {
     onSuccess: () => {
       toast.success("Lesson added successfully!");
       setLessonModalOpen(false);
-      setLessonForm({
-        title: "",
-        content_url: "",
-        duration_minutes: "30",
-        order_index: "1",
-        is_published: true,
-      });
+      setLessonForm({ title: "", content_url: "", duration_minutes: "30", order_index: "1", is_published: true });
       setSelectedCourse(null);
     },
-    onError: (e: any) => {
-      toast.error(e.message);
-    },
-  });
-
-  const deleteCourse = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("courses").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Course deleted successfully");
-      qc.invalidateQueries({ queryKey: ["admin-courses-grid"] });
-    },
-    onError: (e: any) => {
-      toast.error(e.message);
-    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   return (
@@ -279,7 +350,7 @@ function AdminCoursesPage() {
             </p>
           </div>
           <Button
-            onClick={() => setCourseModalOpen(true)}
+            onClick={() => setShowModal(true)}
             className="bg-[#CC0000] hover:bg-[#CC0000]/80 text-white flex items-center justify-center gap-2"
           >
             <Plus className="h-5 w-5" />
@@ -288,7 +359,7 @@ function AdminCoursesPage() {
         </div>
 
         {/* Grid Display */}
-        {isLoading ? (
+        {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-48 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
@@ -312,58 +383,87 @@ function AdminCoursesPage() {
                         {course.level}
                       </span>
                       <h4 className="font-bold text-white text-lg pr-16 line-clamp-1">{course.title}</h4>
+                      
+                      {/* Instructor name OR Unassigned */}
+                      <p className="text-sm font-medium">
+                        {course.instructor ? (
+                          <span className="text-white/80">{course.instructor.full_name}</span>
+                        ) : (
+                          <span className="text-amber-500">Unassigned</span>
+                        )}
+                      </p>
+
                       <p className="text-white/60 text-xs line-clamp-2">{course.description}</p>
 
                       <div className="flex items-center gap-4 text-xs text-white/50 pt-2">
                         <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {course.duration_hours} hrs
+                          <Users className="h-4 w-4" />
+                          {course.enrollments?.length || 0} / {course.max_students}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {course.enrolledCount} / {course.max_students}
+                          <BookOpen className="h-4 w-4" />
+                          {course.course_books?.length || 0} Books
                         </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="p-4 bg-[#0A0A0A] border-t border-[rgba(26,107,26,0.15)] flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={course.is_published}
-                        onCheckedChange={(checked) =>
-                          togglePublish.mutate({ id: course.id, is_published: checked })
-                        }
-                      />
-                      <span className="text-xs font-semibold text-white/70">
-                        {course.is_published ? "Published" : "Draft"}
-                      </span>
+                  <div className="p-4 bg-[#0A0A0A] border-t border-[rgba(26,107,26,0.15)] flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={course.is_published}
+                          onCheckedChange={(checked) =>
+                            togglePublish.mutate({ id: course.id, is_published: checked })
+                          }
+                        />
+                        <span className="text-xs font-semibold text-white/70">
+                          {course.is_published ? "Published" : "Draft"}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 mt-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-[rgba(26,107,26,0.3)] text-[#1A6B1A] hover:bg-[#1A6B1A]/10 hover:text-white flex items-center gap-1 text-[11px]"
+                        className="flex-1 border-[rgba(26,107,26,0.3)] text-[#1A6B1A] hover:bg-[#1A6B1A]/10 hover:text-white flex items-center justify-center gap-1 text-[11px]"
+                        onClick={() => {
+                          setEnrollCourseId(course.id);
+                          setEnrollModal(true);
+                          setSearch("");
+                          setSelectedStudents([]);
+                          fetchAvailableStudents(course.id);
+                        }}
+                      >
+                        👥 Enroll Students
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-white/20 text-white hover:bg-white/10 flex items-center justify-center gap-1 text-[11px]"
                         onClick={() => {
                           setSelectedCourse(course);
                           setLessonModalOpen(true);
                         }}
                       >
-                        <Plus className="h-3 w-3" />
-                        Lesson
+                        ✏️ Edit Lessons
                       </Button>
                       <Button
                         size="sm"
-                        className="bg-red-950/40 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20"
+                        variant="outline"
+                        className="flex-1 border-red-500/30 text-red-500 hover:bg-red-500/10 flex items-center justify-center gap-1 text-[11px]"
                         onClick={() => {
                           if (confirm("Delete this course? All data will be wiped.")) {
                             deleteCourse.mutate(course.id);
                           }
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        🗑 Delete
                       </Button>
                     </div>
                   </div>
@@ -376,24 +476,24 @@ function AdminCoursesPage() {
 
       {/* Add Course Modal */}
       <Modal
-        isOpen={courseModalOpen}
-        onClose={() => setCourseModalOpen(false)}
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
         title="Add New Course"
       >
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            createCourse.mutate();
+            handleCreateCourse();
           }}
-          className="space-y-4 text-xs max-h-[70vh] overflow-y-auto pr-2"
+          className="space-y-4 text-xs"
         >
           <div className="space-y-1">
             <Label className="text-white/70">Title</Label>
             <Input
               required
               placeholder="e.g. Fullstack Web Engineering"
-              value={courseForm.title}
-              onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
             />
           </div>
@@ -402,8 +502,8 @@ function AdminCoursesPage() {
             <Label className="text-white/70">Description</Label>
             <Textarea
               placeholder="Provide a summary of goals and outline..."
-              value={courseForm.description}
-              onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white min-h-[80px]"
             />
           </div>
@@ -412,8 +512,8 @@ function AdminCoursesPage() {
             <div className="space-y-1">
               <Label className="text-white/70">Level</Label>
               <Select
-                value={courseForm.level}
-                onValueChange={(val) => setCourseForm({ ...courseForm, level: val })}
+                value={formData.level}
+                onValueChange={(val) => setFormData({ ...formData, level: val })}
               >
                 <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white">
                   <SelectValue />
@@ -429,8 +529,8 @@ function AdminCoursesPage() {
               <Label className="text-white/70">Duration (Hours)</Label>
               <Input
                 type="number"
-                value={courseForm.duration_hours}
-                onChange={(e) => setCourseForm({ ...courseForm, duration_hours: e.target.value })}
+                value={formData.duration_hours}
+                onChange={(e) => setFormData({ ...formData, duration_hours: e.target.value })}
                 className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
               />
             </div>
@@ -441,27 +541,54 @@ function AdminCoursesPage() {
               <Label className="text-white/70">Max Students</Label>
               <Input
                 type="number"
-                value={courseForm.max_students}
-                onChange={(e) => setCourseForm({ ...courseForm, max_students: parseInt(e.target.value) || 30 })}
+                value={formData.max_students}
+                onChange={(e) => setFormData({ ...formData, max_students: parseInt(e.target.value) || 30 })}
                 className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
               />
             </div>
             <div className="space-y-1">
               <Label className="text-white/70">Assign Instructor</Label>
-              <Select
-                value={courseForm.instructor_id}
-                onValueChange={(val) => setCourseForm({ ...courseForm, instructor_id: val })}
+              {/* FIX 3: ASSIGN INSTRUCTOR DROPDOWN */}
+              <select
+                value={formData.instructor_id ?? ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  instructor_id: e.target.value || ""
+                }))}
+                style={{
+                  width: '100%',
+                  background: '#111',
+                  border: '1px solid rgba(26,107,26,0.4)',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  color: 'white',
+                  fontSize: 14,
+                  cursor: 'pointer'
+                }}
               >
-                <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0F0F0F] border-[rgba(26,107,26,0.3)] text-white">
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {instructors.map(inst => (
-                    <SelectItem key={inst.id} value={inst.id}>{inst.full_name || 'Unnamed'}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">-- Select Instructor --</option>
+                {instructors.length === 0 ? (
+                  <option disabled value="">
+                    No instructors found — assign role first
+                  </option>
+                ) : (
+                  instructors.map((inst: any) => (
+                    <option key={inst.id} value={inst.id}>
+                      {inst.full_name}
+                    </option>
+                  ))
+                )}
+              </select>
+              {instructors.length === 0 && (
+                <p style={{
+                  color: '#F59E0B',
+                  fontSize: 12,
+                  marginTop: 6
+                }}>
+                  ⚠️ No instructors found. Go to Users page 
+                  and change a user's role to "Instructor" first.
+                </p>
+              )}
             </div>
           </div>
 
@@ -474,22 +601,22 @@ function AdminCoursesPage() {
                 variant="outline" 
                 size="sm" 
                 className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
-                onClick={() => setCourseForm({
-                  ...courseForm, 
-                  class_schedule: [...courseForm.class_schedule, { day: "Monday", time: "10:00 AM", duration_mins: 90 }]
+                onClick={() => setFormData({
+                  ...formData, 
+                  sessions: [...formData.sessions, { day: "Monday", time: "10:00 AM", duration_mins: 90 }]
                 })}
               >
                 <Plus className="w-3 h-3 mr-1" /> Add Session
               </Button>
             </div>
-            {courseForm.class_schedule.map((session, i) => (
+            {formData.sessions.map((session, i) => (
               <div key={i} className="flex items-center gap-2">
                 <Select
                   value={session.day}
                   onValueChange={(val) => {
-                    const newSch = [...courseForm.class_schedule];
+                    const newSch = [...formData.sessions];
                     newSch[i].day = val;
-                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                    setFormData({ ...formData, sessions: newSch });
                   }}
                 >
                   <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[120px]">
@@ -505,9 +632,9 @@ function AdminCoursesPage() {
                   placeholder="10:00 AM" 
                   value={session.time} 
                   onChange={(e) => {
-                    const newSch = [...courseForm.class_schedule];
+                    const newSch = [...formData.sessions];
                     newSch[i].time = e.target.value;
-                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                    setFormData({ ...formData, sessions: newSch });
                   }} 
                   className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[100px]" 
                 />
@@ -516,9 +643,9 @@ function AdminCoursesPage() {
                   placeholder="90" 
                   value={session.duration_mins} 
                   onChange={(e) => {
-                    const newSch = [...courseForm.class_schedule];
+                    const newSch = [...formData.sessions];
                     newSch[i].duration_mins = parseInt(e.target.value) || 90;
-                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                    setFormData({ ...formData, sessions: newSch });
                   }} 
                   className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[80px]" 
                 />
@@ -529,8 +656,8 @@ function AdminCoursesPage() {
                   size="icon" 
                   className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-500/10 ml-auto"
                   onClick={() => {
-                    const newSch = courseForm.class_schedule.filter((_, idx) => idx !== i);
-                    setCourseForm({ ...courseForm, class_schedule: newSch });
+                    const newSch = formData.sessions.filter((_, idx) => idx !== i);
+                    setFormData({ ...formData, sessions: newSch });
                   }}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -542,21 +669,21 @@ function AdminCoursesPage() {
           {/* Course Books */}
           <div className="space-y-3 pt-2 border-t border-white/10">
             <div className="flex items-center justify-between">
-              <Label className="text-white/90 font-bold">Course Books (PDF)</Label>
+              <Label className="text-white/90 font-bold">Course Books</Label>
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm" 
                 className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
-                onClick={() => setCourseForm({
-                  ...courseForm, 
-                  books: [...courseForm.books, { title: "", description: "", file: null }]
+                onClick={() => setFormData({
+                  ...formData, 
+                  books: [...formData.books, { title: "", description: "", pdf_url: "" }]
                 })}
               >
                 <Plus className="w-3 h-3 mr-1" /> Add Book
               </Button>
             </div>
-            {courseForm.books.map((book, i) => (
+            {formData.books.map((book, i) => (
               <div key={i} className="space-y-2 p-3 bg-white/5 rounded-lg border border-white/10 relative">
                 <Button 
                   type="button" 
@@ -564,8 +691,8 @@ function AdminCoursesPage() {
                   size="icon" 
                   className="absolute top-1 right-1 h-6 w-6 text-white/50 hover:text-red-500"
                   onClick={() => {
-                    const newBooks = courseForm.books.filter((_, idx) => idx !== i);
-                    setCourseForm({ ...courseForm, books: newBooks });
+                    const newBooks = formData.books.filter((_, idx) => idx !== i);
+                    setFormData({ ...formData, books: newBooks });
                   }}
                 >
                   <X className="w-3 h-3" />
@@ -575,9 +702,9 @@ function AdminCoursesPage() {
                     placeholder="Book Title" 
                     value={book.title}
                     onChange={(e) => {
-                      const newBooks = [...courseForm.books];
+                      const newBooks = [...formData.books];
                       newBooks[i].title = e.target.value;
-                      setCourseForm({ ...courseForm, books: newBooks });
+                      setFormData({ ...formData, books: newBooks });
                     }}
                     className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
                   />
@@ -587,23 +714,23 @@ function AdminCoursesPage() {
                     placeholder="Short description" 
                     value={book.description}
                     onChange={(e) => {
-                      const newBooks = [...courseForm.books];
+                      const newBooks = [...formData.books];
                       newBooks[i].description = e.target.value;
-                      setCourseForm({ ...courseForm, books: newBooks });
+                      setFormData({ ...formData, books: newBooks });
                     }}
                     className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
                   />
                 </div>
                 <div>
                   <Input 
-                    type="file" 
-                    accept="application/pdf"
+                    placeholder="PDF URL (optional)" 
+                    value={book.pdf_url}
                     onChange={(e) => {
-                      const newBooks = [...courseForm.books];
-                      newBooks[i].file = e.target.files?.[0] || null;
-                      setCourseForm({ ...courseForm, books: newBooks });
+                      const newBooks = [...formData.books];
+                      newBooks[i].pdf_url = e.target.value;
+                      setFormData({ ...formData, books: newBooks });
                     }}
-                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs file:text-xs file:text-white/70" 
+                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
                   />
                 </div>
               </div>
@@ -612,8 +739,8 @@ function AdminCoursesPage() {
 
           <div className="flex items-center gap-2 pt-2 border-t border-white/10">
             <Switch
-              checked={courseForm.is_published}
-              onCheckedChange={(checked) => setCourseForm({ ...courseForm, is_published: checked })}
+              checked={formData.is_published}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
             />
             <Label className="text-white/80">Publish immediately</Label>
           </div>
@@ -623,16 +750,16 @@ function AdminCoursesPage() {
               type="button"
               variant="outline"
               className="border-[rgba(26,107,26,0.3)] text-white/70 hover:bg-white/5"
-              onClick={() => setCourseModalOpen(false)}
+              onClick={() => setShowModal(false)}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={createCourse.isPending}
+              disabled={saving}
               className="bg-[#CC0000] hover:bg-[#CC0000]/80 text-white"
             >
-              {createCourse.isPending ? "Creating..." : "Create Course"}
+              {saving ? "Creating..." : "Create Course"}
             </Button>
           </div>
         </form>
@@ -726,6 +853,108 @@ function AdminCoursesPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Enroll Students Modal */}
+      <Modal
+        isOpen={enrollModal}
+        onClose={() => setEnrollModal(false)}
+        title={`Enroll Students`}
+      >
+        <div className="space-y-4">
+          <Input
+            placeholder="Search students..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
+          />
+
+          <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
+            {availableStudents
+              .filter(s => s.full_name.toLowerCase().includes(search.toLowerCase()))
+              .map(student => (
+                <label key={student.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '10px 16px',
+                  cursor: 'pointer',
+                  borderRadius: 8,
+                  background: selectedStudents.includes(student.id)
+                    ? 'rgba(26,107,26,0.1)'
+                    : 'transparent',
+                  border: selectedStudents.includes(student.id)
+                    ? '1px solid rgba(26,107,26,0.3)'
+                    : '1px solid transparent',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedStudents.includes(student.id)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedStudents(prev => [...prev, student.id])
+                      } else {
+                        setSelectedStudents(prev => prev.filter(id => id !== student.id))
+                      }
+                    }}
+                    style={{ accentColor: '#1A6B1A' }}
+                  />
+                  <div style={{
+                    width: 32, height: 32,
+                    borderRadius: '50%',
+                    background: '#1A6B1A',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: 13
+                  }}>
+                    {student.full_name[0]}
+                  </div>
+                  <span style={{ color: 'white' }}>
+                    {student.full_name}
+                  </span>
+                </label>
+              ))
+            }
+            {availableStudents.length === 0 && (
+              <div className="text-center text-white/50 py-4">
+                No available students to enroll.
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-white/10 pt-4">
+            <span className="text-white/70 text-sm">
+              {selectedStudents.length} students selected
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (selectedStudents.length === availableStudents.length) {
+                    setSelectedStudents([]);
+                  } else {
+                    setSelectedStudents(availableStudents.map(s => s.id));
+                  }
+                }}
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                {selectedStudents.length === availableStudents.length ? "Deselect All" : "Select All"}
+              </Button>
+              <Button
+                onClick={enrollStudents}
+                disabled={enrolling}
+                className="bg-[#1A6B1A] hover:bg-[#1A6B1A]/80 text-white"
+              >
+                {enrolling ? "Enrolling..." : "Enroll Selected"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
     </DashboardLayout>
   );
 }
