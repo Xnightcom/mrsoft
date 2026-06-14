@@ -37,6 +37,7 @@ function AdminUsersPage() {
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [suspendReason, setSuspendReason] = useState("");
+  const [suspending, setSuspending] = useState(false);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -53,7 +54,7 @@ function AdminUsersPage() {
 
   React.useEffect(() => {
     const channel = supabase.channel('profiles-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload: any) => {
         if (payload.eventType === 'INSERT' && !payload.new.is_approved) {
           toast.info(`New user registered: ${payload.new.full_name || 'Unknown'}. Pending approval.`);
         }
@@ -83,29 +84,48 @@ function AdminUsersPage() {
     },
   });
 
-  const toggleSuspension = useMutation({
-    mutationFn: async ({ userId, is_suspended, reason }: { userId: string; is_suspended: boolean; reason?: string }) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          is_suspended,
-          suspended_reason: is_suspended ? reason : null,
-          suspended_at: is_suspended ? new Date().toISOString() : null,
-        })
-        .eq("id", userId);
-      if (error) throw error;
-    },
-    onSuccess: (_, vars) => {
-      toast.success(`User ${vars.is_suspended ? "suspended" : "unsuspended"} successfully.`);
-      setSuspendModalOpen(false);
-      setSelectedUser(null);
-      setSuspendReason("");
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
-    },
-    onError: (e: any) => {
-      toast.error(e.message);
-    },
-  });
+  async function suspendUser(userId: string, reason: string) {
+    setSuspending(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        is_suspended: true,
+        suspended_at: new Date().toISOString(),
+        suspended_reason: reason
+      })
+      .eq('id', userId)
+    
+    setSuspending(false);
+    if (error) {
+      toast.error('Failed to suspend user: ' + error.message)
+      return
+    }
+    
+    toast.success('User suspended successfully')
+    setSuspendModalOpen(false)
+    setSelectedUser(null)
+    setSuspendReason("")
+    qc.invalidateQueries({ queryKey: ["admin-users"] })
+  }
+
+  async function unsuspendUser(userId: string) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        is_suspended: false,
+        suspended_at: null,
+        suspended_reason: null
+      })
+      .eq('id', userId)
+    
+    if (error) {
+      toast.error('Failed to unsuspend: ' + error.message)
+      return
+    }
+    
+    toast.success('User unsuspended successfully')
+    qc.invalidateQueries({ queryKey: ["admin-users"] })
+  }
 
   const approveUser = useMutation({
     mutationFn: async ({ userId }: { userId: string }) => {
@@ -137,7 +157,7 @@ function AdminUsersPage() {
       // Send the email via Edge Function (non-blocking)
       supabase.functions.invoke('send-approval-email', {
         body: { userId }
-      }).then(({ error }) => {
+      }).then(({ error }: any) => {
         if (error) {
           console.error("Failed to trigger approval email function:", error);
         }
@@ -159,7 +179,7 @@ function AdminUsersPage() {
 
   const handleUnsuspendClick = (user: UserProfile) => {
     if (confirm(`Are you sure you want to unsuspend ${user.full_name}?`)) {
-      toggleSuspension.mutate({ userId: user.id, is_suspended: false });
+      unsuspendUser(user.id);
     }
   };
 
@@ -359,7 +379,7 @@ function AdminUsersPage() {
           onSubmit={(e) => {
             e.preventDefault();
             if (selectedUser) {
-              toggleSuspension.mutate({ userId: selectedUser.id, is_suspended: true, reason: suspendReason });
+              suspendUser(selectedUser.id, suspendReason);
             }
           }}
           className="space-y-4"
@@ -388,10 +408,10 @@ function AdminUsersPage() {
             </Button>
             <Button
               type="submit"
-              disabled={toggleSuspension.isPending}
+              disabled={suspending}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {toggleSuspension.isPending ? "Suspending..." : "Confirm Suspend"}
+              {suspending ? "Suspending..." : "Confirm Suspend"}
             </Button>
           </div>
         </form>

@@ -45,7 +45,7 @@ import { Route as AuthenticatedDashboardClientProjectsRouteImport } from './rout
 import { Route as AuthenticatedDashboardClientProfileRouteImport } from './routes/_authenticated/dashboard.client/profile'
 import { Route as AuthenticatedDashboardClientMessagesRouteImport } from './routes/_authenticated/dashboard.client/messages'
 import { Route as AuthenticatedDashboardClientInvoicesRouteImport } from './routes/_authenticated/dashboard.client/invoices'
-import { Route as AuthenticatedDashboardClientAnnouncementsRouteImport } from './routes/_authenticated/dashboard.client.announcements'
+import { Route as AuthenticatedDashboardClientAnnouncementsRouteImport } from './routes/_authenticated/dashboard.client/announcements'
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated/dashboard.admin.users'
 import { Route as AuthenticatedDashboardAdminStudentsRouteImport } from './routes/_authenticated/dashboard.admin.students'
 import { Route as AuthenticatedDashboardAdminSettingsRouteImport } from './routes/_authenticated/dashboard.admin.settings'

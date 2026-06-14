@@ -1,374 +1,487 @@
-import React, { useState, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Modal } from "@/components/dashboard/Modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useProfile } from "@/hooks/useProfile";
-import { Pin, Trash2, Edit2, Calendar } from "lucide-react";
+import { useState, useEffect } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { supabase } from '@/integrations/supabase/client'
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { toast } from 'sonner'
 
-export const Route = createFileRoute("/_authenticated/dashboard/admin/announcements")({
-  component: AdminAnnouncementsPage,
-});
+export const Route = createFileRoute('/_authenticated/dashboard/admin/announcements')({
+  component: AdminAnnouncements,
+})
 
-const ALL_ROLES = ["admin", "instructor", "student", "client"];
-
-function AdminAnnouncementsPage() {
-  const qc = useQueryClient();
-  const { profile } = useProfile();
-  
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+export default function AdminAnnouncements() {
+  const [announcements, setAnnouncements] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({
-    title: "",
-    body: "",
-    targetRoles: [...ALL_ROLES],
-    isPinned: false,
-    hasExpiry: false,
-    expiresAt: "",
-  });
+    title: '',
+    body: '',
+    target_roles: ['admin','instructor',
+      'student','client'],
+    is_pinned: false,
+    expires_at: ''
+  })
+  const [saving, setSaving] = useState(false)
 
-  const { data: announcements = [], isLoading } = useQuery({
-    queryKey: ["admin-announcements"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("announcements")
-        .select(`
-          *,
-          created_by_profile:profiles!announcements_created_by_fkey(full_name)
-        `)
-        .order("is_pinned", { ascending: false })
-        .order("created_at", { ascending: false });
-        
-      if (error) throw error;
-      return data;
-    },
-  });
+  const showToast = (message: string, type: 'success' | 'error') => {
+    if (type === 'success') toast.success(message);
+    else toast.error(message);
+  }
 
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!profile?.id) throw new Error("Not authenticated");
-      
-      const payload = {
-        title: form.title,
-        body: form.body,
-        target_roles: form.targetRoles,
-        is_pinned: form.isPinned,
-        expires_at: form.hasExpiry && form.expiresAt ? new Date(form.expiresAt).toISOString() : null,
-      };
+  useEffect(() => {
+    fetchAnnouncements()
+  }, [])
 
-      if (editingId) {
-        const { error } = await supabase
-          .from("announcements")
-          .update(payload)
-          .eq("id", editingId);
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from("announcements")
-          .insert({ ...payload, created_by: profile.id })
-          .select()
-          .maybeSingle();
-        if (error) throw error;
+  async function fetchAnnouncements() {
+    const { data } = await supabase
+      .from('announcements')
+      .select(`
+        *,
+        profiles!created_by (full_name)
+      `)
+      .order('is_pinned', { ascending: false })
+      .order('created_at', { ascending: false })
+    setAnnouncements(data ?? [])
+    setLoading(false)
+  }
 
-        // Also insert notifications
-        if (data) {
-          const { data: targets } = await supabase
-            .from("profiles")
-            .select("id")
-            .in("role", form.targetRoles);
-          
-          if (targets && targets.length > 0) {
-            await supabase.from("notifications").insert(
-              targets.map(t => ({
-                user_id: t.id,
-                title: `📢 ${form.title}`,
-                body: form.body.slice(0, 100) + (form.body.length > 100 ? "..." : ""),
-                type: "info",
-                action_url: `/dashboard/${profile.role}/announcements`
-              }))
-            );
-          }
-        }
-      }
-    },
-    onSuccess: () => {
-      toast.success(editingId ? "Announcement updated" : "Announcement created");
-      setModalOpen(false);
-      qc.invalidateQueries({ queryKey: ["admin-announcements"] });
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to save announcement");
+  async function createAnnouncement() {
+    if (!form.title || !form.body) return
+    setSaving(true)
+    
+    const { data: { session } } = 
+      await supabase.auth.getSession()
+    
+    const { data: announcement, error } = 
+      await supabase
+        .from('announcements')
+        .insert({
+          title: form.title,
+          body: form.body,
+          target_roles: form.target_roles,
+          is_pinned: form.is_pinned,
+          expires_at: form.expires_at || null,
+          created_by: session?.user.id
+        })
+        .select()
+        .single()
+    
+    if (error) {
+      showToast(error.message, 'error')
+      setSaving(false)
+      return
     }
-  });
-
-  const togglePinMutation = useMutation({
-    mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
-      const { error } = await supabase
-        .from("announcements")
-        .update({ is_pinned: isPinned })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-announcements"] }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("announcements").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Announcement deleted");
-      qc.invalidateQueries({ queryKey: ["admin-announcements"] });
-    },
-  });
-
-  const openNewModal = () => {
-    setEditingId(null);
+    
+    // Notify all target users
+    const { data: targets } = await supabase
+      .from('profiles')
+      .select('id')
+      .in('role', form.target_roles)
+    
+    if (targets?.length > 0) {
+      await supabase.from('notifications').insert(
+        targets.map((t: any) => ({
+          user_id: t.id,
+          title: `📢 ${form.title}`,
+          body: form.body.slice(0, 100),
+          type: 'info',
+          action_url: '/dashboard/announcements'
+        }))
+      )
+    }
+    
+    setSaving(false)
+    setShowModal(false)
     setForm({
-      title: "",
-      body: "",
-      targetRoles: [...ALL_ROLES],
-      isPinned: false,
-      hasExpiry: false,
-      expiresAt: "",
-    });
-    setModalOpen(true);
-  };
+      title: '', body: '',
+      target_roles: ['admin','instructor',
+        'student','client'],
+      is_pinned: false,
+      expires_at: ''
+    })
+    fetchAnnouncements()
+    showToast('Announcement posted!', 'success')
+  }
 
-  const openEditModal = (announcement: any) => {
-    setEditingId(announcement.id);
-    setForm({
-      title: announcement.title,
-      body: announcement.body,
-      targetRoles: announcement.target_roles || [],
-      isPinned: announcement.is_pinned || false,
-      hasExpiry: !!announcement.expires_at,
-      expiresAt: announcement.expires_at ? new Date(announcement.expires_at).toISOString().split('T')[0] : "",
-    });
-    setModalOpen(true);
-  };
+  async function deleteAnnouncement(id: any) {
+    await supabase
+      .from('announcements')
+      .delete()
+      .eq('id', id)
+    setAnnouncements(prev => 
+      prev.filter((a: any) => a.id !== id)
+    )
+    showToast('Announcement deleted', 'success')
+  }
 
-  const toggleRole = (role: string) => {
+  async function togglePin(id: any, currentPin: any) {
+    await supabase
+      .from('announcements')
+      .update({ is_pinned: !currentPin })
+      .eq('id', id)
+    fetchAnnouncements()
+  }
+
+  const roleColors: Record<string, string> = {
+    admin: '#CC0000',
+    instructor: '#1A6B1A', 
+    student: '#3B82F6',
+    client: '#8B5CF6'
+  }
+
+  const handleRoleToggle = (role: string) => {
     setForm(prev => {
-      const isSelected = prev.targetRoles.includes(role);
-      const newRoles = isSelected 
-        ? prev.targetRoles.filter(r => r !== role)
-        : [...prev.targetRoles, role];
-      return { ...prev, targetRoles: newRoles };
+      const isSelected = prev.target_roles.includes(role);
+      const nextRoles = isSelected
+        ? prev.target_roles.filter(r => r !== role)
+        : [...prev.target_roles, role];
+      return { ...prev, target_roles: nextRoles };
     });
-  };
+  }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
+      <div style={{ padding: 24 }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 24
+        }}>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Announcements</h1>
-            <p className="text-white/50 text-sm mt-1">Manage global platform announcements.</p>
+            <h1 style={{ 
+              color: 'white', 
+              fontSize: 24, 
+              fontWeight: 700 
+            }}>
+              Announcements
+            </h1>
+            <p style={{ 
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: 14,
+              marginTop: 4
+            }}>
+              Post announcements to users by role
+            </p>
           </div>
-          <Button onClick={openNewModal} className="bg-[#CC0000] hover:bg-[#CC0000]/80 text-white">
-            New Announcement
-          </Button>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              background: '#CC0000',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '10px 20px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: 14
+            }}
+          >
+            + New Announcement
+          </button>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse border border-[rgba(26,107,26,0.3)]" />
-            ))}
+        {/* Announcements list */}
+        {loading ? (
+          <div style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Loading...
           </div>
         ) : announcements.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
-            <h3 className="text-lg font-bold text-white mb-2">No announcements</h3>
-            <p className="text-white/50">Create an announcement to communicate with users.</p>
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            color: 'rgba(255,255,255,0.3)'
+          }}>
+            <p style={{ fontSize: 48 }}>📢</p>
+            <p style={{ fontSize: 18, marginTop: 12 }}>
+              No announcements yet
+            </p>
+            <p style={{ fontSize: 14, marginTop: 8 }}>
+              Click "New Announcement" to post one
+            </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {announcements.map((ann: any, index: number) => (
-              <div 
-                key={ann.id} 
-                className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl p-6 transition-all animate-card-in opacity-0 relative"
-                style={{ animationDelay: `${index * 0.08}s` }}
-              >
-                {ann.is_pinned && (
-                  <div className="absolute top-4 right-4 text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1">
-                    <Pin size={12} /> PINNED
-                  </div>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 12 
+          }}>
+            {announcements.map(a => (
+              <div key={a.id} style={{
+                background: '#0F0F0F',
+                border: a.is_pinned 
+                  ? '1px solid rgba(245,158,11,0.4)'
+                  : '1px solid rgba(26,107,26,0.2)',
+                borderRadius: 12,
+                padding: 20,
+                position: 'relative',
+                animation: 'cardIn 0.3s ease forwards'
+              }}>
+                {/* Pin badge */}
+                {a.is_pinned && (
+                  <span style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    fontSize: 12,
+                    background: 'rgba(245,158,11,0.15)',
+                    color: '#F59E0B',
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    border: '1px solid rgba(245,158,11,0.3)'
+                  }}>
+                    📌 Pinned
+                  </span>
                 )}
-                <h3 className="text-xl font-bold text-white mb-2 pr-20">{ann.title}</h3>
-                <p className="text-white/70 text-sm mb-4 whitespace-pre-wrap">{ann.body}</p>
                 
-                <div className="flex flex-wrap items-center gap-4 text-xs text-white/50">
-                  <div className="flex items-center gap-1">
-                    <span className="font-semibold text-white/70">Targets:</span>
-                    {ann.target_roles.map((r: string) => (
-                      <span key={r} className="bg-white/10 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">{r}</span>
-                    ))}
-                  </div>
-                  <div>
-                    <span className="font-semibold text-white/70">Posted by:</span> {ann.created_by_profile?.full_name || 'Admin'}
-                  </div>
-                  {ann.expires_at && (
-                    <div className="flex items-center gap-1 text-yellow-500/70">
-                      <Calendar size={14} /> Expires: {new Date(ann.expires_at).toLocaleDateString()}
-                    </div>
-                  )}
+                {/* Title */}
+                <h3 style={{ 
+                  color: 'white', 
+                  fontWeight: 700,
+                  fontSize: 16,
+                  marginBottom: 8,
+                  paddingRight: a.is_pinned ? 80 : 0
+                }}>
+                  {a.title}
+                </h3>
+                
+                {/* Body */}
+                <p style={{ 
+                  color: 'rgba(255,255,255,0.6)',
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  marginBottom: 12
+                }}>
+                  {a.body}
+                </p>
+                
+                {/* Target role chips */}
+                <div style={{ 
+                  display: 'flex', 
+                  gap: 6, 
+                  flexWrap: 'wrap',
+                  marginBottom: 12 
+                }}>
+                  {a.target_roles?.map((role: string) => (
+                    <span key={role} style={{
+                      fontSize: 11,
+                      padding: '2px 8px',
+                      borderRadius: 4,
+                      background: `${roleColors[role]}20`,
+                      color: roleColors[role],
+                      border: `1px solid ${roleColors[role]}40`,
+                      textTransform: 'capitalize'
+                    }}>
+                      {role}
+                    </span>
+                  ))}
                 </div>
-
-                <div className="mt-4 pt-4 border-t border-white/10 flex gap-2 justify-end">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-white/20 text-white hover:bg-white/10 h-8 text-xs"
-                    onClick={() => togglePinMutation.mutate({ id: ann.id, isPinned: !ann.is_pinned })}
-                  >
-                    <Pin size={14} className="mr-1" /> {ann.is_pinned ? "Unpin" : "Pin"}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-white/20 text-white hover:bg-white/10 h-8 text-xs"
-                    onClick={() => openEditModal(ann)}
-                  >
-                    <Edit2 size={14} className="mr-1" /> Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-[#CC0000]/30 text-[#CC0000] hover:bg-[#CC0000]/10 h-8 text-xs"
-                    onClick={() => {
-                      if (confirm("Are you sure you want to delete this announcement?")) {
-                        deleteMutation.mutate(ann.id);
-                      }
-                    }}
-                  >
-                    <Trash2 size={14} className="mr-1" /> Delete
-                  </Button>
+                
+                {/* Meta + Actions */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span style={{ 
+                    color: 'rgba(255,255,255,0.3)',
+                    fontSize: 12
+                  }}>
+                    By {a.profiles?.full_name ?? 'Admin'} • 
+                    {new Date(a.created_at)
+                      .toLocaleDateString()}
+                    {a.expires_at && ` • Expires ${
+                      new Date(a.expires_at)
+                        .toLocaleDateString()
+                    }`}
+                  </span>
+                  
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => togglePin(
+                        a.id, a.is_pinned
+                      )}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(245,158,11,0.3)',
+                        color: '#F59E0B',
+                        padding: '4px 12px',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 12
+                      }}
+                    >
+                      {a.is_pinned ? 'Unpin' : '📌 Pin'}
+                    </button>
+                    <button
+                      onClick={() => deleteAnnouncement(a.id)}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(204,0,0,0.3)',
+                        color: '#F87171',
+                        padding: '4px 12px',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 12
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingId ? "Edit Announcement" : "New Announcement"}
-      >
-        <form 
-          className="space-y-4 mt-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (form.targetRoles.length === 0) {
-              return toast.error("Select at least one target role");
-            }
-            saveMutation.mutate();
-          }}
-        >
-          <div>
-            <Label className="text-white/70 text-xs">Title *</Label>
-            <Input 
-              required
-              value={form.title}
-              onChange={e => setForm({...form, title: e.target.value})}
-              className="bg-[#060606] border-white/20 text-white mt-1"
-            />
-          </div>
-          <div>
-            <Label className="text-white/70 text-xs">Body *</Label>
-            <Textarea 
-              required
-              minLength={10}
-              rows={4}
-              value={form.body}
-              onChange={e => setForm({...form, body: e.target.value})}
-              className="bg-[#060606] border-white/20 text-white mt-1"
-            />
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <Label className="text-white/70 text-xs">Target Audience *</Label>
-              <button 
-                type="button"
-                className="text-[10px] text-[#CC0000] hover:underline font-bold"
-                onClick={() => setForm(p => ({ ...p, targetRoles: p.targetRoles.length === ALL_ROLES.length ? [] : [...ALL_ROLES] }))}
-              >
-                {form.targetRoles.length === ALL_ROLES.length ? "Deselect All" : "Select All"}
-              </button>
-            </div>
-            <div className="flex gap-4">
-              {ALL_ROLES.map(role => (
-                <label key={role} className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={form.targetRoles.includes(role)}
-                    onCheckedChange={() => toggleRole(role)}
-                    className="border-white/20 data-[state=checked]:bg-[#CC0000] data-[state=checked]:border-[#CC0000]"
-                  />
-                  <span className="text-sm text-white capitalize">{role}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 pt-2">
-            <Checkbox 
-              id="pin-toggle"
-              checked={form.isPinned}
-              onCheckedChange={(c) => setForm({...form, isPinned: c as boolean})}
-              className="border-white/20 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
-            />
-            <Label htmlFor="pin-toggle" className="text-white text-sm cursor-pointer">Pin to top (shows first always)</Label>
-          </div>
-
-          <div className="pt-2 border-t border-white/10">
-            <div className="flex items-center gap-2 mb-2">
-              <Checkbox 
-                id="expiry-toggle"
-                checked={!form.hasExpiry}
-                onCheckedChange={(c) => {
-                  const noExpiry = c as boolean;
-                  setForm({...form, hasExpiry: !noExpiry, expiresAt: noExpiry ? "" : form.expiresAt });
-                }}
-                className="border-white/20 data-[state=checked]:bg-[#1A6B1A] data-[state=checked]:border-[#1A6B1A]"
-              />
-              <Label htmlFor="expiry-toggle" className="text-white text-sm cursor-pointer">No expiry (permanent)</Label>
-            </div>
-            
-            {form.hasExpiry && (
-              <div className="pl-6">
-                <Label className="text-white/70 text-xs">Expiry Date</Label>
-                <Input 
-                  type="date"
-                  required={form.hasExpiry}
-                  min={new Date().toISOString().split('T')[0]}
-                  value={form.expiresAt}
-                  onChange={e => setForm({...form, expiresAt: e.target.value})}
-                  className="bg-[#060606] border-white/20 text-white mt-1 w-48"
+        {/* Create Modal */}
+        {showModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: '#0F0F0F',
+              border: '1px solid rgba(26,107,26,0.3)',
+              borderRadius: 16,
+              padding: 24,
+              width: '100%',
+              maxWidth: 500,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16
+            }}>
+              <h2 style={{ color: 'white', fontSize: 18, fontWeight: 700, margin: 0 }}>Create Announcement</h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>Title</label>
+                <input
+                  type="text"
+                  placeholder="Announcement Title"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  style={{
+                    background: '#060606',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
                 />
               </div>
-            )}
-          </div>
 
-          <div className="pt-4 flex justify-end gap-2">
-            <Button type="button" variant="outline" className="border-white/20 text-white" onClick={() => setModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saveMutation.isPending} className="bg-[#CC0000] hover:bg-[#CC0000]/80 text-white">
-              {saveMutation.isPending ? "Saving..." : "Submit"}
-            </Button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>Content</label>
+                <textarea
+                  placeholder="Write details..."
+                  value={form.body}
+                  onChange={(e) => setForm({ ...form, body: e.target.value })}
+                  style={{
+                    background: '#060606',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: 14,
+                    minHeight: 100,
+                    resize: 'vertical',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>Target Roles</label>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  {['admin', 'instructor', 'student', 'client'].map(role => (
+                    <label key={role} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'white', fontSize: 13, textTransform: 'capitalize', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={form.target_roles.includes(role)}
+                        onChange={() => handleRoleToggle(role)}
+                        style={{ accentColor: '#CC0000' }}
+                      />
+                      {role}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="checkbox"
+                  id="modal-pin-toggle"
+                  checked={form.is_pinned}
+                  onChange={(e) => setForm({ ...form, is_pinned: e.target.checked })}
+                  style={{ accentColor: '#CC0000' }}
+                />
+                <label htmlFor="modal-pin-toggle" style={{ color: 'white', fontSize: 13, cursor: 'pointer' }}>Pin to top</label>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>Expiry Date (Optional)</label>
+                <input
+                  type="datetime-local"
+                  value={form.expires_at}
+                  onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
+                  style={{
+                    background: '#060606',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    color: 'white',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'end', gap: 12, marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: 'white',
+                    borderRadius: 8,
+                    padding: '8px 16px',
+                    cursor: 'pointer',
+                    fontSize: 13
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={createAnnouncement}
+                  disabled={saving || !form.title || !form.body || form.target_roles.length === 0}
+                  style={{
+                    background: '#CC0000',
+                    border: 'none',
+                    color: 'white',
+                    borderRadius: 8,
+                    padding: '8px 16px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    opacity: (saving || !form.title || !form.body || form.target_roles.length === 0) ? 0.6 : 1
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Post Announcement'}
+                </button>
+              </div>
+            </div>
           </div>
-        </form>
-      </Modal>
+        )}
+      </div>
     </DashboardLayout>
-  );
+  )
 }

@@ -32,7 +32,7 @@ function CertificatesPage() {
         <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {!data?.length ? (
             <Card className="md:col-span-3"><CardContent className="p-10 text-center text-muted-foreground">No certificates yet. Complete a course to earn one.</CardContent></Card>
-          ) : data.map(c => (
+          ) : data.map((c: any) => (
             <Card key={c.id} className="hover:shadow-elegant transition-smooth overflow-hidden">
               <div className="gradient-hero p-6 text-primary-foreground">
                 <Award className="h-10 w-10 mb-3" />

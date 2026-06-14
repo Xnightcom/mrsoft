@@ -24,6 +24,7 @@ interface StudentStats {
   enrolled_count: number;
   average_progress: number;
   attendance_rate: number;
+  is_suspended: boolean;
 }
 
 function AdminStudentsPage() {
@@ -34,6 +35,46 @@ function AdminStudentsPage() {
 
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [certCourseId, setCertCourseId] = useState("");
+
+  async function suspendUser(userId: string, reason: string) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        is_suspended: true,
+        suspended_at: new Date().toISOString(),
+        suspended_reason: reason
+      })
+      .eq('id', userId)
+    
+    if (error) {
+      toast.error('Failed to suspend user: ' + error.message)
+      return
+    }
+    
+    toast.success('User suspended successfully')
+    qc.invalidateQueries({ queryKey: ["admin-students-list"] })
+    setSelectedStudent(null)
+  }
+
+  async function unsuspendUser(userId: string) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        is_suspended: false,
+        suspended_at: null,
+        suspended_reason: null
+      })
+      .eq('id', userId)
+    
+    if (error) {
+      toast.error('Failed to unsuspend: ' + error.message)
+      return
+    }
+    
+    toast.success('User unsuspended successfully')
+    qc.invalidateQueries({ queryKey: ["admin-students-list"] })
+    setSelectedStudent(null)
+  }
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["admin-students-list"],
@@ -59,16 +100,16 @@ function AdminStudentsPage() {
       if (aError) throw aError;
 
       // Map profiles with statistics
-      return profiles.map((p) => {
-        const studentEnrollments = (enrollments ?? []).filter((e) => e.student_id === p.id);
-        const studentAttendance = (attendance ?? []).filter((a) => a.student_id === p.id);
+      return profiles.map((p: any) => {
+        const studentEnrollments = (enrollments ?? []).filter((e: any) => e.student_id === p.id);
+        const studentAttendance = (attendance ?? []).filter((a: any) => a.student_id === p.id);
 
-        const progressSum = studentEnrollments.reduce((sum, e) => sum + (e.progress ?? 0), 0);
+        const progressSum = studentEnrollments.reduce((sum: number, e: any) => sum + (e.progress ?? 0), 0);
         const averageProgress = studentEnrollments.length
           ? Math.round(progressSum / studentEnrollments.length)
           : 0;
 
-        const attendedSessions = studentAttendance.filter((a) => a.attended).length;
+        const attendedSessions = studentAttendance.filter((a: any) => a.attended).length;
         const attendanceRate = studentAttendance.length
           ? Math.round((attendedSessions / studentAttendance.length) * 100)
           : 100; // default 100% if no sessions scheduled yet
@@ -83,6 +124,7 @@ function AdminStudentsPage() {
           enrolled_count: studentEnrollments.length,
           average_progress: averageProgress,
           attendance_rate: attendanceRate,
+          is_suspended: p.is_suspended ?? false,
         } as StudentStats;
       });
     },
@@ -220,6 +262,30 @@ function AdminStudentsPage() {
                 <Award className="h-4 w-4" />
                 Award Certificate
               </Button>
+              {selectedStudent.is_suspended ? (
+                <Button
+                  className="w-full bg-green-700 hover:bg-green-800 text-white flex items-center justify-center gap-2"
+                  onClick={() => {
+                    if (confirm(`Are you sure you want to unsuspend ${selectedStudent.full_name}?`)) {
+                      unsuspendUser(selectedStudent.id);
+                    }
+                  }}
+                >
+                  Unsuspend Student
+                </Button>
+              ) : (
+                <Button
+                  className="w-full bg-red-700 hover:bg-red-800 text-white flex items-center justify-center gap-2"
+                  onClick={() => {
+                    const reason = prompt(`Enter reason to suspend ${selectedStudent.full_name}:`);
+                    if (reason) {
+                      suspendUser(selectedStudent.id, reason);
+                    }
+                  }}
+                >
+                  Suspend Student
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="w-full border-[rgba(26,107,26,0.3)] text-white hover:bg-white/5"
@@ -249,7 +315,7 @@ function AdminStudentsPage() {
                 <SelectValue placeholder="Choose a course..." />
               </SelectTrigger>
               <SelectContent className="bg-[#0F0F0F] border-[rgba(26,107,26,0.3)] text-white">
-                {courses.map((c) => (
+                {courses.map((c: any) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.title}
                   </SelectItem>
@@ -296,7 +362,7 @@ function AdminStudentsPage() {
                 <SelectValue placeholder="Choose a course..." />
               </SelectTrigger>
               <SelectContent className="bg-[#0F0F0F] border-[rgba(26,107,26,0.3)] text-white">
-                {courses.map((c) => (
+                {courses.map((c: any) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.title}
                   </SelectItem>

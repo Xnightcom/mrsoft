@@ -53,7 +53,7 @@ function AdminAnalyticsPage() {
       // AGGREGATION 1: User Roles Distribution
       // ----------------------------------------
       const roleCounts = profiles.reduce(
-        (acc: Record<string, number>, curr) => {
+        (acc: Record<string, number>, curr: any) => {
           const r = curr.role ?? "client";
           acc[r] = (acc[r] || 0) + 1;
           return acc;
@@ -79,7 +79,7 @@ function AdminAnalyticsPage() {
         monthlyCounts[key] = 0;
       }
 
-      profiles.forEach((p) => {
+      profiles.forEach((p: any) => {
         const d = new Date(p.created_at);
         const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
         if (key in monthlyCounts) {
@@ -95,7 +95,7 @@ function AdminAnalyticsPage() {
       // ----------------------------------------
       // AGGREGATION 3: Service Requests by Type
       // ----------------------------------------
-      const serviceCounts = requests.reduce((acc: Record<string, number>, curr) => {
+      const serviceCounts = requests.reduce((acc: Record<string, number>, curr: any) => {
         const s = curr.service || "Other";
         acc[s] = (acc[s] || 0) + 1;
         return acc;
@@ -109,7 +109,7 @@ function AdminAnalyticsPage() {
       // AGGREGATION 4: Course Completion Rate
       // ----------------------------------------
       const totalEnrolled = enrollments.length;
-      const completed = enrollments.filter((e) => (e.progress ?? 0) >= 100).length;
+      const completed = enrollments.filter((e: any) => (e.progress ?? 0) >= 100).length;
       const completionRate = totalEnrolled > 0 ? Math.round((completed / totalEnrolled) * 100) : 0;
 
       return {

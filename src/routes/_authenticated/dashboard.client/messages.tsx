@@ -119,7 +119,7 @@ function ClientMessagesPage() {
           table: "messages",
           filter: `project_id=eq.${selectedProjectId}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newMsg = payload.new as Message;
           setLocalMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;

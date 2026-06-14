@@ -27,7 +27,7 @@ export function useCurrentUser() {
         userId: user.id,
         email: user.email ?? null,
         fullName: profile?.full_name ?? user.email ?? null,
-        roles: (roles ?? []).map(r => r.role as AppRole),
+        roles: (roles ?? []).map((r: any) => r.role as AppRole),
       });
     })();
     return () => { active = false; };

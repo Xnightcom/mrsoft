@@ -56,7 +56,7 @@ export function NotificationBell() {
     };
   }, [profile?.id, qc]);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
   const markAllAsRead = useMutation({
     mutationFn: async () => {

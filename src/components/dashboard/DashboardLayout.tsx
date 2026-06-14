@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useIsMobile } from '@/hooks/useIsMobile'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Link, useRouter, useLocation, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/integrations/supabase/client'
 import { useQuery } from '@tanstack/react-query'
@@ -35,6 +35,22 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
 
   const profile = propProfile || fetchedProfile
 
+  React.useEffect(() => {
+    if (profile?.is_suspended) {
+      const handleSuspension = async () => {
+        await supabase.auth.signOut()
+        navigate({ 
+          to: '/auth',
+          search: { 
+            error: 'suspended',
+            reason: profile.suspended_reason ?? 'Contact admin for details'
+          }
+        })
+      }
+      handleSuspension()
+    }
+  }, [profile, navigate])
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     navigate({ to: '/auth', replace: true })
@@ -66,10 +82,10 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
       { to: '/dashboard/admin', label: 'Overview', icon: LayoutDashboard },
       { to: '/dashboard/admin/users', label: 'Users', icon: Users },
       { to: '/dashboard/admin/requests', label: 'Service Requests', icon: FileText },
+      { to: '/dashboard/admin/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/dashboard/admin/students', label: 'Students', icon: GraduationCap },
       { to: '/dashboard/admin/courses', label: 'Courses', icon: BookOpen },
       { to: '/dashboard/admin/messages', label: 'Messages', icon: MessageSquare },
-      { to: '/dashboard/admin/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart },
       { to: '/dashboard/admin/settings', label: 'Settings', icon: Settings },
     ];

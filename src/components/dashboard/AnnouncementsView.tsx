@@ -26,7 +26,7 @@ export function AnnouncementsView() {
       
       // Filter out expired announcements (RLS should do this, but just in case)
       const now = new Date().getTime();
-      return data.filter(ann => !ann.expires_at || new Date(ann.expires_at).getTime() > now);
+      return data.filter((ann: any) => !ann.expires_at || new Date(ann.expires_at).getTime() > now);
     },
     enabled: !!profile?.role,
   });

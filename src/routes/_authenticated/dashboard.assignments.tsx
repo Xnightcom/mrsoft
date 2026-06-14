@@ -30,7 +30,7 @@ function AssignmentsPage() {
         <div className="mt-8 space-y-3">
           {!data?.length ? (
             <Card><CardContent className="p-10 text-center text-muted-foreground">No assignments yet.</CardContent></Card>
-          ) : data.map(a => (
+          ) : data.map((a: any) => (
             <Card key={a.id} className="hover:shadow-elegant transition-smooth">
               <CardContent className="p-6 flex items-center justify-between gap-4">
                 <div>

@@ -117,62 +117,110 @@ function AdminCoursesPage() {
   // Create Course
   const createCourse = useMutation({
     mutationFn: async () => {
-      const { data: newCourse, error } = await supabase.from("courses").insert({
-        title: courseForm.title,
-        description: courseForm.description,
-        duration_hours: parseInt(courseForm.duration_hours) || 10,
-        level: courseForm.level,
-        is_published: courseForm.is_published,
-        max_students: courseForm.max_students,
+      const formData = {
+        ...courseForm,
         instructor_id: courseForm.instructor_id === "unassigned" ? null : courseForm.instructor_id,
-        class_schedule: courseForm.class_schedule,
-      }).select().maybeSingle();
-      
-      if (error) throw error;
-      const courseId = newCourse.id;
+      };
 
-      // Upload books
-      for (let i = 0; i < courseForm.books.length; i++) {
-        const book = courseForm.books[i];
-        if (!book.file) continue;
-        const fileExt = book.file.name.split(".").pop();
-        const bookId = crypto.randomUUID();
-        const filePath = `${courseId}/${bookId}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("course-books")
-          .upload(filePath, book.file);
-
-        if (uploadError) throw uploadError;
-
-        await supabase.from("course_books").insert({
-          course_id: courseId,
-          title: book.title,
-          description: book.description,
-          pdf_url: filePath,
-          order_index: i,
+      const showToast = (msg: string, type: "success" | "error" | "warning") => {
+        if (type === "success") toast.success(msg);
+        else if (type === "error") toast.error(msg);
+        else toast.warning(msg);
+      };
+      const closeModal = () => {
+        setCourseModalOpen(false);
+        setCourseForm({
+          title: "",
+          description: "",
+          duration_hours: "10",
+          level: "beginner",
+          max_students: 30,
+          instructor_id: "unassigned",
+          is_published: false,
+          class_schedule: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
+          books: []
         });
+      };
+      const refetchCourses = () => qc.invalidateQueries({ queryKey: ["admin-courses-grid"] });
+
+      // Make sure the Supabase storage bucket 'course-books' exists
+      try {
+        await supabase.storage.createBucket('course-books', { public: true });
+      } catch (err) {
+        console.error('Bucket creation/check failed', err);
       }
-    },
-    onSuccess: () => {
-      toast.success("Course created successfully!");
-      setCourseModalOpen(false);
-      setCourseForm({
-        title: "",
-        description: "",
-        duration_hours: "10",
-        level: "beginner",
-        max_students: 30,
-        instructor_id: "unassigned",
-        is_published: false,
-        class_schedule: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
-        books: []
-      });
-      qc.invalidateQueries({ queryKey: ["admin-courses-grid"] });
-    },
-    onError: (e: any) => {
-      toast.error(e.message);
-    },
+
+      const courseData = {
+        title: formData.title,
+        description: formData.description,
+        level: formData.level ?? 'beginner',
+        duration_hours: Number(formData.duration_hours) ?? 0,
+        max_students: Number(formData.max_students) ?? 30,
+        instructor_id: formData.instructor_id ?? null,
+        class_schedule: formData.class_schedule ?? [],
+        is_published: formData.is_published ?? false,
+      }
+
+      const { data: course, error } = await supabase
+        .from('courses')
+        .insert(courseData)
+        .select()
+        .single()
+
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+
+      // Insert books separately after course created
+      if (formData.books?.length > 0) {
+        const books = [];
+        for (let i = 0; i < formData.books.length; i++) {
+          const book = formData.books[i];
+          let pdf_url = (book as any).pdf_url ?? '';
+          
+          if (book.file) {
+            try {
+              const fileExt = book.file.name.split(".").pop();
+              const bookId = crypto.randomUUID();
+              const filePath = `${course.id}/${bookId}.${fileExt}`;
+              const { error: uploadError } = await supabase.storage
+                .from("course-books")
+                .upload(filePath, book.file);
+
+              if (uploadError) {
+                showToast(`PDF upload failed for "${book.title}": ${uploadError.message}`, 'warning');
+              } else {
+                pdf_url = filePath;
+              }
+            } catch (uploadErr: any) {
+              showToast(`PDF upload failed for "${book.title}": ${uploadErr.message || uploadErr}`, 'warning');
+            }
+          }
+
+          books.push({
+            course_id: course.id,
+            title: book.title,
+            description: book.description ?? '',
+            pdf_url: pdf_url,
+            order_index: i
+          });
+        }
+
+        if (books.length > 0) {
+          const { error: booksError } = await supabase
+            .from('course_books')
+            .insert(books)
+          if (booksError) {
+            showToast(`Failed to save books: ${booksError.message}`, 'error');
+          }
+        }
+      }
+
+      showToast('Course created successfully!', 'success')
+      closeModal()
+      refetchCourses()
+    }
   });
 
   // Create Lesson

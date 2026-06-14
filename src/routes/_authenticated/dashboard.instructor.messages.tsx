@@ -44,10 +44,10 @@ function InstructorMessagesPage() {
       if (!profile?.id) return [];
       
       const { data: courses } = await supabase.from("courses").select("id").eq("instructor_id", profile.id);
-      const courseIds = (courses || []).map(c => c.id);
+      const courseIds = (courses || []).map((c: any) => c.id);
       
       const { data: enrollments } = await supabase.from("enrollments").select("student_id").in("course_id", courseIds.length ? courseIds : ['00000000-0000-0000-0000-000000000000']);
-      const studentIds = (enrollments || []).map(e => e.student_id);
+      const studentIds = (enrollments || []).map((e: any) => e.student_id);
 
       const { data, error } = await supabase
         .from("profiles")
@@ -87,7 +87,7 @@ function InstructorMessagesPage() {
         .eq("is_read", false);
       if (error) throw error;
       const counts: Record<string, number> = {};
-      data.forEach((m) => {
+      data.forEach((m: any) => {
         counts[m.sender_id] = (counts[m.sender_id] || 0) + 1;
       });
       return counts;
@@ -149,7 +149,7 @@ function InstructorMessagesPage() {
       // Notify the receiver
       await supabase.from("notifications").insert({
         user_id: selectedUser.id,
-        title: `New message from ${profile.full_name || profile.email}`,
+        title: `New message from ${profile.full_name || "Instructor"}`,
         body: content.length > 50 ? content.substring(0, 47) + "..." : content,
         type: "info",
         action_url: `/dashboard/${selectedUser.role}/messages`

@@ -20,7 +20,7 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!user.userId) return;
-    supabase.from("profiles").select("*").eq("id", user.userId).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("*").eq("id", user.userId).maybeSingle().then(({ data }: any) => {
       if (data) setForm({ full_name: data.full_name ?? "", phone: data.phone ?? "", company: data.company ?? "" });
     });
   }, [user.userId]);

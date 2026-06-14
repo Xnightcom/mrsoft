@@ -49,7 +49,7 @@ function ClientInvoicesPage() {
 
       if (error) throw error;
 
-      const projectIds = data.map(a => a.project_id).filter(Boolean);
+      const projectIds = data.map((a: any) => a.project_id).filter(Boolean);
       let projectsMap: Record<string, string> = {};
       if (projectIds.length > 0) {
         const { data: projectData } = await supabase
@@ -57,13 +57,13 @@ function ClientInvoicesPage() {
           .select("id, title")
           .in("id", projectIds);
         if (projectData) {
-          projectData.forEach(p => {
+          projectData.forEach((p: any) => {
             projectsMap[p.id] = p.title;
           });
         }
       }
 
-      return data.map(a => ({
+      return data.map((a: any) => ({
         ...a,
         project: a.project_id ? { title: projectsMap[a.project_id] || "Project" } : null
       })) as unknown as Invoice[];

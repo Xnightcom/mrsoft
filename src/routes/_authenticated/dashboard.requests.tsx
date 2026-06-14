@@ -30,7 +30,7 @@ function RequestsPage() {
         <div className="mt-8 space-y-3">
           {!data?.length ? (
             <Card><CardContent className="p-10 text-center text-muted-foreground">No requests yet. <a className="text-primary" href="/contact">Submit one</a>.</CardContent></Card>
-          ) : data.map(r => (
+          ) : data.map((r: any) => (
             <Card key={r.id}>
               <CardContent className="p-6 flex items-center justify-between gap-4">
                 <div>

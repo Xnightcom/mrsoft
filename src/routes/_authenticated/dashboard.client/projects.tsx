@@ -56,8 +56,8 @@ function ClientProjectsPage() {
 
       if (pErr) throw pErr;
 
-      const devIds = projectsData.map(p => p.assigned_to).filter(Boolean);
-      const projectIds = projectsData.map(p => p.id);
+      const devIds = projectsData.map((p: any) => p.assigned_to).filter(Boolean);
+      const projectIds = projectsData.map((p: any) => p.id);
 
       let devsMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
       if (devIds.length > 0) {
@@ -66,7 +66,7 @@ function ClientProjectsPage() {
           .select("id, full_name, avatar_url")
           .in("id", devIds);
         if (devsData) {
-          devsData.forEach(d => {
+          devsData.forEach((d: any) => {
             devsMap[d.id] = { full_name: d.full_name, avatar_url: d.avatar_url };
           });
         }
@@ -80,7 +80,7 @@ function ClientProjectsPage() {
           .in("project_id", projectIds)
           .order("due_date", { ascending: true });
         if (milestoneData) {
-          milestoneData.forEach(m => {
+          milestoneData.forEach((m: any) => {
             if (!milestonesMap[m.project_id]) {
               milestonesMap[m.project_id] = [];
             }
@@ -94,7 +94,7 @@ function ClientProjectsPage() {
         }
       }
 
-      return projectsData.map((p) => ({
+      return projectsData.map((p: any) => ({
         ...p,
         developer: p.assigned_to ? devsMap[p.assigned_to] || null : null,
         milestones: milestonesMap[p.id] || [],

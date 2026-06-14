@@ -19,7 +19,7 @@ function AdminPayments() {
       return data;
     },
   });
-  const total = (data ?? []).reduce((s, p) => s + Number(p.amount), 0);
+  const total = (data ?? []).reduce((s: number, p: any) => s + Number(p.amount), 0);
 
   return (
     <DashboardLayout>
@@ -33,7 +33,7 @@ function AdminPayments() {
               <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>User</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
               <TableBody>
                 {!data?.length ? <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No payments yet</TableCell></TableRow> :
-                  data.map(p => (
+                  data.map((p: any) => (
                     <TableRow key={p.id}>
                       <TableCell>{new Date(p.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="font-mono text-xs">{p.user_id.slice(0,8)}…</TableCell>

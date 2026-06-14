@@ -45,7 +45,7 @@ function CoursesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const enrolledIds = new Set((myEnrollments ?? []).map(e => e.course_id));
+  const enrolledIds = new Set((myEnrollments ?? []).map((e: any) => e.course_id));
 
   return (
     <DashboardLayout>
@@ -59,8 +59,8 @@ function CoursesPage() {
           <section>
             <h2 className="text-xl font-semibold mb-4">In progress</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myEnrollments!.map(e => {
-                const c = courses?.find(c => c.id === e.course_id);
+              {myEnrollments!.map((e: any) => {
+                const c = (courses as any[] | undefined)?.find((c: any) => c.id === e.course_id);
                 if (!c) return null;
                 return (
                   <Card key={e.id} className="hover:shadow-elegant transition-smooth">
@@ -85,7 +85,7 @@ function CoursesPage() {
             <Card><CardContent className="p-10 text-center text-muted-foreground">No published courses yet. Check back soon.</CardContent></Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {courses.map(c => (
+              {courses.map((c: any) => (
                 <Card key={c.id} className="hover:shadow-elegant transition-smooth overflow-hidden">
                   <div className="h-28 gradient-hero" />
                   <CardContent className="p-6">

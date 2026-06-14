@@ -17,8 +17,8 @@ export function SiteHeader() {
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setAuthed(!!s));
+    supabase.auth.getSession().then(({ data }: any) => setAuthed(!!data?.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e: any, s: any) => setAuthed(!!s));
     return () => sub.subscription.unsubscribe();
   }, []);
 

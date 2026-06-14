@@ -110,5 +110,44 @@ alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.notifications;
 alter publication supabase_realtime add table public.announcements;
 
+-- ADMIN UPDATES PROFILES RLS POLICY
+drop policy if exists "Admin updates profiles" 
+  on public.profiles;
+
+create policy "Admin updates profiles"
+  on public.profiles for update
+  using (exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  ));
+
+-- FIX COURSES RLS POLICIES
+drop policy if exists "Admin manages courses" on public.courses;
+drop policy if exists "Admins manage courses" on public.courses;
+drop policy if exists "Instructors manage own courses" on public.courses;
+
+create policy "Admin manages courses"
+  on public.courses for all
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+    or exists (
+      select 1 from public.user_roles
+      where user_id = auth.uid() and role = 'admin'
+    )
+  );
+
+create policy "Instructors manage own courses"
+  on public.courses for all
+  using (
+    instructor_id = auth.uid()
+    or exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'instructor'
+    )
+  );
+
 -- REFRESH SCHEMA
 notify pgrst, 'reload schema';

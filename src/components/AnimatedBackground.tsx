@@ -28,47 +28,25 @@ export function AnimatedBackground() {
   const isContactPage = pathname === "/contact";
 
   useEffect(() => {
-    // 1. Setup mobile detection
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
+    // 1. Setup mobile detection and keep coordinates centered on resize
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      mouseRef.current.x = window.innerWidth / 2;
+      mouseRef.current.y = window.innerHeight / 2;
     };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
+    handleResize();
+    window.addEventListener("resize", handleResize);
 
-    // 2. Initialize mouse coordinates in center of screen
+    // 2. Initialize coordinates in center of screen
     mouseRef.current.x = window.innerWidth / 2;
     mouseRef.current.y = window.innerHeight / 2;
     mouseRef.current.lerpX = window.innerWidth / 2;
     mouseRef.current.lerpY = window.innerHeight / 2;
 
-    // 3. Event listeners for mouse / touch move
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current.x = e.clientX;
-      mouseRef.current.y = e.clientY;
-      // Mouse move speed boost (only active if not on contact page)
-      if (!isContactPage) {
-        speedRef.current.current = 4.0;
-        speedRef.current.decayFrames = 60;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        mouseRef.current.x = e.touches[0].clientX;
-        mouseRef.current.y = e.touches[0].clientY;
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("touchmove", handleTouchMove);
-
     return () => {
-      window.removeEventListener("resize", checkMobile);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("resize", handleResize);
     };
-  }, [isContactPage]);
+  }, []);
 
   useEffect(() => {
     let animId: number;

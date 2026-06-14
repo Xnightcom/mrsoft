@@ -26,7 +26,7 @@ function InstructorOverviewPage() {
         .select("id, class_schedule")
         .eq("instructor_id", profile.id);
 
-      const courseIds = (courses || []).map((c) => c.id);
+      const courseIds = (courses || []).map((c: any) => c.id);
 
       // Get enrolled students
       const { count: studentsCount } = await supabase

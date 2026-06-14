@@ -40,8 +40,8 @@ function AuthPage() {
   const [pendingApproval, setPendingApproval] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+    supabase.auth.getSession().then(({ data }: any) => {
+      if (data?.session) navigate({ to: "/dashboard" });
     });
   }, [navigate]);
 
@@ -81,7 +81,7 @@ function AuthPage() {
       .eq('role', 'admin');
       
     if (admins && admins.length > 0) {
-      const notifications = admins.map(admin => ({
+      const notifications = admins.map((admin: any) => ({
         user_id: admin.id,
         title: 'New User Signup',
         body: `${signUp.full_name} (${signUp.role}) has signed up and is awaiting approval.`,
@@ -163,25 +163,45 @@ function AuthPage() {
             </div>
 
             {(() => {
-              const searchParams = new URLSearchParams(window.location.search);
-              const error = searchParams.get("error");
-              const reason = searchParams.get("reason");
+              const searchParams = new URLSearchParams(
+                window.location.search
+              )
+              const suspendedError = searchParams.get('error')
+              const suspendedReason = searchParams.get('reason')
 
-              if (error === "suspended") {
+              if (suspendedError === 'suspended') {
                 return (
-                  <div className="bg-[#CC0000]/10 border border-[#CC0000]/30 rounded-xl p-6 text-center space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-[#CC0000]/20 flex items-center justify-center mx-auto text-[#CC0000]">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-red-500">Your account has been suspended</h2>
-                      <p className="text-sm text-red-400 mt-1">Reason: {reason || "Violation of terms"}</p>
-                    </div>
-                    <p className="text-xs text-white/50">
-                      Please contact support at <a href="mailto:tambikingdavid@gmail.com" className="text-white underline">tambikingdavid@gmail.com</a>
+                  <div style={{
+                    background: 'rgba(204,0,0,0.1)',
+                    border: '1px solid rgba(204,0,0,0.4)',
+                    borderRadius: 12,
+                    padding: 24,
+                    marginBottom: 24,
+                    textAlign: 'center'
+                  }}>
+                    <p style={{ 
+                      color: '#F87171', 
+                      fontWeight: 700,
+                      fontSize: 18,
+                      marginBottom: 8
+                    }}>
+                      🚫 Account Suspended
+                    </p>
+                    <p style={{ 
+                      color: 'rgba(255,255,255,0.6)',
+                      fontSize: 14,
+                      marginBottom: 8
+                    }}>
+                      Reason: {suspendedReason}
+                    </p>
+                    <p style={{ 
+                      color: 'rgba(255,255,255,0.4)',
+                      fontSize: 12
+                    }}>
+                      Contact: tambikingdavid@gmail.com
                     </p>
                   </div>
-                );
+                )
               }
 
               if (pendingApproval) {

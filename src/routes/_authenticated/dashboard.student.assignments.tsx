@@ -50,7 +50,7 @@ function StudentAssignmentsPage() {
       if (error) throw error;
 
       // Fetch course names manually
-      const courseIds = data.map(a => a.course_id).filter(Boolean);
+      const courseIds = data.map((a: any) => a.course_id).filter(Boolean);
       let coursesMap: Record<string, string> = {};
       if (courseIds.length > 0) {
         const { data: courseData } = await supabase
@@ -58,13 +58,13 @@ function StudentAssignmentsPage() {
           .select("id, title")
           .in("id", courseIds);
         if (courseData) {
-          courseData.forEach(c => {
+          courseData.forEach((c: any) => {
             coursesMap[c.id] = c.title;
           });
         }
       }
 
-      return data.map(a => ({
+      return data.map((a: any) => ({
         ...a,
         courseName: a.course_id ? coursesMap[a.course_id] || "Course" : "General"
       })) as unknown as (Assignment & { courseName: string })[];

@@ -1,6 +1,6 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { ReactNode } from "react";
-import { Cpu, LogOut, LayoutDashboard, BookOpen, GraduationCap, ClipboardList, Award, CreditCard, User, Users, Mail, Settings, Shield, Briefcase } from "lucide-react";
+import { ReactNode, useEffect } from "react";
+import { Cpu, LogOut, LayoutDashboard, BookOpen, GraduationCap, ClipboardList, Award, CreditCard, User, Users, Mail, Settings, Shield, Briefcase, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, primaryRole, type AppRole } from "@/hooks/use-current-user";
@@ -30,9 +30,10 @@ const navByRole: Record<AppRole, Item[]> = {
   ],
   admin: [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/dashboard/admin/requests", label: "Service Requests", icon: Mail },
+    { to: "/dashboard/admin/announcements", label: "Announcements", icon: Megaphone },
     { to: "/dashboard/admin/students", label: "Students", icon: Users },
     { to: "/dashboard/admin/courses", label: "Courses", icon: GraduationCap },
-    { to: "/dashboard/admin/requests", label: "Service Requests", icon: Mail },
     { to: "/dashboard/admin/payments", label: "Payments", icon: CreditCard },
     { to: "/dashboard/admin/settings", label: "Settings", icon: Settings },
   ],
@@ -43,6 +44,30 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: s => s.location.pathname });
+
+  useEffect(() => {
+    if (!user.userId) return;
+    const checkSuspension = async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_suspended, suspended_reason, is_approved, role')
+        .eq('id', user.userId)
+        .maybeSingle();
+
+      if (profile?.is_suspended) {
+        await supabase.auth.signOut();
+        queryClient.clear();
+        router.navigate({ 
+          to: '/auth',
+          search: { 
+            error: 'suspended',
+            reason: profile.suspended_reason ?? 'Contact admin for details'
+          }
+        });
+      }
+    };
+    checkSuspension();
+  }, [user.userId, router, queryClient]);
 
   const role = primaryRole(user.roles);
   const items = navByRole[role];

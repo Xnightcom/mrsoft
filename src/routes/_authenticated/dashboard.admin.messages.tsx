@@ -81,7 +81,7 @@ function AdminMessagesPage() {
         .eq("is_read", false);
       if (error) throw error;
       const counts: Record<string, number> = {};
-      data.forEach((m) => {
+      data.forEach((m: any) => {
         counts[m.sender_id] = (counts[m.sender_id] || 0) + 1;
       });
       return counts;
@@ -97,7 +97,7 @@ function AdminMessagesPage() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
-        (payload) => {
+        (payload: any) => {
           qc.invalidateQueries({ queryKey: ["messages", profile?.id, selectedUser?.id] });
           qc.invalidateQueries({ queryKey: ["unread-messages", profile?.id] });
         }

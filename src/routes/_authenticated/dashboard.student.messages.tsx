@@ -49,8 +49,8 @@ function StudentMessagesPage() {
         .eq("student_id", profile.id);
 
       const instructorIds = (enrollments || [])
-        .map(e => e.course?.instructor_id)
-        .filter(id => id); // remove nulls
+        .map((e: any) => e.course?.instructor_id)
+        .filter((id: any) => id); // remove nulls
 
       const { data, error } = await supabase
         .from("profiles")
@@ -91,7 +91,7 @@ function StudentMessagesPage() {
         .eq("is_read", false);
       if (error) throw error;
       const counts: Record<string, number> = {};
-      data.forEach((m) => {
+      data.forEach((m: any) => {
         counts[m.sender_id] = (counts[m.sender_id] || 0) + 1;
       });
       return counts;
