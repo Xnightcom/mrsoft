@@ -1,5 +1,5 @@
 import React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
@@ -11,6 +11,21 @@ import { BookOpen, ClipboardList, Calendar, Play } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/dashboard/student/")({
+  beforeLoad: async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw redirect({ to: '/auth' })
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    const role = profile?.role || 'client'
+    if (role !== 'student' && role !== 'admin') {
+      throw redirect({ to: `/dashboard/${role}` as any })
+    }
+  },
   component: StudentMyLearning,
 });
 

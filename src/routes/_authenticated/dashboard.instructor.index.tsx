@@ -1,5 +1,5 @@
 import React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
@@ -9,6 +9,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Users, CheckSquare, Calendar as CalendarIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/instructor/")({
+  beforeLoad: async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw redirect({ to: '/auth' })
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    const role = profile?.role || 'client'
+    if (role !== 'instructor' && role !== 'admin') {
+      throw redirect({ to: `/dashboard/${role}` as any })
+    }
+  },
   component: InstructorOverviewPage,
 });
 

@@ -11,23 +11,13 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     try {
-      // Race getUser against a 3s timeout — never hang on auth check
-      const userPromise = supabase.auth.getUser();
-      const timeoutPromise = new Promise<never>((_resolve, reject) =>
-        setTimeout(() => reject(new Error("auth_timeout")), 3000),
-      );
-
-      const { data, error } = await Promise.race([
-        userPromise,
-        timeoutPromise,
-      ]);
-
-      if (error || !data.user) throw redirect({ to: "/auth" });
-      return { user: data.user };
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.user) throw redirect({ to: "/auth" });
+      return { user: session.user };
     } catch (err: any) {
       // If it's already a redirect, re-throw it
       if (err?.to === "/auth" || err?.redirect) throw err;
-      // Timeout or unexpected error — redirect to auth
+      // Unexpected error — redirect to auth
       console.error("[_authenticated] Auth check failed:", err);
       throw redirect({ to: "/auth" });
     }

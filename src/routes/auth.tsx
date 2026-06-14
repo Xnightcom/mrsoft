@@ -163,6 +163,7 @@ function AuthPage() {
             </div>
 
             {(() => {
+              if (typeof window === 'undefined') return null;
               const searchParams = new URLSearchParams(
                 window.location.search
               )

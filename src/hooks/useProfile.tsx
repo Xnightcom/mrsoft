@@ -5,7 +5,7 @@ export interface Profile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
-  role: "admin" | "student" | "client";
+  role: "admin" | "student" | "instructor" | "client";
   company: string | null;
   phone: string | null;
   bio: string | null;
@@ -14,7 +14,7 @@ export interface Profile {
 
 interface ProfileContextType {
   profile: Profile | null;
-  role: "admin" | "student" | "client" | null;
+  role: "admin" | "student" | "instructor" | "client" | null;
   loading: boolean;
   refetch: () => Promise<void>;
 }
@@ -96,7 +96,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         session.user.email?.split("@")[0] ??
         "User",
       avatar_url: session.user.user_metadata?.avatar_url ?? null,
-      role: "client" as const,
+      role: (session.user.user_metadata?.role as "admin" | "student" | "instructor" | "client") ?? "client",
     };
 
     const { data: inserted, error: insertError } = await supabase
