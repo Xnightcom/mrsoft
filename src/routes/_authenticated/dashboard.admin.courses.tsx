@@ -304,7 +304,7 @@ function AdminCoursesPage() {
               courses.map((course: any) => (
                 <div
                   key={course.id}
-                  className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] hover:border-[#CC0000]/50 rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-[0_0_15px_rgba(204,0,0,0.15)] flex flex-col justify-between"
+                  className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] hover:border-[#CC0000]/50 rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-[0_0_15px_rgba(204,0,0,0.15)] flex flex-col justify-between course-card"
                 >
                   <div>
                     <div className="p-4 space-y-2 relative">

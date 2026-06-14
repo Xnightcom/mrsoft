@@ -237,7 +237,7 @@ function InstructorCoursesPage() {
             {courses.map((course: any) => (
               <div
                 key={course.id}
-                className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl overflow-hidden shadow-md transition-all duration-300"
+                className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl overflow-hidden shadow-md transition-all duration-300 course-card"
               >
                 <div className="p-5 space-y-3">
                   <h4 className="font-bold text-white text-lg line-clamp-1">{course.title}</h4>

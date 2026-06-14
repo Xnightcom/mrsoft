@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Code2, Cloud, GraduationCap, Network, Shield, Server, Building2, HeartPulse, School, MapPin, Fuel, BarChart3, CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -43,6 +44,31 @@ const solutions = [
 function Home() {
   useScrollReveal();
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            (entry.target as HTMLElement).style.animation = 
+              'fadeUp 0.5s ease forwards';
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    
+    const elements = document.querySelectorAll('.feature-card');
+    elements.forEach(el => {
+      (el as HTMLElement).style.opacity = '0';
+      observer.observe(el);
+    });
+
+    return () => {
+      elements.forEach(el => observer.unobserve(el));
+    };
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -50,7 +76,7 @@ function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden min-h-[80vh] flex items-center" style={{ borderBottom: "1px solid rgba(26,107,26,0.3)" }}>
         <div className="absolute inset-0">
-          <img src={hero} alt="" className="h-full w-full object-cover opacity-8" width={1920} height={1080} />
+          <img src={hero} alt="" className="h-full w-full object-cover opacity-8 hero-image" width={1920} height={1080} />
           <div className="absolute inset-0 bg-[#060606]/92" />
         </div>
         {/* Layer 4: Perspective Grid */}
@@ -60,13 +86,13 @@ function Home() {
             <span className="h-1.5 w-1.5 rounded-full bg-[#1A6B1A] animate-pulse" />
             Trusted by enterprises across 4 continents
           </div>
-          <h1 className="mt-6 text-4xl md:text-6xl font-bold tracking-tight max-w-4xl mx-auto leading-tight heading-slide-in">
+          <h1 className="mt-6 text-4xl md:text-6xl font-bold tracking-tight max-w-4xl mx-auto leading-tight hero-headline">
             Empowering Businesses Through <span className="text-gradient">Innovative Technology</span>
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-white/70 max-w-2xl mx-auto reveal-fade-up">
+          <p className="mt-6 text-lg md:text-xl text-white/70 max-w-2xl mx-auto hero-subtext">
             Transforming organizations through software, training, and digital solutions built for the next decade.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 reveal-fade-up">
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 hero-cta">
             <Button asChild className="ripple-btn h-12 px-7 bg-[#CC0000] hover:bg-[#1A6B1A] text-white border-none font-semibold transition-all duration-300" size="lg" onClick={createRipple}>
               <Link to="/solutions">Explore Solutions <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
@@ -131,7 +157,7 @@ function Home() {
           </div>
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 reveal-stagger">
             {services.map(s => (
-              <TiltCard key={s.title}>
+              <TiltCard key={s.title} className="feature-card">
                 <CardContent className="p-6">
                   <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#1A6B1A]/15 text-[#1A6B1A] border" style={{ borderColor: "rgba(26,107,26,0.3)" }}>
                     <s.icon className="h-6 w-6" />
@@ -157,7 +183,7 @@ function Home() {
         </div>
         <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6 reveal-stagger">
           {solutions.map(s => (
-            <TiltCard key={s.title} className="overflow-hidden">
+            <TiltCard key={s.title} className="overflow-hidden feature-card">
               <div className="h-32 relative overflow-hidden" style={{ background: "linear-gradient(to right, rgba(26,107,26,0.15), rgba(204,0,0,0.08))", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <s.icon className="absolute right-4 bottom-4 h-16 w-16 text-white/5" />
               </div>

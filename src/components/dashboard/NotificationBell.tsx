@@ -101,20 +101,20 @@ export function NotificationBell() {
     }}>
       <DropdownMenuTrigger asChild>
         <button
-          className={`relative rounded-lg p-1.5 text-white/70 hover:bg-white/5 hover:text-white transition-colors focus:outline-none ${
+          className={`relative rounded-lg p-1.5 text-white/70 hover:bg-white/5 hover:text-white transition-colors focus:outline-none bell-icon-btn ${
             shake ? 'animate-bell-shake' : ''
           }`}
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#CC0000] text-[9px] font-bold text-white shadow-[0_0_5px_rgba(204,0,0,0.5)]">
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#CC0000] text-[9px] font-bold text-white shadow-[0_0_5px_rgba(204,0,0,0.5)] notification-badge">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80 rounded-xl border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-2">
+      <DropdownMenuContent align="end" className="w-80 rounded-xl border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-2 notification-dropdown">
         <div className="flex items-center justify-between px-3 py-2">
           <DropdownMenuLabel className="text-white text-sm font-semibold p-0">Notifications</DropdownMenuLabel>
           {unreadCount > 0 && (
@@ -151,7 +151,7 @@ export function NotificationBell() {
                     e.preventDefault();
                     handleMarkAsRead(notif.id, notif.action_url || notif.link);
                   }}
-                  className={`flex gap-3 items-start p-3 mb-1 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex gap-3 items-start p-3 mb-1 rounded-lg cursor-pointer transition-colors notification-item ${
                     notif.is_read
                       ? "hover:bg-white/5 text-white/70"
                       : "bg-[#CC0000]/5 hover:bg-[#CC0000]/10 text-white"

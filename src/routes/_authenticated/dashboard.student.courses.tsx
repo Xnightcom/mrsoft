@@ -400,7 +400,7 @@ function StudentCoursesPage() {
                 {enrolls.map((en: any) => (
                   <div
                     key={en.id}
-                    className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] hover:border-[#CC0000]/50 rounded-xl overflow-hidden shadow-md flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_15px_rgba(204,0,0,0.15)]"
+                    className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] hover:border-[#CC0000]/50 rounded-xl overflow-hidden shadow-md flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_15px_rgba(204,0,0,0.15)] course-card"
                   >
                     <div>
                       {/* Content */}

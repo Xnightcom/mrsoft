@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
 import { Users, GraduationCap, Mail, Briefcase } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
   beforeLoad: async () => {
@@ -124,10 +125,10 @@ function AdminOverview() {
         {statsLoading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-32 rounded-xl bg-white/5 animate-pulse border border-[rgba(26,107,26,0.3)]"
-              />
+              <div key={i} className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl" style={{ padding: 24 }}>
+                <Skeleton w="40%" h={12} />
+                <Skeleton w="60%" h={40} style={{ marginTop: 12 }} />
+              </div>
             ))}
           </div>
         ) : (
@@ -166,11 +167,7 @@ function AdminOverview() {
         {/* Recent Activity Table */}
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-white tracking-wide">Recent Service Requests</h3>
-          {tableLoading ? (
-            <div className="h-64 rounded-xl bg-white/5 animate-pulse border border-[rgba(26,107,26,0.3)]" />
-          ) : (
-            <DataTable columns={columns} data={recentRequests} />
-          )}
+          <DataTable columns={columns} data={recentRequests} isLoading={tableLoading} />
         </div>
       </div>
 

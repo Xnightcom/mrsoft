@@ -54,6 +54,7 @@ function InstructorAttendance() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [flashingRows, setFlashingRows] = useState<Record<string, 'present' | 'absent'>>({});
 
   // Load instructor courses on mount
   useEffect(() => {
@@ -115,6 +116,18 @@ function InstructorAttendance() {
   }
 
   function toggleAttendance(studentId: string, attended: boolean) {
+    setFlashingRows(prev => ({
+      ...prev,
+      [studentId]: attended ? 'present' : 'absent'
+    }));
+    setTimeout(() => {
+      setFlashingRows(prev => {
+        const next = { ...prev };
+        delete next[studentId];
+        return next;
+      });
+    }, 300);
+
     setAttendance(prev => ({
       ...prev,
       [studentId]: attended
@@ -123,10 +136,16 @@ function InstructorAttendance() {
 
   function markAll(attended: boolean) {
     const map: Record<string, boolean> = {};
+    const flashes: Record<string, 'present' | 'absent'> = {};
     students.forEach((s: any) => {
       map[s.student_id] = attended;
+      flashes[s.student_id] = attended ? 'present' : 'absent';
     });
     setAttendance(map);
+    setFlashingRows(flashes);
+    setTimeout(() => {
+      setFlashingRows({});
+    }, 300);
   }
 
   async function saveAttendance() {
@@ -291,74 +310,93 @@ function InstructorAttendance() {
           overflow: 'hidden',
           marginBottom: 16
         }}>
-          {students.map((s: any, i: number) => (
-            <div key={s.student_id} style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 20px',
-              borderBottom: i < students.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-              animation: `cardIn 0.3s ease forwards`,
-              animationDelay: `${i * 0.04}s`,
-              opacity: 0
-            }}>
-              {/* Avatar + Name */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 36, height: 36,
-                  borderRadius: '50%',
-                  background: '#1A6B1A',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: 14
-                }}>
-                  {s.profiles?.full_name?.[0] ?? '?'}
-                </div>
-                <span style={{ color: 'white' }}>
-                  {s.profiles?.full_name ?? 'Unknown'}
-                </span>
-              </div>
+          {students.map((s: any, i: number) => {
+            const flash = flashingRows[s.student_id];
+            let rowBg = 'transparent';
+            let rowTransition = 'border-bottom 0.2s ease';
+            if (flash === 'present') {
+              rowBg = 'rgba(26,107,26,0.15)';
+              rowTransition = 'none';
+            } else if (flash === 'absent') {
+              rowBg = 'rgba(204,0,0,0.15)';
+              rowTransition = 'none';
+            } else {
+              rowTransition = 'background 0.3s ease';
+            }
 
-              {/* Present / Absent buttons */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={() => toggleAttendance(s.student_id, true)}
-                  style={{
-                    padding: '6px 16px',
-                    borderRadius: 6,
-                    border: '1px solid #1A6B1A',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: 13,
-                    transition: 'all 0.2s ease',
-                    background: attendance[s.student_id] === true ? '#1A6B1A' : 'transparent',
-                    color: attendance[s.student_id] === true ? 'white' : '#4ADE80',
-                  }}
-                >
-                  ✓ Present
-                </button>
-                <button
-                  onClick={() => toggleAttendance(s.student_id, false)}
-                  style={{
-                    padding: '6px 16px',
-                    borderRadius: 6,
-                    border: '1px solid #CC0000',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: 13,
-                    transition: 'all 0.2s ease',
-                    background: attendance[s.student_id] === false ? '#CC0000' : 'transparent',
-                    color: attendance[s.student_id] === false ? 'white' : '#F87171',
-                  }}
-                >
-                  ✗ Absent
-                </button>
+            return (
+              <div key={s.student_id} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 20px',
+                borderBottom: i < students.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                animation: `cardIn 0.3s ease forwards`,
+                animationDelay: `${i * 0.04}s`,
+                opacity: 0,
+                background: rowBg,
+                transition: rowTransition,
+              }}>
+                {/* Avatar + Name */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 36, height: 36,
+                    borderRadius: '50%',
+                    background: '#1A6B1A',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: 14
+                  }}>
+                    {s.profiles?.full_name?.[0] ?? '?'}
+                  </div>
+                  <span style={{ color: 'white' }}>
+                    {s.profiles?.full_name ?? 'Unknown'}
+                  </span>
+                </div>
+
+                {/* Present / Absent buttons */}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => toggleAttendance(s.student_id, true)}
+                    className="attendance-toggle-btn"
+                    style={{
+                      padding: '6px 16px',
+                      borderRadius: 6,
+                      border: '1px solid #1A6B1A',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      transition: 'all 0.2s ease',
+                      background: attendance[s.student_id] === true ? '#1A6B1A' : 'transparent',
+                      color: attendance[s.student_id] === true ? 'white' : '#4ADE80',
+                    }}
+                  >
+                    ✓ Present
+                  </button>
+                  <button
+                    onClick={() => toggleAttendance(s.student_id, false)}
+                    className="attendance-toggle-btn"
+                    style={{
+                      padding: '6px 16px',
+                      borderRadius: 6,
+                      border: '1px solid #CC0000',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      transition: 'all 0.2s ease',
+                      background: attendance[s.student_id] === false ? '#CC0000' : 'transparent',
+                      color: attendance[s.student_id] === false ? 'white' : '#F87171',
+                    }}
+                  >
+                    ✗ Absent
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -376,7 +414,7 @@ function InstructorAttendance() {
           fontSize: 16,
           fontWeight: 700,
           cursor: saving ? 'not-allowed' : 'pointer',
-          transition: 'all 0.3s ease',
+          transition: 'background 0.4s ease, opacity 0.3s ease',
           opacity: saving ? 0.7 : 1,
         }}
       >

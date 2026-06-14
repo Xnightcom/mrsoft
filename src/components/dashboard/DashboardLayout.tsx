@@ -269,7 +269,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
           <img 
             src="/mrsoft-logo.png" 
             alt="MRsoft" 
-            className="h-8 object-contain mix-blend-screen"
+            className="h-8 object-contain mix-blend-screen sidebar-logo"
             onError={(e) => {
               // Fallback if logo is missing
               (e.target as HTMLImageElement).style.display = 'none';
@@ -315,10 +315,10 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium sidebar-link
                   ${isActive 
-                    ? 'bg-[#CC0000]/15 text-white border-l-[3px] border-[#CC0000]' 
-                    : 'text-white/60 hover:bg-white/5 hover:text-white border-l-[3px] border-transparent'
+                    ? 'sidebar-link-active' 
+                    : 'text-white/60 hover:bg-white/5 hover:text-white'
                   }
                 `}
               >
@@ -338,7 +338,7 @@ export function DashboardLayout({ profile: propProfile, children }: Props) {
         <div className="p-4 border-t border-[#1a6b1a]/20 shrink-0">
           <button 
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-500/10 sidebar-signout-btn"
           >
             <LogOut size={18} />
             Sign out

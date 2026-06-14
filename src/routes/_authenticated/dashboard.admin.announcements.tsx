@@ -336,7 +336,7 @@ export default function AdminAnnouncements() {
 
         {/* Create Modal */}
         {showModal && (
-          <div style={{
+          <div className="modal-overlay" style={{
             position: 'fixed',
             inset: 0,
             background: 'rgba(0,0,0,0.8)',
@@ -345,7 +345,7 @@ export default function AdminAnnouncements() {
             alignItems: 'center',
             zIndex: 1000
           }}>
-            <div style={{
+            <div className="modal-card" style={{
               background: '#0F0F0F',
               border: '1px solid rgba(26,107,26,0.3)',
               borderRadius: 16,

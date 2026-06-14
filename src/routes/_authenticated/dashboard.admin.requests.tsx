@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Modal } from "@/components/dashboard/Modal";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, User, Briefcase, Mail, Phone, Calendar } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/requests")({
   component: AdminRequestsKanban,
@@ -126,9 +127,21 @@ function AdminRequestsKanban() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[60vh]">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((col) => (
-              <div key={col} className="bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl p-4 animate-pulse" />
+              <div key={col} className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl p-4 space-y-4">
+                <Skeleton w="60%" h={12} />
+                <div className="space-y-2">
+                  <div className="p-3 bg-[#060606] border border-white/5 rounded-lg space-y-2">
+                    <Skeleton w="40%" h={10} />
+                    <Skeleton w="80%" h={10} style={{ marginTop: 6 }} />
+                  </div>
+                  <div className="p-3 bg-[#060606] border border-white/5 rounded-lg space-y-2">
+                    <Skeleton w="50%" h={10} />
+                    <Skeleton w="70%" h={10} style={{ marginTop: 6 }} />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : (

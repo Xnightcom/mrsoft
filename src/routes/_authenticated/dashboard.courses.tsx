@@ -86,7 +86,7 @@ function CoursesPage() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses.map((c: any) => (
-                <Card key={c.id} className="hover:shadow-elegant transition-smooth overflow-hidden">
+                <Card key={c.id} className="hover:shadow-elegant transition-smooth overflow-hidden course-card">
                   <div className="h-28 gradient-hero" />
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> {c.duration_hours}h · {c.category}</div>

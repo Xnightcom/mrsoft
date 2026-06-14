@@ -1,5 +1,6 @@
 import React from "react";
 import { LucideIcon } from "lucide-react";
+import { useCountUp } from "@/hooks/useCountUp";
 
 interface StatCardProps {
   title: string;
@@ -17,16 +18,36 @@ export function StatCard({ title, value, icon: Icon, color = "red", index = 0 }:
     yellow: "bg-yellow-500/10 text-yellow-500 border-yellow-500/30 hover:border-yellow-500 hover:shadow-[0_0_15px_rgba(234,179,8,0.25)]",
   };
 
+  // Attempt to parse a numeric value
+  const numericPart = typeof value === "number" 
+    ? value 
+    : parseFloat(String(value).replace(/[^0-9.]/g, ""));
+  
+  const hasNumber = !isNaN(numericPart) && isFinite(numericPart);
+  const animatedValue = useCountUp(hasNumber ? numericPart : 0);
+
+  // Re-format the value
+  let displayValue = String(value);
+  if (hasNumber) {
+    const isPercent = String(value).includes("%");
+    const isCurrency = String(value).includes("$");
+    const hasPlus = String(value).includes("+");
+    const isDecimal = String(value).includes(".") || (typeof value === "number" && !Number.isInteger(value));
+    
+    const formattedNum = isDecimal ? animatedValue.toFixed(1) : Math.floor(animatedValue);
+    displayValue = `${isCurrency ? "$" : ""}${formattedNum}${isPercent ? "%" : ""}${hasPlus ? "+" : ""}`;
+  }
+
   return (
     <div 
-      className="relative overflow-hidden rounded-xl border border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] p-6 transition-all duration-300 hover:border-[#CC0000]/50 hover:shadow-[0_0_20px_rgba(204,0,0,0.15)] hover:-translate-y-0.5 group animate-card-in opacity-0"
+      className="relative overflow-hidden rounded-xl border border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] p-6 group animate-card-in opacity-0 stat-card-glow"
       style={{ animationDelay: `${index * 0.08}s` }}
     >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-white/50">{title}</p>
           <h3 className="mt-2 text-4xl font-bold tracking-tight text-white md:text-5xl">
-            {value}
+            {displayValue}
           </h3>
         </div>
         <div className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${colorMap[color]}`}>

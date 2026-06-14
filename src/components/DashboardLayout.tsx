@@ -205,7 +205,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <img
               src="/mrsoft-logo-new.png"
               alt="MRsoft Logo"
-              className="object-contain logo-blend"
+              className="object-contain logo-blend sidebar-logo"
               style={{
                 height: 36,
                 width: "auto",
@@ -222,7 +222,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           {items.map(item => {
             const active = pathname === item.to;
             return (
-              <Link key={item.to} to={item.to} className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-smooth ${active ? "bg-[#CC0000]/15 text-white font-semibold" : "text-white/70 hover:bg-white/5 hover:text-white"}`}>
+              <Link key={item.to} to={item.to} className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm sidebar-link ${active ? "sidebar-link-active font-semibold" : "text-white/70 hover:text-white"}`}>
                 <item.icon className="h-4 w-4" />
                 {item.label}
               </Link>
@@ -235,7 +235,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="text-sm font-medium truncate text-white">{user.fullName ?? "—"}</div>
             <div className="text-xs text-white/50 capitalize flex items-center gap-1 mt-1"><Shield className="h-3 w-3" /> {role}</div>
           </div>
-          <Button onClick={signOut} variant="ghost" size="sm" className="w-full justify-start text-white/70 hover:bg-white/5 hover:text-white">
+          <Button onClick={signOut} variant="ghost" size="sm" className="w-full justify-start text-white/70 hover:bg-white/5 hover:text-white sidebar-signout-btn">
             <LogOut className="h-4 w-4" /> Sign out
           </Button>
         </div>
@@ -246,7 +246,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <img
               src="/mrsoft-logo-new.png"
               alt="MRsoft Logo"
-              className="object-contain logo-blend"
+              className="object-contain logo-blend sidebar-logo"
               style={{
                 height: 36,
                 width: "auto",
@@ -258,7 +258,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               }}
             />
           </Link>
-          <Button onClick={signOut} variant="ghost" size="sm" className="text-white"><LogOut className="h-4 w-4" /></Button>
+          <Button onClick={signOut} variant="ghost" size="sm" className="text-white sidebar-signout-btn"><LogOut className="h-4 w-4" /></Button>
         </div>
         {children}
       </main>

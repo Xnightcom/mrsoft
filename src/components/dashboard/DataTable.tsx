@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Column<T> {
   key: string;
@@ -13,6 +14,7 @@ interface DataTableProps<T> {
   data: T[];
   onRowClick?: (item: T) => void;
   pageSize?: number;
+  isLoading?: boolean;
 }
 
 export function DataTable<T extends { id?: string | number }>({
@@ -20,6 +22,7 @@ export function DataTable<T extends { id?: string | number }>({
   data,
   onRowClick,
   pageSize = 10,
+  isLoading = false,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -47,7 +50,24 @@ export function DataTable<T extends { id?: string | number }>({
             </tr>
           </thead>
           <tbody className="divide-y divide-[rgba(26,107,26,0.1)]">
-            {paginatedData.length === 0 ? (
+            {isLoading ? (
+              Array(5).fill(0).map((_, i) => (
+                <tr key={i} className="border-b border-[rgba(26,107,26,0.1)]">
+                  {columns.map((col, cIdx) => (
+                    <td key={col.key} className="px-6 py-4">
+                      {cIdx === 0 ? (
+                        <div className="flex items-center gap-2">
+                          <Skeleton rounded h={32} w={32} />
+                          <Skeleton w="60%" h={12} />
+                        </div>
+                      ) : (
+                        <Skeleton w={cIdx % 2 === 0 ? "50%" : "30%"} h={12} />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center text-white/50">
                   No records found.

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Search, ShieldAlert, UserCheck, Key, User as UserIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/users")({
   component: AdminUsersPage,
@@ -349,23 +350,19 @@ function AdminUsersPage() {
           </TabsList>
 
           <TabsContent value="all" className="mt-4">
-            {isLoading ? (
-              <div className="h-96 rounded-xl bg-white/5 animate-pulse border border-[rgba(26,107,26,0.3)]" />
-            ) : (
-              <DataTable columns={columns} data={getFilteredUsers("all")} />
-            )}
+            <DataTable columns={columns} data={getFilteredUsers("all")} isLoading={isLoading} />
           </TabsContent>
           <TabsContent value="pending" className="mt-4">
-            <DataTable columns={columns} data={getFilteredUsers("pending")} />
+            <DataTable columns={columns} data={getFilteredUsers("pending")} isLoading={isLoading} />
           </TabsContent>
           <TabsContent value="instructor" className="mt-4">
-            <DataTable columns={columns} data={getFilteredUsers("instructor")} />
+            <DataTable columns={columns} data={getFilteredUsers("instructor")} isLoading={isLoading} />
           </TabsContent>
           <TabsContent value="student" className="mt-4">
-            <DataTable columns={columns} data={getFilteredUsers("student")} />
+            <DataTable columns={columns} data={getFilteredUsers("student")} isLoading={isLoading} />
           </TabsContent>
           <TabsContent value="client" className="mt-4">
-            <DataTable columns={columns} data={getFilteredUsers("client")} />
+            <DataTable columns={columns} data={getFilteredUsers("client")} isLoading={isLoading} />
           </TabsContent>
         </Tabs>
       </div>
