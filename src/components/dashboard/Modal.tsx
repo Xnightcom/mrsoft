@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -9,79 +9,98 @@ interface ModalProps {
   className?: string;
 }
 
-export function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
-
+export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) return null;
 
   return (
-    <>
-      <style>{`
-        .custom-modal-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 1000;
-          background: rgba(0,0,0,0.85);
-          backdrop-filter: blur(8px);
-          overflow-y: auto;
-          overflow-x: hidden;
-          padding: 24px 16px;
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        background: "rgba(0,0,0,0.85)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: "24px 16px",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
         }
-        .custom-modal-card {
-          background: #0F0F0F;
-          border: 1px solid rgba(204,0,0,0.3);
-          border-radius: 16px;
-          padding: 32px;
-          width: 100%;
-          max-width: 600px;
-          margin: 0 auto;
-          position: relative;
-        }
-        @media (max-width: 768px) {
-          .custom-modal-card {
-            padding: 20px;
-            border-radius: 12px;
-          }
-        }
-      `}</style>
-      <div 
-        className="custom-modal-overlay" 
-        onClick={(e) => {
-          // Only close if clicking the overlay itself
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
+      }}
+    >
+      <div
+        style={{
+          background: "#0F0F0F",
+          border: "1px solid rgba(204,0,0,0.3)",
+          borderRadius: 16,
+          padding: 32,
+          width: "100%",
+          maxWidth: 600,
+          margin: "0 auto",
+          position: "relative",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className={`custom-modal-card ${className || ""}`}>
-          {/* Header */}
-          <div className="border-b border-[rgba(26,107,26,0.3)] pb-4 mb-4 pr-8">
-            <h3 className="text-xl font-semibold text-white tracking-wide">{title}</h3>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ position: 'absolute', top: 16, right: 16 }}
-              className="rounded-lg p-1 text-white/50 hover:bg-white/5 hover:text-white transition-colors modal-close-btn"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        {/* Header */}
+        <div
+          style={{
+            borderBottom: "1px solid rgba(26,107,26,0.3)",
+            paddingBottom: 16,
+            marginBottom: 20,
+            paddingRight: 40,
+          }}
+        >
+          <h3
+            style={{
+              color: "white",
+              fontSize: 20,
+              fontWeight: 600,
+              margin: 0,
+              letterSpacing: "0.02em",
+            }}
+          >
+            {title}
+          </h3>
+        </div>
 
-          {/* Content */}
-          <div className="text-white/90">
-            {children}
-          </div>
+        {/* Close button — absolutely positioned */}
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: 6,
+            borderRadius: 8,
+            color: "rgba(255,255,255,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+            (e.currentTarget as HTMLButtonElement).style.color = "white";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+            (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)";
+          }}
+        >
+          <X size={20} />
+        </button>
+
+        {/* Content */}
+        <div style={{ color: "rgba(255,255,255,0.9)" }}>
+          {children}
         </div>
       </div>
-    </>
+    </div>
   );
 }
