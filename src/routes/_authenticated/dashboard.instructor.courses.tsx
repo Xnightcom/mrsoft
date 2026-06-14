@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { BookOpen, Users, CheckSquare, Calendar as CalendarIcon, FileText, Download, Edit3, CheckCircle } from "lucide-react";
 
+const EMPTY_ARRAY: any[] = [];
+
 export const Route = createFileRoute("/_authenticated/dashboard/instructor/courses")({
   component: InstructorCoursesPage,
 });
@@ -36,7 +38,7 @@ function InstructorCoursesPage() {
     max_grade: 100,
   });
 
-  const { data: courses = [], isLoading } = useQuery({
+  const { data: courses = EMPTY_ARRAY, isLoading } = useQuery({
     queryKey: ["instructor-courses", profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
@@ -52,7 +54,7 @@ function InstructorCoursesPage() {
   });
 
   // Queries for the selected course
-  const { data: enrollments = [] } = useQuery({
+  const { data: enrollments = EMPTY_ARRAY } = useQuery({
     queryKey: ["course-enrollments", selectedCourse?.id],
     queryFn: async () => {
       if (!selectedCourse?.id) return [];
@@ -69,7 +71,7 @@ function InstructorCoursesPage() {
     enabled: !!selectedCourse?.id,
   });
 
-  const { data: books = [] } = useQuery({
+  const { data: books = EMPTY_ARRAY } = useQuery({
     queryKey: ["course-books", selectedCourse?.id],
     queryFn: async () => {
       if (!selectedCourse?.id) return [];
@@ -84,7 +86,7 @@ function InstructorCoursesPage() {
     enabled: !!selectedCourse?.id,
   });
 
-  const { data: assignments = [] } = useQuery({
+  const { data: assignments = EMPTY_ARRAY } = useQuery({
     queryKey: ["course-assignments", selectedCourse?.id],
     queryFn: async () => {
       if (!selectedCourse?.id) return [];
@@ -99,7 +101,7 @@ function InstructorCoursesPage() {
     enabled: !!selectedCourse?.id,
   });
 
-  const { data: attendance = [] } = useQuery({
+  const { data: attendance } = useQuery({
     queryKey: ["course-attendance", selectedCourse?.id, selectedDate],
     queryFn: async () => {
       if (!selectedCourse?.id) return [];
@@ -116,9 +118,11 @@ function InstructorCoursesPage() {
 
   React.useEffect(() => {
     const map: Record<string, boolean> = {};
-    attendance.forEach((a: any) => {
-      map[a.student_id] = a.attended;
-    });
+    if (attendance) {
+      attendance.forEach((a: any) => {
+        map[a.student_id] = a.attended;
+      });
+    }
     setAttendanceState(map);
   }, [attendance]);
 
