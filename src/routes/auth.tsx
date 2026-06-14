@@ -159,7 +159,7 @@ function AuthPage() {
               <img
                 src="/mrsoft-logo-new.png"
                 alt="MRsoft Logo"
-                className="object-contain mb-4 animate-float logo-blend"
+                className="object-contain mb-4 logo-blend"
                 style={{
                   height: 80,
                   width: "auto",
