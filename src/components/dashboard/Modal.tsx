@@ -29,14 +29,12 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
         .custom-modal-overlay {
           position: fixed;
           inset: 0;
+          z-index: 1000;
           background: rgba(0,0,0,0.85);
           backdrop-filter: blur(8px);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 16px;
           overflow-y: auto;
+          overflow-x: hidden;
+          padding: 24px 16px;
         }
         .custom-modal-card {
           background: #0F0F0F;
@@ -45,35 +43,33 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
           padding: 32px;
           width: 100%;
           max-width: 600px;
-          max-height: calc(100vh - 32px);
-          overflow-y: auto;
+          margin: 0 auto;
           position: relative;
-          margin: auto;
         }
         @media (max-width: 768px) {
           .custom-modal-card {
             padding: 20px;
-            max-width: 100%;
-            max-height: calc(100vh - 16px);
-            border-radius: 12px 12px 0 0;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            margin: 0;
+            border-radius: 12px;
           }
         }
       `}</style>
-      <div className="custom-modal-overlay" onClick={onClose}>
-        <div 
-          className={\`custom-modal-card \${className || ""}\`} 
-          onClick={(e) => e.stopPropagation()}
-        >
+      <div 
+        className="custom-modal-overlay" 
+        onClick={(e) => {
+          // Only close if clicking the overlay itself
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div className={`custom-modal-card ${className || ""}`}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[rgba(26,107,26,0.3)] pb-4">
+          <div className="border-b border-[rgba(26,107,26,0.3)] pb-4 mb-4 pr-8">
             <h3 className="text-xl font-semibold text-white tracking-wide">{title}</h3>
             <button
+              type="button"
               onClick={onClose}
+              style={{ position: 'absolute', top: 16, right: 16 }}
               className="rounded-lg p-1 text-white/50 hover:bg-white/5 hover:text-white transition-colors modal-close-btn"
             >
               <X className="h-5 w-5" />
@@ -81,7 +77,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
           </div>
 
           {/* Content */}
-          <div className="mt-4 text-white/90">
+          <div className="text-white/90">
             {children}
           </div>
         </div>

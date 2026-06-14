@@ -477,7 +477,10 @@ function AdminCoursesPage() {
       {/* Add Course Modal */}
       <Modal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          resetForm();
+        }}
         title="Add New Course"
       >
         <form
@@ -487,14 +490,44 @@ function AdminCoursesPage() {
           }}
           className="space-y-4 text-xs"
         >
-          <div className="space-y-1">
-            <Label className="text-white/70">Title</Label>
-            <Input
-              required
-              placeholder="e.g. Fullstack Web Engineering"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
+          <div style={{ marginBottom: 16 }}>
+            <label style={{
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: 13,
+              display: 'block',
+              marginBottom: 6
+            }}>
+              Course Title *
+            </label>
+            <input
+              type="text"
+              value={formData.title ?? ''}
+              onChange={e => setFormData(prev => ({
+                ...prev,
+                title: e.target.value
+              }))}
+              placeholder="e.g. Introduction to Web Development"
+              style={{
+                width: '100%',
+                background: '#111',
+                border: '1px solid rgba(26,107,26,0.4)',
+                borderRadius: 8,
+                padding: '10px 14px',
+                color: 'white',
+                fontSize: 14,
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s ease'
+              }}
+              onFocus={e => {
+                e.target.style.borderColor = '#CC0000'
+                e.target.style.boxShadow = 
+                  '0 0 0 3px rgba(204,0,0,0.15)'
+              }}
+              onBlur={e => {
+                e.target.style.borderColor = 
+                  'rgba(26,107,26,0.4)'
+                e.target.style.boxShadow = 'none'
+              }}
             />
           </div>
 
