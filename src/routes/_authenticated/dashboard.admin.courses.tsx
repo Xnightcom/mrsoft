@@ -150,8 +150,19 @@ function AdminCoursesPage() {
       }
 
       // Build course object with only valid columns
+      function generateSlug(title: string) {
+        return title
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          + '-' + Date.now()
+      }
+
       const coursePayload = {
         title: formData.title.trim(),
+        slug: generateSlug(formData.title.trim()),
         description: formData.description?.trim() 
           ?? '',
         level: formData.level ?? 'beginner',
@@ -510,7 +521,8 @@ function AdminCoursesPage() {
             background: 'rgba(0,0,0,0.85)',
             backdropFilter: 'blur(8px)',
             overflowY: 'auto',
-            padding: '24px 16px',
+            WebkitOverflowScrolling: 'touch',
+            padding: '20px',
           }}
         >
           <div
@@ -521,8 +533,9 @@ function AdminCoursesPage() {
               padding: 32,
               width: '100%',
               maxWidth: 600,
-              margin: '0 auto',
+              margin: '0 auto 20px auto',
               position: 'relative',
+              boxSizing: 'border-box',
             }}
           >
             {/* X close button */}
