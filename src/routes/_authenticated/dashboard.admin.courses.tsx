@@ -555,13 +555,13 @@ function AdminCoursesPage() {
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={e => {
-                e.target.style.color = '#CC0000'
-                e.target.style.transform = 'rotate(90deg)'
+                (e.target as HTMLElement).style.color = '#CC0000';
+                (e.target as HTMLElement).style.transform = 'rotate(90deg)';
               }}
               onMouseLeave={e => {
-                e.target.style.color = 
-                  'rgba(255,255,255,0.5)'
-                e.target.style.transform = 'rotate(0deg)'
+                (e.target as HTMLElement).style.color = 
+                  'rgba(255,255,255,0.5)';
+                (e.target as HTMLElement).style.transform = 'rotate(0deg)';
               }}
             >
               ✕
@@ -694,7 +694,7 @@ function AdminCoursesPage() {
                   value={formData.duration_hours ?? 10}
                   onChange={e => setFormData(p => ({
                     ...p, 
-                    duration_hours: Number(e.target.value)
+                    duration_hours: e.target.value
                   }))}
                   style={{
                     width: '100%',
