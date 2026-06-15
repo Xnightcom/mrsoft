@@ -131,6 +131,24 @@ function AdminCoursesPage() {
         return
       }
 
+      console.log('Current user ID:', session?.user?.id)
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session?.user?.id)
+        .maybeSingle()
+
+      console.log('Current role:', profile?.role)
+
+      if (profile?.role !== 'admin') {
+        showToast(
+          'Only admins can create courses', 
+          'error'
+        )
+        return
+      }
+
       // Build course object with only valid columns
       const coursePayload = {
         title: formData.title.trim(),
@@ -475,119 +493,96 @@ function AdminCoursesPage() {
       </div>
 
       {/* Add Course Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          resetForm();
-        }}
-        title="Add New Course"
-      >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleCreateCourse();
+      {showModal && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowModal(false)
+            }
           }}
-          className="space-y-4 text-xs"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1000,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(8px)',
+            overflowY: 'auto',
+            padding: '24px 16px',
+          }}
         >
-          <div style={{ marginBottom: 16 }}>
-            <label style={{
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: 13,
-              display: 'block',
-              marginBottom: 6
-            }}>
-              Course Title *
-            </label>
-            <input
-              type="text"
-              value={formData.title ?? ''}
-              onChange={e => setFormData(prev => ({
-                ...prev,
-                title: e.target.value
-              }))}
-              placeholder="e.g. Introduction to Web Development"
+          <div
+            style={{
+              background: '#0F0F0F',
+              border: '1px solid rgba(204,0,0,0.3)',
+              borderRadius: 16,
+              padding: 32,
+              width: '100%',
+              maxWidth: 600,
+              margin: '0 auto',
+              position: 'relative',
+            }}
+          >
+            {/* X close button */}
+            <button
+              onClick={() => setShowModal(false)}
               style={{
-                width: '100%',
-                background: '#111',
-                border: '1px solid rgba(26,107,26,0.4)',
-                borderRadius: 8,
-                padding: '10px 14px',
-                color: 'white',
-                fontSize: 14,
-                boxSizing: 'border-box',
-                transition: 'border-color 0.2s ease'
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.5)',
+                fontSize: 20,
+                cursor: 'pointer',
+                lineHeight: 1,
+                padding: 4,
+                transition: 'all 0.2s ease',
               }}
-              onFocus={e => {
-                e.target.style.borderColor = '#CC0000'
-                e.target.style.boxShadow = 
-                  '0 0 0 3px rgba(204,0,0,0.15)'
+              onMouseEnter={e => {
+                e.target.style.color = '#CC0000'
+                e.target.style.transform = 'rotate(90deg)'
               }}
-              onBlur={e => {
-                e.target.style.borderColor = 
-                  'rgba(26,107,26,0.4)'
-                e.target.style.boxShadow = 'none'
+              onMouseLeave={e => {
+                e.target.style.color = 
+                  'rgba(255,255,255,0.5)'
+                e.target.style.transform = 'rotate(0deg)'
               }}
-            />
-          </div>
+            >
+              ✕
+            </button>
 
-          <div className="space-y-1">
-            <Label className="text-white/70">Description</Label>
-            <Textarea
-              placeholder="Provide a summary of goals and outline..."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white min-h-[80px]"
-            />
-          </div>
+            {/* Modal title */}
+            <h2 style={{
+              color: 'white',
+              fontSize: 20,
+              fontWeight: 700,
+              marginBottom: 24,
+              paddingRight: 32
+            }}>
+              Add New Course
+            </h2>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-white/70">Level</Label>
-              <Select
-                value={formData.level}
-                onValueChange={(val) => setFormData({ ...formData, level: val })}
-              >
-                <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0F0F0F] border-[rgba(26,107,26,0.3)] text-white">
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-white/70">Duration (Hours)</Label>
-              <Input
-                type="number"
-                value={formData.duration_hours}
-                onChange={(e) => setFormData({ ...formData, duration_hours: e.target.value })}
-                className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-white/70">Max Students</Label>
-              <Input
-                type="number"
-                value={formData.max_students}
-                onChange={(e) => setFormData({ ...formData, max_students: parseInt(e.target.value) || 30 })}
-                className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-white/70">Assign Instructor</Label>
-              {/* FIX 3: ASSIGN INSTRUCTOR DROPDOWN */}
-              <select
-                value={formData.instructor_id ?? ''}
-                onChange={e => setFormData(prev => ({
-                  ...prev,
-                  instructor_id: e.target.value || ""
+            {/* FIELD 1 - Course Title */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 13,
+                display: 'block',
+                marginBottom: 6,
+                fontWeight: 500
+              }}>
+                Course Title *
+              </label>
+              <input
+                type="text"
+                value={formData.title ?? ''}
+                onChange={e => setFormData(p => ({
+                  ...p, title: e.target.value
                 }))}
+                placeholder="e.g. Web Development Fundamentals"
                 style={{
                   width: '100%',
                   background: '#111',
@@ -596,34 +591,190 @@ function AdminCoursesPage() {
                   padding: '10px 14px',
                   color: 'white',
                   fontSize: 14,
-                  cursor: 'pointer'
+                  boxSizing: 'border-box',
+                  outline: 'none',
                 }}
-              >
-                <option value="">-- Select Instructor --</option>
-                {instructors.length === 0 ? (
-                  <option disabled value="">
-                    No instructors found — assign role first
+              />
+            </div>
+
+            {/* FIELD 2 - Description */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 13,
+                display: 'block',
+                marginBottom: 6,
+                fontWeight: 500
+              }}>
+                Description
+              </label>
+              <textarea
+                value={formData.description ?? ''}
+                onChange={e => setFormData(p => ({
+                  ...p, description: e.target.value
+                }))}
+                placeholder="Provide a summary of goals and outline..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  background: '#111',
+                  border: '1px solid rgba(26,107,26,0.4)',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  color: 'white',
+                  fontSize: 14,
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+
+            {/* FIELD 3+4 - Level + Duration side by side */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 12,
+              marginBottom: 16
+            }}>
+              <div>
+                <label style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 13,
+                  display: 'block',
+                  marginBottom: 6
+                }}>Level</label>
+                <select
+                  value={formData.level ?? 'beginner'}
+                  onChange={e => setFormData(p => ({
+                    ...p, level: e.target.value
+                  }))}
+                  style={{
+                    width: '100%',
+                    background: '#111',
+                    border: '1px solid rgba(26,107,26,0.4)',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                    color: 'white',
+                    fontSize: 14,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">
+                    Intermediate
                   </option>
-                ) : (
-                  instructors.map((inst: any) => (
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+              <div>
+                <label style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 13,
+                  display: 'block',
+                  marginBottom: 6
+                }}>Duration (Hours)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.duration_hours ?? 10}
+                  onChange={e => setFormData(p => ({
+                    ...p, 
+                    duration_hours: Number(e.target.value)
+                  }))}
+                  style={{
+                    width: '100%',
+                    background: '#111',
+                    border: '1px solid rgba(26,107,26,0.4)',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                    color: 'white',
+                    fontSize: 14,
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* FIELD 5+6 - Max Students + Instructor */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 12,
+              marginBottom: 20
+            }}>
+              <div>
+                <label style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 13,
+                  display: 'block',
+                  marginBottom: 6
+                }}>Max Students</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.max_students ?? 30}
+                  onChange={e => setFormData(p => ({
+                    ...p,
+                    max_students: Number(e.target.value)
+                  }))}
+                  style={{
+                    width: '100%',
+                    background: '#111',
+                    border: '1px solid rgba(26,107,26,0.4)',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                    color: 'white',
+                    fontSize: 14,
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 13,
+                  display: 'block',
+                  marginBottom: 6
+                }}>Assign Instructor</label>
+                <select
+                  value={formData.instructor_id ?? ''}
+                  onChange={e => setFormData(p => ({
+                    ...p,
+                    instructor_id: e.target.value || ""
+                  }))}
+                  style={{
+                    width: '100%',
+                    background: '#111',
+                    border: '1px solid rgba(26,107,26,0.4)',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                    color: 'white',
+                    fontSize: 14,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">
+                    -- Select Instructor --
+                  </option>
+                  {instructors?.map(inst => (
                     <option key={inst.id} value={inst.id}>
                       {inst.full_name}
                     </option>
-                  ))
+                  ))}
+                </select>
+                {(!instructors || instructors.length === 0) && (
+                  <p style={{
+                    color: '#F59E0B',
+                    fontSize: 11,
+                    marginTop: 4
+                  }}>
+                    ⚠️ No instructors — assign role in Users
+                  </p>
                 )}
-              </select>
-              {instructors.length === 0 && (
-                <p style={{
-                  color: '#F59E0B',
-                  fontSize: 12,
-                  marginTop: 6
-                }}>
-                  ⚠️ No instructors found. Go to Users page 
-                  and change a user's role to "Instructor" first.
-                </p>
-              )}
+              </div>
             </div>
-          </div>
 
           {/* Class Schedule */}
           <div className="space-y-3 pt-2 border-t border-white/10">
@@ -778,25 +929,53 @@ function AdminCoursesPage() {
             <Label className="text-white/80">Publish immediately</Label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(26,107,26,0.1)]">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-[rgba(26,107,26,0.3)] text-white/70 hover:bg-white/5"
-              onClick={() => setShowModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={saving}
-              className="bg-[#CC0000] hover:bg-[#CC0000]/80 text-white"
-            >
-              {saving ? "Creating..." : "Create Course"}
-            </Button>
+          {/* Bottom buttons */}
+            <div style={{
+              display: 'flex',
+              gap: 12,
+              justifyContent: 'flex-end',
+              marginTop: 24,
+              paddingTop: 20,
+              borderTop: '1px solid rgba(255,255,255,0.08)'
+            }}>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)',
+                  padding: '10px 24px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateCourse}
+                disabled={saving || !formData.title?.trim()}
+                style={{
+                  background: saving 
+                    ? 'rgba(204,0,0,0.5)' 
+                    : '#CC0000',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '10px 24px',
+                  fontWeight: 700,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  fontSize: 14,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {saving ? 'Creating...' : 'Create Course'}
+              </button>
+            </div>
           </div>
-        </form>
-      </Modal>
+        </div>
+      )}
 
       {/* Add Lesson Modal */}
       <Modal
