@@ -23,6 +23,16 @@ function AdminCoursesPage() {
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showModal]);
   // --- FIX 5: COURSE LIST DISPLAY ---
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -520,9 +530,11 @@ function AdminCoursesPage() {
             zIndex: 1000,
             background: 'rgba(0,0,0,0.85)',
             backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
             overflowY: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            padding: '20px',
+            padding: '40px 16px',
           }}
         >
           <div
@@ -533,9 +545,9 @@ function AdminCoursesPage() {
               padding: 32,
               width: '100%',
               maxWidth: 600,
-              margin: '0 auto 20px auto',
+              flexShrink: 0,
+              marginBottom: 40,
               position: 'relative',
-              boxSizing: 'border-box',
             }}
           >
             {/* X close button */}
