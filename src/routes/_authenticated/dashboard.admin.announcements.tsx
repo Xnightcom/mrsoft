@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { supabase } from '@/integrations/supabase/client'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { Modal } from '@/components/dashboard/Modal'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/dashboard/admin/announcements')({
@@ -335,28 +336,13 @@ export default function AdminAnnouncements() {
         )}
 
         {/* Create Modal */}
-        {showModal && (
-          <div className="modal-overlay" style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div className="modal-card" style={{
-              background: '#0F0F0F',
-              border: '1px solid rgba(26,107,26,0.3)',
-              borderRadius: 16,
-              padding: 24,
-              width: '100%',
-              maxWidth: 500,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16
-            }}>
-              <h2 style={{ color: 'white', fontSize: 18, fontWeight: 700, margin: 0 }}>Create Announcement</h2>
+        <Modal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          title="Create Announcement"
+          maxWidth={500}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>Title</label>
@@ -479,8 +465,7 @@ export default function AdminAnnouncements() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
+        </Modal>
       </div>
     </DashboardLayout>
   )

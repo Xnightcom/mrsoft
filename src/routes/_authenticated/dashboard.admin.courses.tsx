@@ -23,16 +23,7 @@ function AdminCoursesPage() {
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
-  useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [showModal]);
+
   // --- FIX 5: COURSE LIST DISPLAY ---
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -514,81 +505,11 @@ function AdminCoursesPage() {
       </div>
 
       {/* Add Course Modal */}
-      {showModal && (
-        <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowModal(false)
-            }
-          }}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 1000,
-            background: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
-            overflowY: 'auto',
-            padding: '40px 16px',
-          }}
-        >
-          <div
-            style={{
-              background: '#0F0F0F',
-              border: '1px solid rgba(204,0,0,0.3)',
-              borderRadius: 16,
-              padding: 32,
-              width: '100%',
-              maxWidth: 600,
-              flexShrink: 0,
-              marginBottom: 40,
-              position: 'relative',
-            }}
-          >
-            {/* X close button */}
-            <button
-              onClick={() => setShowModal(false)}
-              style={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                background: 'none',
-                border: 'none',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: 20,
-                cursor: 'pointer',
-                lineHeight: 1,
-                padding: 4,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => {
-                (e.target as HTMLElement).style.color = '#CC0000';
-                (e.target as HTMLElement).style.transform = 'rotate(90deg)';
-              }}
-              onMouseLeave={e => {
-                (e.target as HTMLElement).style.color = 
-                  'rgba(255,255,255,0.5)';
-                (e.target as HTMLElement).style.transform = 'rotate(0deg)';
-              }}
-            >
-              ✕
-            </button>
-
-            {/* Modal title */}
-            <h2 style={{
-              color: 'white',
-              fontSize: 20,
-              fontWeight: 700,
-              marginBottom: 24,
-              paddingRight: 32
-            }}>
-              Add New Course
-            </h2>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Add New Course"
+      >
 
             {/* FIELD 1 - Course Title */}
             <div style={{ marginBottom: 16 }}>
@@ -998,9 +919,7 @@ function AdminCoursesPage() {
                 {saving ? 'Creating...' : 'Create Course'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Add Lesson Modal */}
       <Modal
