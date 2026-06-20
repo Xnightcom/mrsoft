@@ -13,16 +13,17 @@ interface StatCardProps {
 export function StatCard({ title, value, icon: Icon, color = "red", index = 0 }: StatCardProps) {
   const colorMap = {
     red: "bg-[#CC0000]/10 text-[#CC0000] border-[#CC0000]/30 hover:border-[#CC0000] hover:shadow-[0_0_15px_rgba(204,0,0,0.25)]",
-    green: "bg-[#1A6B1A]/10 text-[#1A6B1A] border-[#1A6B1A]/30 hover:border-[#1A6B1A] hover:shadow-[0_0_15px_rgba(26,107,26,0.25)]",
+    green:
+      "bg-[#1A6B1A]/10 text-[#1A6B1A] border-[#1A6B1A]/30 hover:border-[#1A6B1A] hover:shadow-[0_0_15px_rgba(26,107,26,0.25)]",
     blue: "bg-[#1A3A6B]/10 text-[#3B82F6] border-[#1A3A6B]/30 hover:border-[#3B82F6] hover:shadow-[0_0_15px_rgba(59,130,246,0.25)]",
-    yellow: "bg-yellow-500/10 text-yellow-500 border-yellow-500/30 hover:border-yellow-500 hover:shadow-[0_0_15px_rgba(234,179,8,0.25)]",
+    yellow:
+      "bg-yellow-500/10 text-yellow-500 border-yellow-500/30 hover:border-yellow-500 hover:shadow-[0_0_15px_rgba(234,179,8,0.25)]",
   };
 
   // Attempt to parse a numeric value
-  const numericPart = typeof value === "number" 
-    ? value 
-    : parseFloat(String(value).replace(/[^0-9.]/g, ""));
-  
+  const numericPart =
+    typeof value === "number" ? value : parseFloat(String(value).replace(/[^0-9.]/g, ""));
+
   const hasNumber = !isNaN(numericPart) && isFinite(numericPart);
   const animatedValue = useCountUp(hasNumber ? numericPart : 0);
 
@@ -32,14 +33,15 @@ export function StatCard({ title, value, icon: Icon, color = "red", index = 0 }:
     const isPercent = String(value).includes("%");
     const isCurrency = String(value).includes("$");
     const hasPlus = String(value).includes("+");
-    const isDecimal = String(value).includes(".") || (typeof value === "number" && !Number.isInteger(value));
-    
+    const isDecimal =
+      String(value).includes(".") || (typeof value === "number" && !Number.isInteger(value));
+
     const formattedNum = isDecimal ? animatedValue.toFixed(1) : Math.floor(animatedValue);
     displayValue = `${isCurrency ? "$" : ""}${formattedNum}${isPercent ? "%" : ""}${hasPlus ? "+" : ""}`;
   }
 
   return (
-    <div 
+    <div
       className="relative overflow-hidden rounded-xl border border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] p-6 group animate-card-in opacity-0 stat-card-glow"
       style={{ animationDelay: `${index * 0.08}s` }}
     >
@@ -50,7 +52,9 @@ export function StatCard({ title, value, icon: Icon, color = "red", index = 0 }:
             {displayValue}
           </h3>
         </div>
-        <div className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${colorMap[color]}`}>
+        <div
+          className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${colorMap[color]}`}
+        >
           <Icon className="h-6 w-6" />
         </div>
       </div>

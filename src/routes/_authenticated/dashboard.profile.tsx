@@ -20,16 +20,28 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!user.userId) return;
-    supabase.from("profiles").select("*").eq("id", user.userId).maybeSingle().then(({ data }: any) => {
-      if (data) setForm({ full_name: data.full_name ?? "", phone: data.phone ?? "", company: data.company ?? "" });
-    });
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.userId)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data)
+          setForm({
+            full_name: data.full_name ?? "",
+            phone: data.phone ?? "",
+            company: data.company ?? "",
+          });
+      });
   }, [user.userId]);
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user.userId) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").upsert({ id: user.userId, ...form, updated_at: new Date().toISOString() });
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.userId, ...form, updated_at: new Date().toISOString() });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile saved");
@@ -43,11 +55,34 @@ function ProfilePage() {
         <Card className="mt-8">
           <CardContent className="p-8">
             <form onSubmit={save} className="space-y-4">
-              <div><Label>Email</Label><Input value={user.email ?? ""} disabled /></div>
-              <div><Label>Full name</Label><Input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} /></div>
-              <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-              <div><Label>Company</Label><Input value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} /></div>
-              <Button type="submit" variant="hero" disabled={saving}>{saving ? "Saving..." : "Save changes"}</Button>
+              <div>
+                <Label>Email</Label>
+                <Input value={user.email ?? ""} disabled />
+              </div>
+              <div>
+                <Label>Full name</Label>
+                <Input
+                  value={form.full_name}
+                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Company</Label>
+                <Input
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                />
+              </div>
+              <Button type="submit" variant="hero" disabled={saving}>
+                {saving ? "Saving..." : "Save changes"}
+              </Button>
             </form>
           </CardContent>
         </Card>

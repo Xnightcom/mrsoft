@@ -48,9 +48,11 @@ function AuthCallbackPage() {
         await supabase.auth.getSession();
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       let targetPath = "/dashboard/client";
-      
+
       if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -59,17 +61,19 @@ function AuthCallbackPage() {
           .maybeSingle();
 
         if (profile?.is_suspended) {
-          navigate({ 
-            to: '/auth',
-            search: { 
-              error: 'suspended',
-              reason: profile.suspended_reason ?? 'Your account has been suspended. Contact tambikingdavid@gmail.com'
-            } as any
+          navigate({
+            to: "/auth",
+            search: {
+              error: "suspended",
+              reason:
+                profile.suspended_reason ??
+                "Your account has been suspended. Contact tambikingdavid@gmail.com",
+            } as any,
           });
           await supabase.auth.signOut();
           return;
         }
-        
+
         if (profile?.role === "admin") {
           targetPath = "/dashboard/admin";
         } else if (profile?.role === "instructor") {

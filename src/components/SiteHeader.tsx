@@ -23,7 +23,10 @@ export function SiteHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#060606] border-b" style={{ borderBottomColor: "rgba(26,107,26,0.5)" }}>
+    <header
+      className="sticky top-0 z-50 w-full bg-[#060606] border-b"
+      style={{ borderBottomColor: "rgba(26,107,26,0.5)" }}
+    >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center justify-start py-1">
           <img
@@ -37,7 +40,7 @@ export function SiteHeader() {
               background: "transparent",
               filter: "contrast(1.1) brightness(1.05)",
               border: "none",
-              boxShadow: "none"
+              boxShadow: "none",
             }}
           />
         </Link>
@@ -48,7 +51,10 @@ export function SiteHeader() {
               key={n.to}
               to={n.to}
               className="px-4 py-2 text-sm font-medium text-white/80 hover:text-[#CC0000] transition-smooth nav-link-underline"
-              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-white nav-link-underline after:scale-x-100" }}
+              activeProps={{
+                className:
+                  "px-4 py-2 text-sm font-semibold text-white nav-link-underline after:scale-x-100",
+              }}
             >
               {n.label}
             </Link>
@@ -57,35 +63,65 @@ export function SiteHeader() {
 
         <div className="hidden md:flex items-center gap-2">
           {authed ? (
-            <Button asChild className="bg-[#CC0000] hover:bg-[#1A6B1A] text-white border-none font-semibold transition-all duration-300 ease-in-out rounded-md" size="sm">
+            <Button
+              asChild
+              className="bg-[#CC0000] hover:bg-[#1A6B1A] text-white border-none font-semibold transition-all duration-300 ease-in-out rounded-md"
+              size="sm"
+            >
               <Link to="/dashboard">Dashboard</Link>
             </Button>
           ) : (
             <>
-              <Button asChild variant="ghost" className="text-white hover:text-[#CC0000] hover:bg-transparent" size="sm">
+              <Button
+                asChild
+                variant="ghost"
+                className="text-white hover:text-[#CC0000] hover:bg-transparent"
+                size="sm"
+              >
                 <Link to="/auth">Sign in</Link>
               </Button>
-              <Button asChild className="bg-[#CC0000] hover:bg-[#1A6B1A] text-white border-none font-semibold transition-all duration-300 ease-in-out rounded-md" size="sm" style={{ borderRadius: 6 }}>
+              <Button
+                asChild
+                className="bg-[#CC0000] hover:bg-[#1A6B1A] text-white border-none font-semibold transition-all duration-300 ease-in-out rounded-md"
+                size="sm"
+                style={{ borderRadius: 6 }}
+              >
                 <Link to="/auth">Get started</Link>
               </Button>
             </>
           )}
         </div>
 
-        <button className="md:hidden p-2 text-white" onClick={() => setOpen(!open)} aria-label="Menu">
+        <button
+          className="md:hidden p-2 text-white"
+          onClick={() => setOpen(!open)}
+          aria-label="Menu"
+        >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
       {open && (
-        <div className="md:hidden border-t bg-[#060606]" style={{ borderTopColor: "rgba(26,107,26,0.3)" }}>
+        <div
+          className="md:hidden border-t bg-[#060606]"
+          style={{ borderTopColor: "rgba(26,107,26,0.3)" }}
+        >
           <nav className="container mx-auto flex flex-col px-4 py-2">
             {nav.map((n) => (
-              <Link key={n.to} to={n.to} onClick={() => setOpen(false)} className="py-3 text-sm font-medium text-white/80 hover:text-[#CC0000]">
+              <Link
+                key={n.to}
+                to={n.to}
+                onClick={() => setOpen(false)}
+                className="py-3 text-sm font-medium text-white/80 hover:text-[#CC0000]"
+              >
                 {n.label}
               </Link>
             ))}
-            <Link to="/auth" onClick={() => setOpen(false)} className="py-3 text-sm font-semibold text-[#CC0000]">
+            <Link
+              to="/auth"
+              onClick={() => setOpen(false)}
+              className="py-3 text-sm font-semibold text-[#CC0000]"
+            >
               {authed ? "Dashboard" : "Sign in"}
             </Link>
           </nav>

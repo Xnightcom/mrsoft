@@ -20,7 +20,11 @@ function CoursesPage() {
   const { data: courses } = useQuery({
     queryKey: ["courses-published"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("courses").select("*").eq("is_published", true).order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -30,7 +34,10 @@ function CoursesPage() {
     queryKey: ["my-enrollments", user.userId],
     enabled: !!user.userId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("enrollments").select("*").eq("student_id", user.userId!);
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("*")
+        .eq("student_id", user.userId!);
       if (error) throw error;
       return data;
     },
@@ -38,10 +45,15 @@ function CoursesPage() {
 
   const enroll = useMutation({
     mutationFn: async (courseId: string) => {
-      const { error } = await supabase.from("enrollments").insert({ student_id: user.userId!, course_id: courseId, progress: 0 });
+      const { error } = await supabase
+        .from("enrollments")
+        .insert({ student_id: user.userId!, course_id: courseId, progress: 0 });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Enrolled!"); qc.invalidateQueries({ queryKey: ["my-enrollments"] }); },
+    onSuccess: () => {
+      toast.success("Enrolled!");
+      qc.invalidateQueries({ queryKey: ["my-enrollments"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -65,12 +77,20 @@ function CoursesPage() {
                 return (
                   <Card key={e.id} className="hover:shadow-elegant transition-smooth">
                     <CardContent className="p-6">
-                      <div className="grid h-10 w-10 place-items-center rounded-lg gradient-primary text-primary-foreground mb-3"><BookOpen className="h-5 w-5" /></div>
+                      <div className="grid h-10 w-10 place-items-center rounded-lg gradient-primary text-primary-foreground mb-3">
+                        <BookOpen className="h-5 w-5" />
+                      </div>
                       <h3 className="font-semibold">{c.title}</h3>
                       <p className="text-xs text-muted-foreground mt-1">{c.category}</p>
-                      <div className="mt-3"><Progress value={e.progress ?? 0} /></div>
-                      <p className="text-xs text-muted-foreground mt-1">{e.progress ?? 0}% complete</p>
-                      <Button asChild variant="hero" size="sm" className="mt-4 w-full"><Link to="/dashboard/courses">Continue</Link></Button>
+                      <div className="mt-3">
+                        <Progress value={e.progress ?? 0} />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {e.progress ?? 0}% complete
+                      </p>
+                      <Button asChild variant="hero" size="sm" className="mt-4 w-full">
+                        <Link to="/dashboard/courses">Continue</Link>
+                      </Button>
                     </CardContent>
                   </Card>
                 );
@@ -82,22 +102,44 @@ function CoursesPage() {
         <section>
           <h2 className="text-xl font-semibold mb-4">Course catalog</h2>
           {!courses?.length ? (
-            <Card><CardContent className="p-10 text-center text-muted-foreground">No published courses yet. Check back soon.</CardContent></Card>
+            <Card>
+              <CardContent className="p-10 text-center text-muted-foreground">
+                No published courses yet. Check back soon.
+              </CardContent>
+            </Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses.map((c: any) => (
-                <Card key={c.id} className="hover:shadow-elegant transition-smooth overflow-hidden course-card">
+                <Card
+                  key={c.id}
+                  className="hover:shadow-elegant transition-smooth overflow-hidden course-card"
+                >
                   <div className="h-28 gradient-hero" />
                   <CardContent className="p-6">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> {c.duration_hours}h · {c.category}</div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" /> {c.duration_hours}h · {c.category}
+                    </div>
                     <h3 className="mt-2 font-semibold">{c.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{c.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {c.description}
+                    </p>
                     <div className="mt-4 flex items-center justify-between">
-                      <span className="font-bold">{Number(c.price) > 0 ? `$${c.price}` : "Free"}</span>
+                      <span className="font-bold">
+                        {Number(c.price) > 0 ? `$${c.price}` : "Free"}
+                      </span>
                       {enrolledIds.has(c.id) ? (
-                        <Button size="sm" variant="outline" disabled>Enrolled</Button>
+                        <Button size="sm" variant="outline" disabled>
+                          Enrolled
+                        </Button>
                       ) : (
-                        <Button size="sm" variant="hero" onClick={() => enroll.mutate(c.id)} disabled={enroll.isPending}>Enroll</Button>
+                        <Button
+                          size="sm"
+                          variant="hero"
+                          onClick={() => enroll.mutate(c.id)}
+                          disabled={enroll.isPending}
+                        >
+                          Enroll
+                        </Button>
                       )}
                     </div>
                   </CardContent>

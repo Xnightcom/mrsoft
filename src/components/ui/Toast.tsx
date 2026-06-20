@@ -1,6 +1,6 @@
-import React from 'react';
-import { useToast, ToastType } from '@/hooks/useToast';
-import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
+import React from "react";
+import { useToast, ToastType } from "@/hooks/useToast";
+import { CheckCircle, AlertCircle, Info, X } from "lucide-react";
 
 export function ToastProvider() {
   const { toasts, dismissToast } = useToast();
@@ -22,25 +22,35 @@ export function ToastProvider() {
   );
 }
 
-function Toast({ id, message, type, onDismiss }: { id: string; message: string; type: ToastType; onDismiss: () => void }) {
+function Toast({
+  id,
+  message,
+  type,
+  onDismiss,
+}: {
+  id: string;
+  message: string;
+  type: ToastType;
+  onDismiss: () => void;
+}) {
   const getStyles = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return {
-          bg: 'bg-[#0F0F0F]',
-          border: 'border-[#1A6B1A]',
+          bg: "bg-[#0F0F0F]",
+          border: "border-[#1A6B1A]",
           icon: <CheckCircle className="h-5 w-5 text-[#1A6B1A]" />,
         };
-      case 'error':
+      case "error":
         return {
-          bg: 'bg-[#0F0F0F]',
-          border: 'border-[#CC0000]',
+          bg: "bg-[#0F0F0F]",
+          border: "border-[#CC0000]",
           icon: <AlertCircle className="h-5 w-5 text-[#CC0000]" />,
         };
       default:
         return {
-          bg: 'bg-[#0F0F0F]',
-          border: 'border-[#1A3A6B]',
+          bg: "bg-[#0F0F0F]",
+          border: "border-[#1A3A6B]",
           icon: <Info className="h-5 w-5 text-[#1A3A6B]" />,
         };
     }

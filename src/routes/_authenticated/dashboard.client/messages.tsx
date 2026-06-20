@@ -62,7 +62,10 @@ function ClientMessagesPage() {
           title: p.title,
           lastMessage: lastMsg?.content ?? "No messages yet. Say hello!",
           lastMessageTime: lastMsg?.created_at
-            ? new Date(lastMsg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            ? new Date(lastMsg.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
             : undefined,
         });
       }
@@ -125,7 +128,7 @@ function ClientMessagesPage() {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
-        }
+        },
       )
       .subscribe();
 
@@ -166,9 +169,7 @@ function ClientMessagesPage() {
         <div className="w-full md:w-80 border-r border-[rgba(26,107,26,0.3)] bg-[#0A0A0A] flex flex-col shrink-0">
           <div className="p-4 border-b border-[rgba(26,107,26,0.15)] flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-[#CC0000]" />
-            <h3 className="font-bold text-white text-sm tracking-wider uppercase">
-              Project Chats
-            </h3>
+            <h3 className="font-bold text-white text-sm tracking-wider uppercase">Project Chats</h3>
           </div>
 
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -226,7 +227,9 @@ function ClientMessagesPage() {
                   <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-white/40">
                     <MessageSquare className="h-10 w-10 text-white/20" />
                     <p className="text-xs">No project messages exchanged yet.</p>
-                    <p className="text-[10px] text-white/30">Write a message below to coordinate with our developers.</p>
+                    <p className="text-[10px] text-white/30">
+                      Write a message below to coordinate with our developers.
+                    </p>
                   </div>
                 ) : (
                   localMessages.map((msg) => {
@@ -243,7 +246,9 @@ function ClientMessagesPage() {
                               : "bg-[#111] text-white border-white/10 rounded-tl-none"
                           }`}
                         >
-                          <p className="leading-relaxed break-words whitespace-pre-wrap">{msg.content}</p>
+                          <p className="leading-relaxed break-words whitespace-pre-wrap">
+                            {msg.content}
+                          </p>
                           <span className="block text-[8px] text-white/40 text-right mt-1.5">
                             {new Date(msg.created_at).toLocaleTimeString([], {
                               hour: "2-digit",

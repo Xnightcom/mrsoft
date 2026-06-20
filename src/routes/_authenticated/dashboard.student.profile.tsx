@@ -44,7 +44,7 @@ function StudentProfilePage() {
         bio: form.bio,
       })
       .eq("id", profile.id);
-    
+
     setSaving(false);
     if (error) {
       toast.error(error.message);
@@ -59,7 +59,9 @@ function StudentProfilePage() {
       <div className="max-w-2xl space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Student Profile</h1>
-          <p className="text-white/50 text-sm mt-1">Manage your biographical and contact details.</p>
+          <p className="text-white/50 text-sm mt-1">
+            Manage your biographical and contact details.
+          </p>
         </div>
 
         <Card className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)]">
@@ -67,12 +69,17 @@ function StudentProfilePage() {
             <form onSubmit={save} className="space-y-4 text-xs">
               <div className="flex items-center gap-4 border-b border-white/5 pb-5">
                 <img
-                  src={profile?.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"}
+                  src={
+                    profile?.avatar_url ??
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                  }
                   alt={profile?.full_name ?? "Student"}
                   className="h-16 w-16 rounded-full border border-[rgba(26,107,26,0.5)] object-cover"
                 />
                 <div>
-                  <h4 className="font-bold text-white text-base">{profile?.full_name ?? "Student Member"}</h4>
+                  <h4 className="font-bold text-white text-base">
+                    {profile?.full_name ?? "Student Member"}
+                  </h4>
                   <span className="text-[10px] bg-[#1A6B1A]/10 border border-[#1A6B1A]/20 text-[#22c55e] px-2 py-0.5 rounded font-bold uppercase block w-fit mt-1">
                     Student Account
                   </span>

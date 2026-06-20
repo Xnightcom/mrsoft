@@ -37,7 +37,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   }
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${style}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${style}`}
+    >
       {norm}
     </span>
   );

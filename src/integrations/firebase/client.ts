@@ -1,11 +1,11 @@
-import { initializeApp, getApps } from 'firebase/app';
+import { initializeApp, getApps } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
   type User as FirebaseUser,
-} from 'firebase/auth';
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,8 +17,13 @@ const firebaseConfig = {
 let auth: ReturnType<typeof getAuth> | null = null;
 
 function ensureFirebaseAuth() {
-  if (typeof window === 'undefined') return null;
-  if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId || !firebaseConfig.appId) {
+  if (typeof window === "undefined") return null;
+  if (
+    !firebaseConfig.apiKey ||
+    !firebaseConfig.authDomain ||
+    !firebaseConfig.projectId ||
+    !firebaseConfig.appId
+  ) {
     return null;
   }
   if (!getApps().length) {
@@ -35,7 +40,7 @@ export const firebaseAuth = () => ensureFirebaseAuth();
 export async function signInWithGooglePopup() {
   const authInstance = ensureFirebaseAuth();
   if (!authInstance) {
-    throw new Error('Firebase is not configured for this environment.');
+    throw new Error("Firebase is not configured for this environment.");
   }
   const provider = new GoogleAuthProvider();
   return signInWithPopup(authInstance, provider);

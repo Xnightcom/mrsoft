@@ -16,7 +16,8 @@ function CertificatesPage() {
     queryKey: ["certs", user.userId],
     enabled: !!user.userId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("certificates")
+      const { data, error } = await supabase
+        .from("certificates")
         .select("id, issued_at, course:courses(title)")
         .eq("student_id", user.userId!);
       if (error) throw error;
@@ -31,22 +32,32 @@ function CertificatesPage() {
         <p className="text-muted-foreground">Earned upon completing a course.</p>
         <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {!data?.length ? (
-            <Card className="md:col-span-3"><CardContent className="p-10 text-center text-muted-foreground">No certificates yet. Complete a course to earn one.</CardContent></Card>
-          ) : data.map((c: any) => (
-            <Card key={c.id} className="hover:shadow-elegant transition-smooth overflow-hidden">
-              <div className="gradient-hero p-6 text-primary-foreground">
-                <Award className="h-10 w-10 mb-3" />
-                <div className="text-xs uppercase tracking-wider opacity-80">Certificate of Completion</div>
-                <div className="font-bold text-lg mt-1">{(c.course as { title: string } | null)?.title ?? "Course"}</div>
-              </div>
-              <CardContent className="p-6 text-sm">
-                <div className="text-muted-foreground">Issued</div>
-                <div className="font-medium">{new Date(c.issued_at).toLocaleDateString()}</div>
-                <div className="text-muted-foreground mt-3">Certificate ID</div>
-                <div className="font-mono text-xs">{c.id}</div>
+            <Card className="md:col-span-3">
+              <CardContent className="p-10 text-center text-muted-foreground">
+                No certificates yet. Complete a course to earn one.
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            data.map((c: any) => (
+              <Card key={c.id} className="hover:shadow-elegant transition-smooth overflow-hidden">
+                <div className="gradient-hero p-6 text-primary-foreground">
+                  <Award className="h-10 w-10 mb-3" />
+                  <div className="text-xs uppercase tracking-wider opacity-80">
+                    Certificate of Completion
+                  </div>
+                  <div className="font-bold text-lg mt-1">
+                    {(c.course as { title: string } | null)?.title ?? "Course"}
+                  </div>
+                </div>
+                <CardContent className="p-6 text-sm">
+                  <div className="text-muted-foreground">Issued</div>
+                  <div className="font-medium">{new Date(c.issued_at).toLocaleDateString()}</div>
+                  <div className="text-muted-foreground mt-3">Certificate ID</div>
+                  <div className="font-mono text-xs">{c.id}</div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </DashboardLayout>

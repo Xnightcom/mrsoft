@@ -43,12 +43,17 @@ export function NotificationBell() {
       .channel("notifications_channel")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${profile.id}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${profile.id}`,
+        },
         () => {
           qc.invalidateQueries({ queryKey: ["notifications", profile?.id] });
           setShake(true);
           setTimeout(() => setShake(false), 1000);
-        }
+        },
       )
       .subscribe();
     return () => {
@@ -77,10 +82,7 @@ export function NotificationBell() {
   });
 
   const handleMarkAsRead = async (id: string, link?: string | null) => {
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", id);
+    const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
     if (error) {
       toast.error(error.message);
     } else {
@@ -93,16 +95,19 @@ export function NotificationBell() {
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={(o) => {
-      setOpen(o);
-      if (o && unreadCount > 0) {
-        markAllAsRead.mutate();
-      }
-    }}>
+    <DropdownMenu
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o && unreadCount > 0) {
+          markAllAsRead.mutate();
+        }
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <button
           className={`relative rounded-lg p-1.5 text-white/70 hover:bg-white/5 hover:text-white transition-colors focus:outline-none bell-icon-btn ${
-            shake ? 'animate-bell-shake' : ''
+            shake ? "animate-bell-shake" : ""
           }`}
         >
           <Bell className="h-5 w-5" />
@@ -114,9 +119,14 @@ export function NotificationBell() {
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80 rounded-xl border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-2 notification-dropdown">
+      <DropdownMenuContent
+        align="end"
+        className="w-80 rounded-xl border-[rgba(26,107,26,0.3)] bg-[#0F0F0F] shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-2 notification-dropdown"
+      >
         <div className="flex items-center justify-between px-3 py-2">
-          <DropdownMenuLabel className="text-white text-sm font-semibold p-0">Notifications</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-white text-sm font-semibold p-0">
+            Notifications
+          </DropdownMenuLabel>
           {unreadCount > 0 && (
             <button
               onClick={(e) => {
@@ -130,12 +140,10 @@ export function NotificationBell() {
           )}
         </div>
         <DropdownMenuSeparator className="bg-[rgba(26,107,26,0.2)]" />
-        
+
         <div className="max-h-[300px] overflow-y-auto pr-1 p-1">
           {notifications.length === 0 ? (
-            <div className="py-6 text-center text-xs text-white/50">
-              No notifications yet.
-            </div>
+            <div className="py-6 text-center text-xs text-white/50">No notifications yet.</div>
           ) : (
             notifications.slice(0, 5).map((notif: any) => {
               let icon = "ℹ️";
@@ -160,7 +168,9 @@ export function NotificationBell() {
                   <div className="text-lg mt-0.5">{icon}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-1 mb-1">
-                      <span className="font-semibold text-xs truncate leading-tight">{notif.title}</span>
+                      <span className="font-semibold text-xs truncate leading-tight">
+                        {notif.title}
+                      </span>
                       <span className="text-[10px] text-white/40 shrink-0">
                         {new Date(notif.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
@@ -168,8 +178,12 @@ export function NotificationBell() {
                         })}
                       </span>
                     </div>
-                    {notif.body && <p className="text-[11px] text-white/60 line-clamp-2 leading-relaxed">{notif.body}</p>}
-                    
+                    {notif.body && (
+                      <p className="text-[11px] text-white/60 line-clamp-2 leading-relaxed">
+                        {notif.body}
+                      </p>
+                    )}
+
                     {notif.type === "new_user" && notif.action_url && !notif.is_read && (
                       <div className="mt-2 text-[#CC0000] font-medium hover:underline text-[10px]">
                         Review Request →

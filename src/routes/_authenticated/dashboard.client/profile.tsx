@@ -59,7 +59,9 @@ function ClientProfilePage() {
       <div className="max-w-2xl space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Client Profile</h1>
-          <p className="text-white/50 text-sm mt-1">Manage your biographical, company, and contact details.</p>
+          <p className="text-white/50 text-sm mt-1">
+            Manage your biographical, company, and contact details.
+          </p>
         </div>
 
         <Card className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)]">
@@ -67,12 +69,17 @@ function ClientProfilePage() {
             <form onSubmit={save} className="space-y-4 text-xs">
               <div className="flex items-center gap-4 border-b border-white/5 pb-5">
                 <img
-                  src={profile?.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"}
+                  src={
+                    profile?.avatar_url ??
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                  }
                   alt={profile?.full_name ?? "Client"}
                   className="h-16 w-16 rounded-full border border-[rgba(26,107,26,0.5)] object-cover"
                 />
                 <div>
-                  <h4 className="font-bold text-white text-base">{profile?.full_name ?? "Partner Client"}</h4>
+                  <h4 className="font-bold text-white text-base">
+                    {profile?.full_name ?? "Partner Client"}
+                  </h4>
                   <span className="text-[10px] bg-[#1A3A6B]/15 border border-[#1A3A6B]/30 text-[#60a5fa] px-2 py-0.5 rounded font-bold uppercase block w-fit mt-1">
                     Client Account
                   </span>

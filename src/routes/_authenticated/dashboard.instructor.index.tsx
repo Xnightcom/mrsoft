@@ -10,18 +10,20 @@ import { BookOpen, Users, CheckSquare, Calendar as CalendarIcon } from "lucide-r
 
 export const Route = createFileRoute("/_authenticated/dashboard/instructor/")({
   beforeLoad: async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) throw redirect({ to: '/auth' })
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw redirect({ to: "/auth" });
 
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .maybeSingle()
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .maybeSingle();
 
-    const role = profile?.role || 'client'
-    if (role !== 'instructor' && role !== 'admin') {
-      throw redirect({ to: `/dashboard/${role}` as any })
+    const role = profile?.role || "client";
+    if (role !== "instructor" && role !== "admin") {
+      throw redirect({ to: `/dashboard/${role}` as any });
     }
   },
   component: InstructorOverviewPage,
@@ -47,13 +49,13 @@ function InstructorOverviewPage() {
       const { count: studentsCount } = await supabase
         .from("enrollments")
         .select("id", { count: "exact" })
-        .in("course_id", courseIds.length ? courseIds : ['00000000-0000-0000-0000-000000000000']);
+        .in("course_id", courseIds.length ? courseIds : ["00000000-0000-0000-0000-000000000000"]);
 
       // Get pending assignments (not graded)
       const { count: assignmentsCount } = await supabase
         .from("assignments")
         .select("id", { count: "exact" })
-        .in("course_id", courseIds.length ? courseIds : ['00000000-0000-0000-0000-000000000000'])
+        .in("course_id", courseIds.length ? courseIds : ["00000000-0000-0000-0000-000000000000"])
         .is("grade", null);
 
       return {
@@ -72,7 +74,8 @@ function InstructorOverviewPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Instructor Overview</h1>
           <p className="text-white/50 text-sm mt-1">
-            Welcome back, {profile?.full_name?.split(" ")[0] || "Instructor"}. Here's what's happening.
+            Welcome back, {profile?.full_name?.split(" ")[0] || "Instructor"}. Here's what's
+            happening.
           </p>
         </div>
 
@@ -103,7 +106,9 @@ function InstructorOverviewPage() {
 
           <Card className="bg-[#0F0F0F] border-[rgba(26,107,26,0.3)] shadow-[0_0_15px_rgba(26,107,26,0.05)]">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-white/70">Pending Assignments</CardTitle>
+              <CardTitle className="text-sm font-medium text-white/70">
+                Pending Assignments
+              </CardTitle>
               <CheckSquare className="h-4 w-4 text-[#CC0000]" />
             </CardHeader>
             <CardContent>
@@ -120,9 +125,7 @@ function InstructorOverviewPage() {
               <CalendarIcon className="h-4 w-4 text-[#1A6B1A]" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold text-white">
-                Check Schedule
-              </div>
+              <div className="text-lg font-bold text-white">Check Schedule</div>
               <p className="text-xs text-white/50 mt-1">See Courses tab</p>
             </CardContent>
           </Card>

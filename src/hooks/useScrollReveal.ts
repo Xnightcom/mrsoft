@@ -18,11 +18,7 @@ export function useScrollReveal() {
             if (countTo && !entry.target.getAttribute("data-counting")) {
               entry.target.setAttribute("data-counting", "true");
               const isFloat = countTo.includes(".");
-              animateCount(
-                entry.target as HTMLElement,
-                parseFloat(countTo),
-                isFloat
-              );
+              animateCount(entry.target as HTMLElement, parseFloat(countTo), isFloat);
             }
 
             // Stop observing once revealed
@@ -30,7 +26,7 @@ export function useScrollReveal() {
           }
         });
       },
-      { threshold: 0.08 }
+      { threshold: 0.08 },
     );
 
     const observeElements = () => {
@@ -52,7 +48,8 @@ export function useScrollReveal() {
       for (const m of mutations) {
         if (m.addedNodes.length > 0) {
           for (let i = 0; i < m.addedNodes.length; i++) {
-            if (m.addedNodes[i].nodeType === 1) { // Node.ELEMENT_NODE
+            if (m.addedNodes[i].nodeType === 1) {
+              // Node.ELEMENT_NODE
               hasNewElements = true;
               break;
             }

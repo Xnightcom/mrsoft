@@ -12,18 +12,20 @@ import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/dashboard/student/")({
   beforeLoad: async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) throw redirect({ to: '/auth' })
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw redirect({ to: "/auth" });
 
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .maybeSingle()
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .maybeSingle();
 
-    const role = profile?.role || 'client'
-    if (role !== 'student' && role !== 'admin') {
-      throw redirect({ to: `/dashboard/${role}` as any })
+    const role = profile?.role || "client";
+    if (role !== "student" && role !== "admin") {
+      throw redirect({ to: `/dashboard/${role}` as any });
     }
   },
   component: StudentMyLearning,
@@ -60,11 +62,13 @@ function StudentMyLearning() {
       if (!profile?.id) return [];
       const { data, error } = await supabase
         .from("enrollments")
-        .select(`
+        .select(
+          `
           id,
           progress,
           course:courses(id, title, description, thumbnail_url)
-        `)
+        `,
+        )
         .eq("student_id", profile.id);
 
       if (error) throw error;
@@ -80,13 +84,15 @@ function StudentMyLearning() {
       if (!profile?.id) return [];
       const { data, error } = await supabase
         .from("assignments")
-        .select(`
+        .select(
+          `
           id,
           title,
           due_date,
           status,
           course_id
-        `)
+        `,
+        )
         .eq("student_id", profile.id)
         .eq("status", "pending")
         .order("due_date", { ascending: true })
@@ -96,7 +102,7 @@ function StudentMyLearning() {
 
       // Fetch course titles manually for the assignments
       const courseIds = data.map((a: any) => a.course_id).filter(Boolean);
-      let coursesMap: Record<string, string> = {};
+      const coursesMap: Record<string, string> = {};
       if (courseIds.length > 0) {
         const { data: courseData } = await supabase
           .from("courses")
@@ -111,7 +117,7 @@ function StudentMyLearning() {
 
       return data.map((a: any) => ({
         ...a,
-        course: a.course_id ? { title: coursesMap[a.course_id] || "Course" } : null
+        course: a.course_id ? { title: coursesMap[a.course_id] || "Course" } : null,
       })) as unknown as Assignment[];
     },
     enabled: !!profile?.id,
@@ -191,7 +197,9 @@ function StudentMyLearning() {
                         <span className="text-xs text-[#CC0000] font-bold tracking-wider uppercase">
                           Enrolled Course
                         </span>
-                        <h4 className="text-xl font-bold text-white mt-1">{activeCourse.course.title}</h4>
+                        <h4 className="text-xl font-bold text-white mt-1">
+                          {activeCourse.course.title}
+                        </h4>
                         <p className="text-xs text-white/50 mt-1 line-clamp-2">
                           {activeCourse.course.description}
                         </p>
@@ -230,7 +238,9 @@ function StudentMyLearning() {
                         className="p-3 bg-[#060606] border border-white/5 rounded-lg space-y-1.5"
                       >
                         <div className="flex justify-between items-start gap-1">
-                          <span className="text-xs font-semibold text-white truncate">{ass.title}</span>
+                          <span className="text-xs font-semibold text-white truncate">
+                            {ass.title}
+                          </span>
                           <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-500 font-bold uppercase">
                             Pending
                           </span>

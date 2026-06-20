@@ -51,22 +51,24 @@ export function DataTable<T extends { id?: string | number }>({
           </thead>
           <tbody className="divide-y divide-[rgba(26,107,26,0.1)]">
             {isLoading ? (
-              Array(5).fill(0).map((_, i) => (
-                <tr key={i} className="border-b border-[rgba(26,107,26,0.1)]">
-                  {columns.map((col, cIdx) => (
-                    <td key={col.key} className="px-6 py-4">
-                      {cIdx === 0 ? (
-                        <div className="flex items-center gap-2">
-                          <Skeleton rounded h={32} w={32} />
-                          <Skeleton w="60%" h={12} />
-                        </div>
-                      ) : (
-                        <Skeleton w={cIdx % 2 === 0 ? "50%" : "30%"} h={12} />
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              Array(5)
+                .fill(0)
+                .map((_, i) => (
+                  <tr key={i} className="border-b border-[rgba(26,107,26,0.1)]">
+                    {columns.map((col, cIdx) => (
+                      <td key={col.key} className="px-6 py-4">
+                        {cIdx === 0 ? (
+                          <div className="flex items-center gap-2">
+                            <Skeleton rounded h={32} w={32} />
+                            <Skeleton w="60%" h={12} />
+                          </div>
+                        ) : (
+                          <Skeleton w={cIdx % 2 === 0 ? "50%" : "30%"} h={12} />
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
             ) : paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center text-white/50">
@@ -101,7 +103,8 @@ export function DataTable<T extends { id?: string | number }>({
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
           <div className="text-xs text-white/50">
-            Showing {startIndex + 1} to {Math.min(startIndex + pageSize, data.length)} of {data.length} entries
+            Showing {startIndex + 1} to {Math.min(startIndex + pageSize, data.length)} of{" "}
+            {data.length} entries
           </div>
           <div className="flex items-center gap-2">
             <Button

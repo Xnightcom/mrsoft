@@ -6,7 +6,15 @@ import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { ArrowLeft, Calendar, FileText, CheckCircle2, Circle, MessageSquare, Download } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  FileText,
+  CheckCircle2,
+  Circle,
+  MessageSquare,
+  Download,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/client/projects")({
   component: ClientProjectsPage,
@@ -44,14 +52,16 @@ function ClientProjectsPage() {
       if (!profile?.id) return [];
       const { data: projectsData, error: pErr } = await supabase
         .from("projects")
-        .select(`
+        .select(
+          `
           id,
           title,
           description,
           status,
           deadline,
           assigned_to
-        `)
+        `,
+        )
         .eq("client_id", profile.id);
 
       if (pErr) throw pErr;
@@ -59,7 +69,7 @@ function ClientProjectsPage() {
       const devIds = projectsData.map((p: any) => p.assigned_to).filter(Boolean);
       const projectIds = projectsData.map((p: any) => p.id);
 
-      let devsMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+      const devsMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
       if (devIds.length > 0) {
         const { data: devsData } = await supabase
           .from("profiles")
@@ -72,7 +82,7 @@ function ClientProjectsPage() {
         }
       }
 
-      let milestonesMap: Record<string, Milestone[]> = {};
+      const milestonesMap: Record<string, Milestone[]> = {};
       if (projectIds.length > 0) {
         const { data: milestoneData } = await supabase
           .from("milestones")
@@ -88,7 +98,7 @@ function ClientProjectsPage() {
               id: m.id,
               title: m.title,
               due_date: m.due_date,
-              is_completed: m.is_completed
+              is_completed: m.is_completed,
             });
           });
         }
@@ -152,7 +162,10 @@ function ClientProjectsPage() {
               {selectedProject.developer && (
                 <div className="flex items-center gap-3 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl p-3">
                   <img
-                    src={selectedProject.developer.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"}
+                    src={
+                      selectedProject.developer.avatar_url ??
+                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                    }
                     alt={selectedProject.developer.full_name ?? "Dev"}
                     className="h-9 w-9 rounded-full object-cover border border-white/5"
                   />
@@ -187,7 +200,9 @@ function ClientProjectsPage() {
                           </span>
 
                           <div className="space-y-1">
-                            <h4 className={`text-sm font-semibold ${m.is_completed ? "text-white/60 line-through" : "text-white"}`}>
+                            <h4
+                              className={`text-sm font-semibold ${m.is_completed ? "text-white/60 line-through" : "text-white"}`}
+                            >
                               {m.title}
                             </h4>
                             {m.due_date && (
@@ -244,7 +259,10 @@ function ClientProjectsPage() {
             {isLoading ? (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {[1, 2].map((i) => (
-                  <div key={i} className="h-64 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
+                  <div
+                    key={i}
+                    className="h-64 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse"
+                  />
                 ))}
               </div>
             ) : projects.length === 0 ? (
@@ -276,7 +294,10 @@ function ClientProjectsPage() {
                       {project.developer ? (
                         <div className="flex items-center gap-2">
                           <img
-                            src={project.developer.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"}
+                            src={
+                              project.developer.avatar_url ??
+                              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                            }
                             alt={project.developer.full_name ?? "Dev"}
                             className="h-6 w-6 rounded-full object-cover border border-white/5"
                           />

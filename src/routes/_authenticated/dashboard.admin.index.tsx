@@ -14,18 +14,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
   beforeLoad: async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) throw redirect({ to: '/auth' })
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw redirect({ to: "/auth" });
 
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .maybeSingle()
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .maybeSingle();
 
-    const role = profile?.role || 'client'
-    if (role !== 'admin') {
-      throw redirect({ to: `/dashboard/${role}` as any })
+    const role = profile?.role || "client";
+    if (role !== "admin") {
+      throw redirect({ to: `/dashboard/${role}` as any });
     }
   },
   component: AdminOverview,
@@ -50,8 +52,14 @@ function AdminOverview() {
     queryFn: async () => {
       const [usersCount, studentsCount, requestsCount, projectsCount] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student"),
-        supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("role", "student"),
+        supabase
+          .from("service_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending"),
         supabase.from("projects").select("id", { count: "exact", head: true }),
       ]);
 
@@ -116,16 +124,18 @@ function AdminOverview() {
         <AnnouncementBanner />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
-          <p className="text-white/50 text-sm mt-1">
-            System status, metrics, and activity.
-          </p>
+          <p className="text-white/50 text-sm mt-1">System status, metrics, and activity.</p>
         </div>
 
         {/* Stats Grid */}
         {statsLoading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl" style={{ padding: 24 }}>
+              <div
+                key={i}
+                className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl"
+                style={{ padding: 24 }}
+              >
                 <Skeleton w="40%" h={12} />
                 <Skeleton w="60%" h={40} style={{ marginTop: 12 }} />
               </div>

@@ -38,28 +38,31 @@ export const sendContactEmail = createServerFn({ method: "POST" })
     const config = getServerConfig();
 
     if (!config.smtpHost || !config.smtpUser || !config.smtpPass || !config.smtpFrom) {
-      throw new Error("SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM.");
+      throw new Error(
+        "SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM.",
+      );
     }
 
     const nodemailer = await import("nodemailer");
 
-    const transportOptions = config.smtpHost === "smtp.gmail.com"
-      ? {
-          service: "gmail",
-          auth: {
-            user: config.smtpUser,
-            pass: config.smtpPass,
-          },
-        }
-      : {
-          host: config.smtpHost,
-          port: config.smtpPort ?? 587,
-          secure: config.smtpSecure ?? false,
-          auth: {
-            user: config.smtpUser,
-            pass: config.smtpPass,
-          },
-        };
+    const transportOptions =
+      config.smtpHost === "smtp.gmail.com"
+        ? {
+            service: "gmail",
+            auth: {
+              user: config.smtpUser,
+              pass: config.smtpPass,
+            },
+          }
+        : {
+            host: config.smtpHost,
+            port: config.smtpPort ?? 587,
+            secure: config.smtpSecure ?? false,
+            auth: {
+              user: config.smtpUser,
+              pass: config.smtpPass,
+            },
+          };
 
     const transport = nodemailer.createTransport(transportOptions);
 

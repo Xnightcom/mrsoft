@@ -15,8 +15,13 @@ export function useCurrentUser() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { if (active) setState(s => ({ ...s, loading: false })); return; }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        if (active) setState((s) => ({ ...s, loading: false }));
+        return;
+      }
       const [{ data: profile }, { data: roles }] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
@@ -30,7 +35,9 @@ export function useCurrentUser() {
         roles: (roles ?? []).map((r: any) => r.role as AppRole),
       });
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   return state;

@@ -7,8 +7,6 @@ interface TiltCardProps {
 
 export function TiltCard({ children, className = "" }: TiltCardProps) {
   return (
-    <div className={`tilt-card relative overflow-hidden rounded-xl ${className}`}>
-      {children}
-    </div>
+    <div className={`tilt-card relative overflow-hidden rounded-xl ${className}`}>{children}</div>
   );
 }

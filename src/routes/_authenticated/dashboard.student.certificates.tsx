@@ -31,20 +31,22 @@ function StudentCertificatesPage() {
       if (!profile?.id) return [];
       const { data, error } = await supabase
         .from("certificates")
-        .select(`
+        .select(
+          `
           id,
           issued_at,
           pdf_url,
           share_token,
           course_id
-        `)
+        `,
+        )
         .eq("student_id", profile.id);
 
       if (error) throw error;
 
       // Fetch course names manually
       const courseIds = data.map((a: any) => a.course_id).filter(Boolean);
-      let coursesMap: Record<string, string> = {};
+      const coursesMap: Record<string, string> = {};
       if (courseIds.length > 0) {
         const { data: courseData } = await supabase
           .from("courses")
@@ -59,7 +61,7 @@ function StudentCertificatesPage() {
 
       return data.map((a: any) => ({
         ...a,
-        course: a.course_id ? { title: coursesMap[a.course_id] || "Course" } : null
+        course: a.course_id ? { title: coursesMap[a.course_id] || "Course" } : null,
       })) as unknown as Certificate[];
     },
     enabled: !!profile?.id,
@@ -93,12 +95,16 @@ function StudentCertificatesPage() {
         {isLoading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2].map((i) => (
-              <div key={i} className="h-64 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-64 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse"
+              />
             ))}
           </div>
         ) : certificates.length === 0 ? (
           <div className="border border-dashed border-white/10 rounded-xl p-12 text-center text-white/50 text-sm">
-            No certificates earned yet. Complete 100% of a course syllabus to generate verified credentials.
+            No certificates earned yet. Complete 100% of a course syllabus to generate verified
+            credentials.
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

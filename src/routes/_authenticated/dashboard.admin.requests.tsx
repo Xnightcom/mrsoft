@@ -61,10 +61,7 @@ function AdminRequestsKanban() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("service_requests")
-        .update({ status })
-        .eq("id", id);
+      const { error } = await supabase.from("service_requests").update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -96,7 +93,7 @@ function AdminRequestsKanban() {
   const shiftStatus = (req: ServiceRequest, direction: "left" | "right") => {
     const statusOrder = ["pending", "reviewed", "in_progress", "completed"];
     const currentIndex = statusOrder.indexOf(req.status);
-    let nextIndex = direction === "right" ? currentIndex + 1 : currentIndex - 1;
+    const nextIndex = direction === "right" ? currentIndex + 1 : currentIndex - 1;
 
     if (nextIndex >= 0 && nextIndex < statusOrder.length) {
       const nextStatus = statusOrder[nextIndex];
@@ -122,14 +119,18 @@ function AdminRequestsKanban() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Service Requests</h1>
           <p className="text-white/50 text-sm mt-1">
-            Manage inbound client project inquiries via Kanban columns. Drag and drop cards or click arrows to transition.
+            Manage inbound client project inquiries via Kanban columns. Drag and drop cards or click
+            arrows to transition.
           </p>
         </div>
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((col) => (
-              <div key={col} className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl p-4 space-y-4">
+              <div
+                key={col}
+                className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl p-4 space-y-4"
+              >
                 <Skeleton w="60%" h={12} />
                 <div className="space-y-2">
                   <div className="p-3 bg-[#060606] border border-white/5 rounded-lg space-y-2">
@@ -181,7 +182,9 @@ function AdminRequestsKanban() {
                           onClick={() => setSelectedRequest(req)}
                           className="bg-[#060606] border border-white/5 hover:border-[#CC0000]/50 rounded-lg p-3 cursor-pointer transition-all hover:shadow-[0_0_10px_rgba(204,0,0,0.1)] group relative"
                         >
-                          <div className="text-xs font-semibold text-white truncate">{req.name}</div>
+                          <div className="text-xs font-semibold text-white truncate">
+                            {req.name}
+                          </div>
                           <div className="text-[11px] text-white/60 font-medium truncate mt-1">
                             {req.service}
                           </div>
@@ -192,7 +195,10 @@ function AdminRequestsKanban() {
                           )}
                           <div className="text-[10px] text-white/40 mt-2 flex items-center justify-between">
                             <span>{new Date(req.created_at).toLocaleDateString()}</span>
-                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <div
+                              className="flex items-center gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {req.status !== "pending" && (
                                 <button
                                   onClick={() => shiftStatus(req, "left")}
@@ -250,7 +256,9 @@ function AdminRequestsKanban() {
               )}
               <div className="flex items-center gap-2 text-white/70">
                 <Briefcase className="h-4 w-4 text-[#CC0000]" />
-                <span>Service: <strong className="text-white">{selectedRequest.service}</strong></span>
+                <span>
+                  Service: <strong className="text-white">{selectedRequest.service}</strong>
+                </span>
               </div>
               {selectedRequest.budget && (
                 <div className="flex items-center gap-2 text-white/70">

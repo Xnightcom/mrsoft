@@ -88,18 +88,15 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
 
     // ---------- PROFILE DOES NOT EXIST — auto-create ----------
-    console.warn(
-      "[useProfile] No profile row, auto-creating for",
-      session.user.id,
-    );
+    console.warn("[useProfile] No profile row, auto-creating for", session.user.id);
     const defaultProfile = {
       id: session.user.id,
       full_name:
-        session.user.user_metadata?.full_name ??
-        session.user.email?.split("@")[0] ??
-        "User",
+        session.user.user_metadata?.full_name ?? session.user.email?.split("@")[0] ?? "User",
       avatar_url: session.user.user_metadata?.avatar_url ?? null,
-      role: (session.user.user_metadata?.role as "admin" | "student" | "instructor" | "client") ?? "client",
+      role:
+        (session.user.user_metadata?.role as "admin" | "student" | "instructor" | "client") ??
+        "client",
       is_approved: false,
       is_suspended: false,
     };
@@ -134,16 +131,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (event: string) => {
-        if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-          fetchProfile(false);
-        } else if (event === "SIGNED_OUT") {
-          setProfile(null);
-          setLoading(false);
-        }
-      },
-    );
+    } = supabase.auth.onAuthStateChange((event: string) => {
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+        fetchProfile(false);
+      } else if (event === "SIGNED_OUT") {
+        setProfile(null);
+        setLoading(false);
+      }
+    });
 
     // HARD SAFETY: force loading=false after 6s no matter what
     const hardTimeout = setTimeout(() => {

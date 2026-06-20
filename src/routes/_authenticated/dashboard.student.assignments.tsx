@@ -51,7 +51,7 @@ function StudentAssignmentsPage() {
 
       // Fetch course names manually
       const courseIds = data.map((a: any) => a.course_id).filter(Boolean);
-      let coursesMap: Record<string, string> = {};
+      const coursesMap: Record<string, string> = {};
       if (courseIds.length > 0) {
         const { data: courseData } = await supabase
           .from("courses")
@@ -66,7 +66,7 @@ function StudentAssignmentsPage() {
 
       return data.map((a: any) => ({
         ...a,
-        courseName: a.course_id ? coursesMap[a.course_id] || "Course" : "General"
+        courseName: a.course_id ? coursesMap[a.course_id] || "Course" : "General",
       })) as unknown as (Assignment & { courseName: string })[];
     },
     enabled: !!profile?.id,
@@ -195,19 +195,31 @@ function StudentAssignmentsPage() {
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-24 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse"
+              />
             ))}
           </div>
         ) : (
           <Tabs defaultValue="pending" className="w-full">
             <TabsList className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] text-white/60 mb-6">
-              <TabsTrigger value="pending" className="data-[state=active]:bg-[#CC0000] data-[state=active]:text-white">
+              <TabsTrigger
+                value="pending"
+                className="data-[state=active]:bg-[#CC0000] data-[state=active]:text-white"
+              >
                 Pending ({pending.length})
               </TabsTrigger>
-              <TabsTrigger value="submitted" className="data-[state=active]:bg-[#CC0000] data-[state=active]:text-white">
+              <TabsTrigger
+                value="submitted"
+                className="data-[state=active]:bg-[#CC0000] data-[state=active]:text-white"
+              >
                 Submitted ({submitted.length})
               </TabsTrigger>
-              <TabsTrigger value="graded" className="data-[state=active]:bg-[#CC0000] data-[state=active]:text-white">
+              <TabsTrigger
+                value="graded"
+                className="data-[state=active]:bg-[#CC0000] data-[state=active]:text-white"
+              >
                 Graded ({graded.length})
               </TabsTrigger>
             </TabsList>

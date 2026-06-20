@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,7 +29,6 @@ function AdminCoursesPage() {
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
-
   // --- FIX 5: COURSE LIST DISPLAY ---
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,8 +42,9 @@ function AdminCoursesPage() {
   async function fetchCourses() {
     setLoading(true);
     const { data, error } = await supabase
-      .from('courses')
-      .select(`
+      .from("courses")
+      .select(
+        `
         id,
         title,
         description,
@@ -53,12 +59,13 @@ function AdminCoursesPage() {
         ),
         enrollments (id),
         course_books (id, title)
-      `)
-      .order('created_at', { ascending: false });
-    
+      `,
+      )
+      .order("created_at", { ascending: false });
+
     if (error) {
-      console.error('Fetch courses error:', error);
-      showToast('Failed to load courses', 'error');
+      console.error("Fetch courses error:", error);
+      showToast("Failed to load courses", "error");
     } else {
       setCourses(data ?? []);
     }
@@ -78,13 +85,13 @@ function AdminCoursesPage() {
 
   async function fetchInstructors() {
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .eq('role', 'instructor')
-      .eq('is_suspended', false)
-      .order('full_name');
-    
-    console.log('Instructors:', data, error);
+      .from("profiles")
+      .select("id, full_name")
+      .eq("role", "instructor")
+      .eq("is_suspended", false)
+      .order("full_name");
+
+    console.log("Instructors:", data, error);
     setInstructors(data ?? []);
   }
 
@@ -98,220 +105,192 @@ function AdminCoursesPage() {
     instructor_id: "",
     is_published: false,
     sessions: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }] as any[],
-    books: [] as any[]
+    books: [] as any[],
   });
   const [saving, setSaving] = useState(false);
 
-  const resetForm = () => setFormData({
-    title: "",
-    description: "",
-    duration_hours: "10",
-    level: "beginner",
-    max_students: 30,
-    instructor_id: "",
-    is_published: false,
-    sessions: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
-    books: []
-  });
+  const resetForm = () =>
+    setFormData({
+      title: "",
+      description: "",
+      duration_hours: "10",
+      level: "beginner",
+      max_students: 30,
+      instructor_id: "",
+      is_published: false,
+      sessions: [{ day: "Monday", time: "10:00 AM", duration_mins: 90 }],
+      books: [],
+    });
 
   async function handleCreateCourse() {
     // Validate required fields
     if (!formData.title?.trim()) {
-      showToast('Course title is required', 'error')
-      return
+      showToast("Course title is required", "error");
+      return;
     }
-    
-    setSaving(true)
-    
+
+    setSaving(true);
+
     try {
-      const { data: { session } } = 
-        await supabase.auth.getSession()
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session) {
-        showToast('Not authenticated', 'error')
-        return
+        showToast("Not authenticated", "error");
+        return;
       }
 
-      console.log('Current user ID:', session?.user?.id)
+      console.log("Current user ID:", session?.user?.id);
 
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session?.user?.id)
-        .maybeSingle()
+        .from("profiles")
+        .select("role")
+        .eq("id", session?.user?.id)
+        .maybeSingle();
 
-      console.log('Current role:', profile?.role)
+      console.log("Current role:", profile?.role);
 
-      if (profile?.role !== 'admin') {
-        showToast(
-          'Only admins can create courses', 
-          'error'
-        )
-        return
+      if (profile?.role !== "admin") {
+        showToast("Only admins can create courses", "error");
+        return;
       }
 
       // Build course object with only valid columns
       function generateSlug(title: string) {
-        return title
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          + '-' + Date.now()
+        return (
+          title
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-") +
+          "-" +
+          Date.now()
+        );
       }
 
       const coursePayload = {
         title: formData.title.trim(),
         slug: generateSlug(formData.title.trim()),
-        description: formData.description?.trim() 
-          ?? '',
-        level: formData.level ?? 'beginner',
-        duration_hours: Number(formData.duration_hours) 
-          || 0,
-        max_students: Number(formData.max_students) 
-          || 30,
-        instructor_id: formData.instructor_id 
-          || null,
+        description: formData.description?.trim() ?? "",
+        level: formData.level ?? "beginner",
+        duration_hours: Number(formData.duration_hours) || 0,
+        max_students: Number(formData.max_students) || 30,
+        instructor_id: formData.instructor_id || null,
         class_schedule: formData.sessions ?? [],
         is_published: formData.is_published ?? false,
-      }
+      };
 
-      console.log('Creating course:', coursePayload)
+      console.log("Creating course:", coursePayload);
 
       // Insert course
-      const { data: course, error: courseError } = 
-        await supabase
-          .from('courses')
-          .insert(coursePayload)
-          .select()
-          .maybeSingle()
+      const { data: course, error: courseError } = await supabase
+        .from("courses")
+        .insert(coursePayload)
+        .select()
+        .maybeSingle();
 
       if (courseError) {
-        console.error('Course error:', courseError)
-        showToast(
-          'Failed to create course: ' + 
-          courseError.message, 
-          'error'
-        )
-        return
+        console.error("Course error:", courseError);
+        showToast("Failed to create course: " + courseError.message, "error");
+        return;
       }
 
-      console.log('Course created:', course)
+      console.log("Course created:", course);
 
       // Insert books if any
       if (formData.books?.length > 0 && course?.id) {
         const bookRecords = formData.books
-          .filter(b => b.title?.trim())
+          .filter((b) => b.title?.trim())
           .map((book, i) => ({
             course_id: course.id,
             title: book.title.trim(),
-            description: book.description?.trim() 
-              ?? '',
-            pdf_url: book.pdf_url ?? '',
-            order_index: i
-          }))
+            description: book.description?.trim() ?? "",
+            pdf_url: book.pdf_url ?? "",
+            order_index: i,
+          }));
 
         if (bookRecords.length > 0) {
-          const { error: bookError } = await supabase
-            .from('course_books')
-            .insert(bookRecords)
+          const { error: bookError } = await supabase.from("course_books").insert(bookRecords);
 
           if (bookError) {
-            console.error('Book error:', bookError)
-            showToast(
-              'Course created but books failed: ' + 
-              bookError.message, 
-              'warning'
-            )
+            console.error("Book error:", bookError);
+            showToast("Course created but books failed: " + bookError.message, "warning");
           }
         }
       }
 
       // Success
-      showToast('Course created successfully! 🎉', 
-        'success')
-      setShowModal(false)
-      resetForm()
-      await fetchCourses()
-
+      showToast("Course created successfully! 🎉", "success");
+      setShowModal(false);
+      resetForm();
+      await fetchCourses();
     } catch (err: any) {
-      console.error('Unexpected error:', err)
-      showToast('Unexpected error: ' + err.message, 
-        'error')
+      console.error("Unexpected error:", err);
+      showToast("Unexpected error: " + err.message, "error");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   // --- FIX 4: ASSIGN COURSE TO STUDENT ---
-  const [enrollModal, setEnrollModal] = useState(false)
-  const [enrollCourseId, setEnrollCourseId] = useState<string | null>(null)
-  const [availableStudents, setAvailableStudents] = useState<any[]>([])
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([])
-  const [enrolling, setEnrolling] = useState(false)
+  const [enrollModal, setEnrollModal] = useState(false);
+  const [enrollCourseId, setEnrollCourseId] = useState<string | null>(null);
+  const [availableStudents, setAvailableStudents] = useState<any[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [enrolling, setEnrolling] = useState(false);
   const [search, setSearch] = useState("");
 
   async function fetchAvailableStudents(courseId: string) {
     // Get all students
     const { data: allStudents } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .eq('role', 'student')
-      .eq('is_suspended', false)
-    
+      .from("profiles")
+      .select("id, full_name")
+      .eq("role", "student")
+      .eq("is_suspended", false);
+
     // Get already enrolled
     const { data: enrolled } = await supabase
-      .from('enrollments')
-      .select('student_id')
-      .eq('course_id', courseId)
-    
-    const enrolledIds = enrolled?.map(
-      (e: any) => e.student_id
-    ) ?? []
-    
+      .from("enrollments")
+      .select("student_id")
+      .eq("course_id", courseId);
+
+    const enrolledIds = enrolled?.map((e: any) => e.student_id) ?? [];
+
     // Filter out already enrolled
-    const available = allStudents?.filter(
-      (s: any) => !enrolledIds.includes(s.id)
-    ) ?? []
-    
-    setAvailableStudents(available)
+    const available = allStudents?.filter((s: any) => !enrolledIds.includes(s.id)) ?? [];
+
+    setAvailableStudents(available);
   }
 
   async function enrollStudents() {
     if (selectedStudents.length === 0) {
-      showToast('Select at least one student', 
-        'warning')
-      return
+      showToast("Select at least one student", "warning");
+      return;
     }
-    setEnrolling(true)
-    
-    const records = selectedStudents.map(sid => ({
+    setEnrolling(true);
+
+    const records = selectedStudents.map((sid) => ({
       student_id: sid,
       course_id: enrollCourseId,
-      progress: 0
-    }))
-    
-    const { error } = await supabase
-      .from('enrollments')
-      .upsert(records, {
-        onConflict: 'student_id,course_id',
-        ignoreDuplicates: true
-      })
-    
-    setEnrolling(false)
-    
+      progress: 0,
+    }));
+
+    const { error } = await supabase.from("enrollments").upsert(records, {
+      onConflict: "student_id,course_id",
+      ignoreDuplicates: true,
+    });
+
+    setEnrolling(false);
+
     if (error) {
-      showToast('Enrollment failed: ' 
-        + error.message, 'error')
+      showToast("Enrollment failed: " + error.message, "error");
     } else {
-      showToast(
-        `${selectedStudents.length} student(s) enrolled successfully! 🎉`,
-        'success'
-      )
-      setEnrollModal(false)
-      setSelectedStudents([])
-      fetchCourses()
+      showToast(`${selectedStudents.length} student(s) enrolled successfully! 🎉`, "success");
+      setEnrollModal(false);
+      setSelectedStudents([]);
+      fetchCourses();
     }
   }
 
@@ -345,7 +324,11 @@ function AdminCoursesPage() {
   });
 
   const [lessonForm, setLessonForm] = useState({
-    title: "", content_url: "", duration_minutes: "30", order_index: "1", is_published: true,
+    title: "",
+    content_url: "",
+    duration_minutes: "30",
+    order_index: "1",
+    is_published: true,
   });
   const createLesson = useMutation({
     mutationFn: async () => {
@@ -363,7 +346,13 @@ function AdminCoursesPage() {
     onSuccess: () => {
       toast.success("Lesson added successfully!");
       setLessonModalOpen(false);
-      setLessonForm({ title: "", content_url: "", duration_minutes: "30", order_index: "1", is_published: true });
+      setLessonForm({
+        title: "",
+        content_url: "",
+        duration_minutes: "30",
+        order_index: "1",
+        is_published: true,
+      });
       setSelectedCourse(null);
     },
     onError: (e: any) => toast.error(e.message),
@@ -392,7 +381,10 @@ function AdminCoursesPage() {
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-48 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse"
+              />
             ))}
           </div>
         ) : (
@@ -412,8 +404,10 @@ function AdminCoursesPage() {
                       <span className="absolute top-4 right-4 px-2 py-0.5 rounded bg-[#1A6B1A]/20 text-[#1A6B1A] text-[10px] font-bold uppercase tracking-wider">
                         {course.level}
                       </span>
-                      <h4 className="font-bold text-white text-lg pr-16 line-clamp-1">{course.title}</h4>
-                      
+                      <h4 className="font-bold text-white text-lg pr-16 line-clamp-1">
+                        {course.title}
+                      </h4>
+
                       {/* Instructor name OR Unassigned */}
                       <p className="text-sm font-medium">
                         {course.instructor ? (
@@ -505,420 +499,472 @@ function AdminCoursesPage() {
       </div>
 
       {/* Add Course Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="Add New Course"
-      >
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add New Course">
+        {/* FIELD 1 - Course Title */}
+        <div style={{ marginBottom: 16 }}>
+          <label
+            style={{
+              color: "rgba(255,255,255,0.7)",
+              fontSize: 13,
+              display: "block",
+              marginBottom: 6,
+              fontWeight: 500,
+            }}
+          >
+            Course Title *
+          </label>
+          <input
+            type="text"
+            value={formData.title ?? ""}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                title: e.target.value,
+              }))
+            }
+            placeholder="e.g. Web Development Fundamentals"
+            style={{
+              width: "100%",
+              background: "#111",
+              border: "1px solid rgba(26,107,26,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              color: "white",
+              fontSize: 14,
+              boxSizing: "border-box",
+              outline: "none",
+            }}
+          />
+        </div>
 
-            {/* FIELD 1 - Course Title */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{
-                color: 'rgba(255,255,255,0.7)',
+        {/* FIELD 2 - Description */}
+        <div style={{ marginBottom: 16 }}>
+          <label
+            style={{
+              color: "rgba(255,255,255,0.7)",
+              fontSize: 13,
+              display: "block",
+              marginBottom: 6,
+              fontWeight: 500,
+            }}
+          >
+            Description
+          </label>
+          <textarea
+            value={formData.description ?? ""}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                description: e.target.value,
+              }))
+            }
+            placeholder="Provide a summary of goals and outline..."
+            rows={3}
+            style={{
+              width: "100%",
+              background: "#111",
+              border: "1px solid rgba(26,107,26,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              color: "white",
+              fontSize: 14,
+              resize: "vertical",
+              boxSizing: "border-box",
+              outline: "none",
+              fontFamily: "inherit",
+            }}
+          />
+        </div>
+
+        {/* FIELD 3+4 - Level + Duration side by side */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <div>
+            <label
+              style={{
+                color: "rgba(255,255,255,0.7)",
                 fontSize: 13,
-                display: 'block',
+                display: "block",
                 marginBottom: 6,
-                fontWeight: 500
-              }}>
-                Course Title *
-              </label>
-              <input
-                type="text"
-                value={formData.title ?? ''}
-                onChange={e => setFormData(p => ({
-                  ...p, title: e.target.value
-                }))}
-                placeholder="e.g. Web Development Fundamentals"
-                style={{
-                  width: '100%',
-                  background: '#111',
-                  border: '1px solid rgba(26,107,26,0.4)',
-                  borderRadius: 8,
-                  padding: '10px 14px',
-                  color: 'white',
-                  fontSize: 14,
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                }}
-              />
-            </div>
-
-            {/* FIELD 2 - Description */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: 13,
-                display: 'block',
-                marginBottom: 6,
-                fontWeight: 500
-              }}>
-                Description
-              </label>
-              <textarea
-                value={formData.description ?? ''}
-                onChange={e => setFormData(p => ({
-                  ...p, description: e.target.value
-                }))}
-                placeholder="Provide a summary of goals and outline..."
-                rows={3}
-                style={{
-                  width: '100%',
-                  background: '#111',
-                  border: '1px solid rgba(26,107,26,0.4)',
-                  borderRadius: 8,
-                  padding: '10px 14px',
-                  color: 'white',
-                  fontSize: 14,
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  fontFamily: 'inherit'
-                }}
-              />
-            </div>
-
-            {/* FIELD 3+4 - Level + Duration side by side */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 12,
-              marginBottom: 16
-            }}>
-              <div>
-                <label style={{
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: 13,
-                  display: 'block',
-                  marginBottom: 6
-                }}>Level</label>
-                <select
-                  value={formData.level ?? 'beginner'}
-                  onChange={e => setFormData(p => ({
-                    ...p, level: e.target.value
-                  }))}
-                  style={{
-                    width: '100%',
-                    background: '#111',
-                    border: '1px solid rgba(26,107,26,0.4)',
-                    borderRadius: 8,
-                    padding: '10px 14px',
-                    color: 'white',
-                    fontSize: 14,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">
-                    Intermediate
-                  </option>
-                  <option value="advanced">Advanced</option>
-                </select>
-              </div>
-              <div>
-                <label style={{
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: 13,
-                  display: 'block',
-                  marginBottom: 6
-                }}>Duration (Hours)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.duration_hours ?? 10}
-                  onChange={e => setFormData(p => ({
-                    ...p, 
-                    duration_hours: e.target.value
-                  }))}
-                  style={{
-                    width: '100%',
-                    background: '#111',
-                    border: '1px solid rgba(26,107,26,0.4)',
-                    borderRadius: 8,
-                    padding: '10px 14px',
-                    color: 'white',
-                    fontSize: 14,
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* FIELD 5+6 - Max Students + Instructor */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 12,
-              marginBottom: 20
-            }}>
-              <div>
-                <label style={{
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: 13,
-                  display: 'block',
-                  marginBottom: 6
-                }}>Max Students</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.max_students ?? 30}
-                  onChange={e => setFormData(p => ({
-                    ...p,
-                    max_students: Number(e.target.value)
-                  }))}
-                  style={{
-                    width: '100%',
-                    background: '#111',
-                    border: '1px solid rgba(26,107,26,0.4)',
-                    borderRadius: 8,
-                    padding: '10px 14px',
-                    color: 'white',
-                    fontSize: 14,
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: 13,
-                  display: 'block',
-                  marginBottom: 6
-                }}>Assign Instructor</label>
-                <select
-                  value={formData.instructor_id ?? ''}
-                  onChange={e => setFormData(p => ({
-                    ...p,
-                    instructor_id: e.target.value || ""
-                  }))}
-                  style={{
-                    width: '100%',
-                    background: '#111',
-                    border: '1px solid rgba(26,107,26,0.4)',
-                    borderRadius: 8,
-                    padding: '10px 14px',
-                    color: 'white',
-                    fontSize: 14,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="">
-                    -- Select Instructor --
-                  </option>
-                  {instructors?.map(inst => (
-                    <option key={inst.id} value={inst.id}>
-                      {inst.full_name}
-                    </option>
-                  ))}
-                </select>
-                {(!instructors || instructors.length === 0) && (
-                  <p style={{
-                    color: '#F59E0B',
-                    fontSize: 11,
-                    marginTop: 4
-                  }}>
-                    ⚠️ No instructors — assign role in Users
-                  </p>
-                )}
-              </div>
-            </div>
-
-          {/* Class Schedule */}
-          <div className="space-y-3 pt-2 border-t border-white/10">
-            <div className="flex items-center justify-between">
-              <Label className="text-white/90 font-bold">Class Schedule</Label>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
-                onClick={() => setFormData({
-                  ...formData, 
-                  sessions: [...formData.sessions, { day: "Monday", time: "10:00 AM", duration_mins: 90 }]
-                })}
-              >
-                <Plus className="w-3 h-3 mr-1" /> Add Session
-              </Button>
-            </div>
-            {formData.sessions.map((session, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Select
-                  value={session.day}
-                  onValueChange={(val) => {
-                    const newSch = [...formData.sessions];
-                    newSch[i].day = val;
-                    setFormData({ ...formData, sessions: newSch });
-                  }}
-                >
-                  <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[120px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#0F0F0F] text-white border-[rgba(26,107,26,0.3)]">
-                    {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input 
-                  placeholder="10:00 AM" 
-                  value={session.time} 
-                  onChange={(e) => {
-                    const newSch = [...formData.sessions];
-                    newSch[i].time = e.target.value;
-                    setFormData({ ...formData, sessions: newSch });
-                  }} 
-                  className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[100px]" 
-                />
-                <Input 
-                  type="number" 
-                  placeholder="90" 
-                  value={session.duration_mins} 
-                  onChange={(e) => {
-                    const newSch = [...formData.sessions];
-                    newSch[i].duration_mins = parseInt(e.target.value) || 90;
-                    setFormData({ ...formData, sessions: newSch });
-                  }} 
-                  className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[80px]" 
-                />
-                <span className="text-white/50 text-[10px]">mins</span>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-500/10 ml-auto"
-                  onClick={() => {
-                    const newSch = formData.sessions.filter((_, idx) => idx !== i);
-                    setFormData({ ...formData, sessions: newSch });
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
+              }}
+            >
+              Level
+            </label>
+            <select
+              value={formData.level ?? "beginner"}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  level: e.target.value,
+                }))
+              }
+              style={{
+                width: "100%",
+                background: "#111",
+                border: "1px solid rgba(26,107,26,0.4)",
+                borderRadius: 8,
+                padding: "10px 14px",
+                color: "white",
+                fontSize: 14,
+                cursor: "pointer",
+              }}
+            >
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
           </div>
+          <div>
+            <label
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: 13,
+                display: "block",
+                marginBottom: 6,
+              }}
+            >
+              Duration (Hours)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.duration_hours ?? 10}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  duration_hours: e.target.value,
+                }))
+              }
+              style={{
+                width: "100%",
+                background: "#111",
+                border: "1px solid rgba(26,107,26,0.4)",
+                borderRadius: 8,
+                padding: "10px 14px",
+                color: "white",
+                fontSize: 14,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+        </div>
 
-          {/* Course Books */}
-          <div className="space-y-3 pt-2 border-t border-white/10">
-            <div className="flex items-center justify-between">
-              <Label className="text-white/90 font-bold">Course Books</Label>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
-                onClick={() => setFormData({
-                  ...formData, 
-                  books: [...formData.books, { title: "", description: "", pdf_url: "" }]
-                })}
+        {/* FIELD 5+6 - Max Students + Instructor */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
+          <div>
+            <label
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: 13,
+                display: "block",
+                marginBottom: 6,
+              }}
+            >
+              Max Students
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={formData.max_students ?? 30}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  max_students: Number(e.target.value),
+                }))
+              }
+              style={{
+                width: "100%",
+                background: "#111",
+                border: "1px solid rgba(26,107,26,0.4)",
+                borderRadius: 8,
+                padding: "10px 14px",
+                color: "white",
+                fontSize: 14,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div>
+            <label
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: 13,
+                display: "block",
+                marginBottom: 6,
+              }}
+            >
+              Assign Instructor
+            </label>
+            <select
+              value={formData.instructor_id ?? ""}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  instructor_id: e.target.value || "",
+                }))
+              }
+              style={{
+                width: "100%",
+                background: "#111",
+                border: "1px solid rgba(26,107,26,0.4)",
+                borderRadius: 8,
+                padding: "10px 14px",
+                color: "white",
+                fontSize: 14,
+                cursor: "pointer",
+              }}
+            >
+              <option value="">-- Select Instructor --</option>
+              {instructors?.map((inst) => (
+                <option key={inst.id} value={inst.id}>
+                  {inst.full_name}
+                </option>
+              ))}
+            </select>
+            {(!instructors || instructors.length === 0) && (
+              <p
+                style={{
+                  color: "#F59E0B",
+                  fontSize: 11,
+                  marginTop: 4,
+                }}
               >
-                <Plus className="w-3 h-3 mr-1" /> Add Book
+                ⚠️ No instructors — assign role in Users
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Class Schedule */}
+        <div className="space-y-3 pt-2 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <Label className="text-white/90 font-bold">Class Schedule</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  sessions: [
+                    ...formData.sessions,
+                    { day: "Monday", time: "10:00 AM", duration_mins: 90 },
+                  ],
+                })
+              }
+            >
+              <Plus className="w-3 h-3 mr-1" /> Add Session
+            </Button>
+          </div>
+          {formData.sessions.map((session, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Select
+                value={session.day}
+                onValueChange={(val) => {
+                  const newSch = [...formData.sessions];
+                  newSch[i].day = val;
+                  setFormData({ ...formData, sessions: newSch });
+                }}
+              >
+                <SelectTrigger className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0F0F0F] text-white border-[rgba(26,107,26,0.3)]">
+                  {[
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday",
+                  ].map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="10:00 AM"
+                value={session.time}
+                onChange={(e) => {
+                  const newSch = [...formData.sessions];
+                  newSch[i].time = e.target.value;
+                  setFormData({ ...formData, sessions: newSch });
+                }}
+                className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[100px]"
+              />
+              <Input
+                type="number"
+                placeholder="90"
+                value={session.duration_mins}
+                onChange={(e) => {
+                  const newSch = [...formData.sessions];
+                  newSch[i].duration_mins = parseInt(e.target.value) || 90;
+                  setFormData({ ...formData, sessions: newSch });
+                }}
+                className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white w-[80px]"
+              />
+              <span className="text-white/50 text-[10px]">mins</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-500/10 ml-auto"
+                onClick={() => {
+                  const newSch = formData.sessions.filter((_, idx) => idx !== i);
+                  setFormData({ ...formData, sessions: newSch });
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
               </Button>
             </div>
-            {formData.books.map((book, i) => (
-              <div key={i} className="space-y-2 p-3 bg-white/5 rounded-lg border border-white/10 relative">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute top-1 right-1 h-6 w-6 text-white/50 hover:text-red-500"
-                  onClick={() => {
-                    const newBooks = formData.books.filter((_, idx) => idx !== i);
+          ))}
+        </div>
+
+        {/* Course Books */}
+        <div className="space-y-3 pt-2 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <Label className="text-white/90 font-bold">Course Books</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 text-[10px] border-[rgba(26,107,26,0.3)]"
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  books: [...formData.books, { title: "", description: "", pdf_url: "" }],
+                })
+              }
+            >
+              <Plus className="w-3 h-3 mr-1" /> Add Book
+            </Button>
+          </div>
+          {formData.books.map((book, i) => (
+            <div
+              key={i}
+              className="space-y-2 p-3 bg-white/5 rounded-lg border border-white/10 relative"
+            >
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-1 right-1 h-6 w-6 text-white/50 hover:text-red-500"
+                onClick={() => {
+                  const newBooks = formData.books.filter((_, idx) => idx !== i);
+                  setFormData({ ...formData, books: newBooks });
+                }}
+              >
+                <X className="w-3 h-3" />
+              </Button>
+              <div>
+                <Input
+                  placeholder="Book Title"
+                  value={book.title}
+                  onChange={(e) => {
+                    const newBooks = [...formData.books];
+                    newBooks[i].title = e.target.value;
                     setFormData({ ...formData, books: newBooks });
                   }}
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-                <div>
-                  <Input 
-                    placeholder="Book Title" 
-                    value={book.title}
-                    onChange={(e) => {
-                      const newBooks = [...formData.books];
-                      newBooks[i].title = e.target.value;
-                      setFormData({ ...formData, books: newBooks });
-                    }}
-                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
-                  />
-                </div>
-                <div>
-                  <Input 
-                    placeholder="Short description" 
-                    value={book.description}
-                    onChange={(e) => {
-                      const newBooks = [...formData.books];
-                      newBooks[i].description = e.target.value;
-                      setFormData({ ...formData, books: newBooks });
-                    }}
-                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
-                  />
-                </div>
-                <div>
-                  <Input 
-                    placeholder="PDF URL (optional)" 
-                    value={book.pdf_url}
-                    onChange={(e) => {
-                      const newBooks = [...formData.books];
-                      newBooks[i].pdf_url = e.target.value;
-                      setFormData({ ...formData, books: newBooks });
-                    }}
-                    className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs" 
-                  />
-                </div>
+                  className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs"
+                />
               </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-            <Switch
-              checked={formData.is_published}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
-            />
-            <Label className="text-white/80">Publish immediately</Label>
-          </div>
-
-          {/* Bottom buttons */}
-            <div style={{
-              display: 'flex',
-              gap: 12,
-              justifyContent: 'flex-end',
-              marginTop: 24,
-              paddingTop: 20,
-              borderTop: '1px solid rgba(255,255,255,0.08)'
-            }}>
-              <button
-                onClick={() => setShowModal(false)}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: 'rgba(255,255,255,0.6)',
-                  padding: '10px 24px',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateCourse}
-                disabled={saving || !formData.title?.trim()}
-                style={{
-                  background: saving 
-                    ? 'rgba(204,0,0,0.5)' 
-                    : '#CC0000',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '10px 24px',
-                  fontWeight: 700,
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  fontSize: 14,
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {saving ? 'Creating...' : 'Create Course'}
-              </button>
+              <div>
+                <Input
+                  placeholder="Short description"
+                  value={book.description}
+                  onChange={(e) => {
+                    const newBooks = [...formData.books];
+                    newBooks[i].description = e.target.value;
+                    setFormData({ ...formData, books: newBooks });
+                  }}
+                  className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs"
+                />
+              </div>
+              <div>
+                <Input
+                  placeholder="PDF URL (optional)"
+                  value={book.pdf_url}
+                  onChange={(e) => {
+                    const newBooks = [...formData.books];
+                    newBooks[i].pdf_url = e.target.value;
+                    setFormData({ ...formData, books: newBooks });
+                  }}
+                  className="h-8 bg-[#060606] border-[rgba(26,107,26,0.3)] text-white text-xs"
+                />
+              </div>
             </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+          <Switch
+            checked={formData.is_published}
+            onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
+          />
+          <Label className="text-white/80">Publish immediately</Label>
+        </div>
+
+        {/* Bottom buttons */}
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            justifyContent: "flex-end",
+            marginTop: 24,
+            paddingTop: 20,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <button
+            onClick={() => setShowModal(false)}
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: "rgba(255,255,255,0.6)",
+              padding: "10px 24px",
+              borderRadius: 8,
+              cursor: "pointer",
+              fontSize: 14,
+              transition: "all 0.2s ease",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreateCourse}
+            disabled={saving || !formData.title?.trim()}
+            style={{
+              background: saving ? "rgba(204,0,0,0.5)" : "#CC0000",
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              padding: "10px 24px",
+              fontWeight: 700,
+              cursor: saving ? "not-allowed" : "pointer",
+              fontSize: 14,
+              transition: "all 0.2s ease",
+            }}
+          >
+            {saving ? "Creating..." : "Create Course"}
+          </button>
+        </div>
       </Modal>
 
       {/* Add Lesson Modal */}
@@ -1011,73 +1057,70 @@ function AdminCoursesPage() {
       </Modal>
 
       {/* Enroll Students Modal */}
-      <Modal
-        isOpen={enrollModal}
-        onClose={() => setEnrollModal(false)}
-        title={`Enroll Students`}
-      >
+      <Modal isOpen={enrollModal} onClose={() => setEnrollModal(false)} title={`Enroll Students`}>
         <div className="space-y-4">
           <Input
             placeholder="Search students..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             className="bg-[#060606] border-[rgba(26,107,26,0.3)] text-white"
           />
 
           <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
             {availableStudents
-              .filter(s => s.full_name.toLowerCase().includes(search.toLowerCase()))
-              .map(student => (
-                <label key={student.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 16px',
-                  cursor: 'pointer',
-                  borderRadius: 8,
-                  background: selectedStudents.includes(student.id)
-                    ? 'rgba(26,107,26,0.1)'
-                    : 'transparent',
-                  border: selectedStudents.includes(student.id)
-                    ? '1px solid rgba(26,107,26,0.3)'
-                    : '1px solid transparent',
-                  transition: 'all 0.2s ease'
-                }}>
+              .filter((s) => s.full_name.toLowerCase().includes(search.toLowerCase()))
+              .map((student) => (
+                <label
+                  key={student.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "10px 16px",
+                    cursor: "pointer",
+                    borderRadius: 8,
+                    background: selectedStudents.includes(student.id)
+                      ? "rgba(26,107,26,0.1)"
+                      : "transparent",
+                    border: selectedStudents.includes(student.id)
+                      ? "1px solid rgba(26,107,26,0.3)"
+                      : "1px solid transparent",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={selectedStudents.includes(student.id)}
-                    onChange={e => {
+                    onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedStudents(prev => [...prev, student.id])
+                        setSelectedStudents((prev) => [...prev, student.id]);
                       } else {
-                        setSelectedStudents(prev => prev.filter(id => id !== student.id))
+                        setSelectedStudents((prev) => prev.filter((id) => id !== student.id));
                       }
                     }}
-                    style={{ accentColor: '#1A6B1A' }}
+                    style={{ accentColor: "#1A6B1A" }}
                   />
-                  <div style={{
-                    width: 32, height: 32,
-                    borderRadius: '50%',
-                    background: '#1A6B1A',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: 13
-                  }}>
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: "#1A6B1A",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      fontWeight: 700,
+                      fontSize: 13,
+                    }}
+                  >
                     {student.full_name[0]}
                   </div>
-                  <span style={{ color: 'white' }}>
-                    {student.full_name}
-                  </span>
+                  <span style={{ color: "white" }}>{student.full_name}</span>
                 </label>
-              ))
-            }
+              ))}
             {availableStudents.length === 0 && (
-              <div className="text-center text-white/50 py-4">
-                No available students to enroll.
-              </div>
+              <div className="text-center text-white/50 py-4">No available students to enroll.</div>
             )}
           </div>
 
@@ -1092,12 +1135,14 @@ function AdminCoursesPage() {
                   if (selectedStudents.length === availableStudents.length) {
                     setSelectedStudents([]);
                   } else {
-                    setSelectedStudents(availableStudents.map(s => s.id));
+                    setSelectedStudents(availableStudents.map((s) => s.id));
                   }
                 }}
                 className="border-white/20 text-white hover:bg-white/10"
               >
-                {selectedStudents.length === availableStudents.length ? "Deselect All" : "Select All"}
+                {selectedStudents.length === availableStudents.length
+                  ? "Deselect All"
+                  : "Select All"}
               </Button>
               <Button
                 onClick={enrollStudents}
@@ -1110,7 +1155,6 @@ function AdminCoursesPage() {
           </div>
         </div>
       </Modal>
-
     </DashboardLayout>
   );
 }

@@ -36,7 +36,8 @@ function ClientInvoicesPage() {
       if (!profile?.id) return [];
       const { data, error } = await supabase
         .from("invoices")
-        .select(`
+        .select(
+          `
           id,
           amount,
           currency,
@@ -44,13 +45,14 @@ function ClientInvoicesPage() {
           due_date,
           pdf_url,
           project_id
-        `)
+        `,
+        )
         .eq("client_id", profile.id);
 
       if (error) throw error;
 
       const projectIds = data.map((a: any) => a.project_id).filter(Boolean);
-      let projectsMap: Record<string, string> = {};
+      const projectsMap: Record<string, string> = {};
       if (projectIds.length > 0) {
         const { data: projectData } = await supabase
           .from("projects")
@@ -65,7 +67,7 @@ function ClientInvoicesPage() {
 
       return data.map((a: any) => ({
         ...a,
-        project: a.project_id ? { title: projectsMap[a.project_id] || "Project" } : null
+        project: a.project_id ? { title: projectsMap[a.project_id] || "Project" } : null,
       })) as unknown as Invoice[];
     },
     enabled: !!profile?.id,
@@ -105,7 +107,9 @@ function ClientInvoicesPage() {
       key: "id",
       header: "Invoice #",
       render: (item: Invoice) => (
-        <span className="font-mono text-xs text-white/50">#{item.id.slice(0, 8).toUpperCase()}</span>
+        <span className="font-mono text-xs text-white/50">
+          #{item.id.slice(0, 8).toUpperCase()}
+        </span>
       ),
     },
     {
@@ -123,7 +127,8 @@ function ClientInvoicesPage() {
     {
       key: "due_date",
       header: "Due Date",
-      render: (item: Invoice) => (item.due_date ? new Date(item.due_date).toLocaleDateString() : "—"),
+      render: (item: Invoice) =>
+        item.due_date ? new Date(item.due_date).toLocaleDateString() : "—",
     },
     {
       key: "status",

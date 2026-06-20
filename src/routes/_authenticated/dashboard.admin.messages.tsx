@@ -62,7 +62,9 @@ function AdminMessagesPage() {
       const { data, error } = await supabase
         .from("messages")
         .select("*")
-        .or(`and(sender_id.eq.${profile.id},receiver_id.eq.${selectedUser.id}),and(sender_id.eq.${selectedUser.id},receiver_id.eq.${profile.id})`)
+        .or(
+          `and(sender_id.eq.${profile.id},receiver_id.eq.${selectedUser.id}),and(sender_id.eq.${selectedUser.id},receiver_id.eq.${profile.id})`,
+        )
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data as Message[];
@@ -100,7 +102,7 @@ function AdminMessagesPage() {
         (payload: any) => {
           qc.invalidateQueries({ queryKey: ["messages", profile?.id, selectedUser?.id] });
           qc.invalidateQueries({ queryKey: ["unread-messages", profile?.id] });
-        }
+        },
       )
       .subscribe();
     return () => {
@@ -150,14 +152,16 @@ function AdminMessagesPage() {
   });
 
   const filteredUsers = users.filter((u) =>
-    (u.full_name || "").toLowerCase().includes(search.toLowerCase())
+    (u.full_name || "").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-120px)] flex md:gap-6 relative">
         {/* Left Panel - Users List */}
-        <div className={`w-full md:w-80 shrink-0 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex-col overflow-hidden ${selectedUser ? "hidden md:flex" : "flex h-full"}`}>
+        <div
+          className={`w-full md:w-80 shrink-0 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex-col overflow-hidden ${selectedUser ? "hidden md:flex" : "flex h-full"}`}
+        >
           <div className="p-4 border-b border-white/5">
             <h2 className="text-lg font-bold text-white mb-4">Conversations</h2>
             <div className="relative">
@@ -175,8 +179,9 @@ function AdminMessagesPage() {
               <button
                 key={u.id}
                 onClick={() => setSelectedUser(u)}
-                className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b border-white/5 hover:bg-white/5 ${selectedUser?.id === u.id ? "bg-[#CC0000]/10 border-l-2 border-l-[#CC0000]" : ""
-                  }`}
+                className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b border-white/5 hover:bg-white/5 ${
+                  selectedUser?.id === u.id ? "bg-[#CC0000]/10 border-l-2 border-l-[#CC0000]" : ""
+                }`}
               >
                 <div className="relative h-10 w-10 shrink-0 rounded-full bg-[#1A6B1A]/20 flex items-center justify-center border border-[#1A6B1A]/30 overflow-hidden">
                   {u.avatar_url ? (
@@ -186,7 +191,9 @@ function AdminMessagesPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{u.full_name || "Unnamed User"}</p>
+                  <p className="text-sm font-medium text-white truncate">
+                    {u.full_name || "Unnamed User"}
+                  </p>
                   <p className="text-[10px] text-white/50 uppercase tracking-wider">{u.role}</p>
                 </div>
                 {unreadCounts[u.id] > 0 && (
@@ -200,7 +207,9 @@ function AdminMessagesPage() {
         </div>
 
         {/* Right Panel - Chat Thread */}
-        <div className={`flex-1 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex-col overflow-hidden ${selectedUser ? "flex h-full" : "hidden md:flex h-full"}`}>
+        <div
+          className={`flex-1 bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] rounded-xl flex-col overflow-hidden ${selectedUser ? "flex h-full" : "hidden md:flex h-full"}`}
+        >
           {selectedUser ? (
             <>
               {/* Chat Header */}
@@ -213,13 +222,19 @@ function AdminMessagesPage() {
                 </button>
                 <div className="h-8 w-8 rounded-full bg-[#CC0000]/20 flex items-center justify-center border border-[#CC0000]/30 overflow-hidden">
                   {selectedUser.avatar_url ? (
-                    <img src={selectedUser.avatar_url} alt="" className="h-full w-full object-cover" />
+                    <img
+                      src={selectedUser.avatar_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <User className="h-4 w-4 text-[#CC0000]" />
                   )}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">{selectedUser.full_name || "Unnamed User"}</h3>
+                  <h3 className="text-sm font-bold text-white">
+                    {selectedUser.full_name || "Unnamed User"}
+                  </h3>
                   <p className="text-[10px] text-white/50 uppercase">{selectedUser.role}</p>
                 </div>
               </div>
@@ -238,16 +253,25 @@ function AdminMessagesPage() {
                   messages.map((msg) => {
                     const isMe = msg.sender_id === profile?.id;
                     return (
-                      <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                      <div
+                        key={msg.id}
+                        className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                      >
                         <div
-                          className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${isMe
+                          className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
+                            isMe
                               ? "bg-[#1A6B1A] text-white rounded-br-sm"
                               : "bg-[#111] text-white rounded-bl-sm"
-                            }`}
+                          }`}
                         >
                           {msg.content}
-                          <div className={`text-[9px] mt-1 opacity-50 ${isMe ? "text-right" : "text-left"}`}>
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <div
+                            className={`text-[9px] mt-1 opacity-50 ${isMe ? "text-right" : "text-left"}`}
+                          >
+                            {new Date(msg.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </div>
                         </div>
                       </div>

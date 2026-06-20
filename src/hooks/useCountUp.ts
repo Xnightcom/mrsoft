@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 export function useCountUp(target: number, duration: number = 1500) {
   const [count, setCount] = useState(0);
-  
+
   useEffect(() => {
     if (!target) {
       setCount(0);
@@ -21,6 +21,6 @@ export function useCountUp(target: number, duration: number = 1500) {
     }, 16);
     return () => clearInterval(timer);
   }, [target, duration]);
-  
+
   return count;
 }

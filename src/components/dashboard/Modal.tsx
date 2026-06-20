@@ -125,6 +125,6 @@ export function Modal({ isOpen, onClose, title, children, maxWidth }: ModalProps
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

@@ -1,17 +1,15 @@
 import React from "react";
-import {
-  createFileRoute,
-  Outlet,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
       if (error || !session?.user) {
         throw redirect({
           to: "/auth",
@@ -59,9 +57,7 @@ function AuthErrorFallback({ error }: { error: Error }) {
             />
           </svg>
         </div>
-        <h2 className="text-lg font-bold text-white">
-          Something went wrong
-        </h2>
+        <h2 className="text-lg font-bold text-white">Something went wrong</h2>
         <p className="max-w-sm text-sm text-white/50">
           {error?.message || "Failed to load dashboard. Please try signing in again."}
         </p>

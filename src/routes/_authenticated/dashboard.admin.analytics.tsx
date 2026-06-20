@@ -58,7 +58,7 @@ function AdminAnalyticsPage() {
           acc[r] = (acc[r] || 0) + 1;
           return acc;
         },
-        { admin: 0, student: 0, client: 0 }
+        { admin: 0, student: 0, client: 0 },
       );
       const roleData = Object.keys(roleCounts).map((role) => ({
         name: role.toUpperCase(),
@@ -68,7 +68,20 @@ function AdminAnalyticsPage() {
       // ----------------------------------------
       // AGGREGATION 2: Signups per Month (Last 6 Months)
       // ----------------------------------------
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
       const monthlyCounts: Record<string, number> = {};
 
       // Initialize last 6 months
@@ -135,7 +148,10 @@ function AdminAnalyticsPage() {
         {isLoading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-80 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-80 bg-white/5 border border-[rgba(26,107,26,0.2)] rounded-xl animate-pulse"
+              />
             ))}
           </div>
         ) : (
@@ -146,7 +162,9 @@ function AdminAnalyticsPage() {
                 <CardContent className="p-6 flex items-center justify-between">
                   <div>
                     <p className="text-sm text-white/50 font-medium">Avg Completion Rate</p>
-                    <h3 className="text-3xl font-bold text-white mt-1">{analytics?.completionRate}%</h3>
+                    <h3 className="text-3xl font-bold text-white mt-1">
+                      {analytics?.completionRate}%
+                    </h3>
                   </div>
                   <div className="h-10 w-10 rounded-full bg-[#1A6B1A]/10 text-[#22c55e] border border-[#1A6B1A]/20 flex items-center justify-center">
                     <Percent className="h-5 w-5" />
@@ -157,7 +175,9 @@ function AdminAnalyticsPage() {
                 <CardContent className="p-6 flex items-center justify-between">
                   <div>
                     <p className="text-sm text-white/50 font-medium">Total Course Enrolls</p>
-                    <h3 className="text-3xl font-bold text-white mt-1">{analytics?.totalEnrolled}</h3>
+                    <h3 className="text-3xl font-bold text-white mt-1">
+                      {analytics?.totalEnrolled}
+                    </h3>
                   </div>
                   <div className="h-10 w-10 rounded-full bg-[#CC0000]/10 text-[#CC0000] border border-[#CC0000]/20 flex items-center justify-center">
                     <GraduationCap className="h-5 w-5" />
@@ -181,7 +201,12 @@ function AdminAnalyticsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#222" />
                       <XAxis dataKey="month" stroke="#888" fontSize={11} />
                       <YAxis stroke="#888" fontSize={11} />
-                      <Tooltip contentStyle={{ backgroundColor: "#0F0F0F", borderColor: "rgba(26,107,26,0.3)" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0F0F0F",
+                          borderColor: "rgba(26,107,26,0.3)",
+                        }}
+                      />
                       <Legend />
                       <Line
                         type="monotone"
@@ -208,7 +233,12 @@ function AdminAnalyticsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#222" />
                       <XAxis dataKey="service" stroke="#888" fontSize={10} />
                       <YAxis stroke="#888" fontSize={11} />
-                      <Tooltip contentStyle={{ backgroundColor: "#0F0F0F", borderColor: "rgba(26,107,26,0.3)" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0F0F0F",
+                          borderColor: "rgba(26,107,26,0.3)",
+                        }}
+                      />
                       <Legend />
                       <Bar dataKey="Requests" fill="#1A6B1A" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -240,7 +270,12 @@ function AdminAnalyticsPage() {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip contentStyle={{ backgroundColor: "#0F0F0F", borderColor: "rgba(26,107,26,0.3)" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#0F0F0F",
+                            borderColor: "rgba(26,107,26,0.3)",
+                          }}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
 

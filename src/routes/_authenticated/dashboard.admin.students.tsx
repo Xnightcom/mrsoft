@@ -5,7 +5,13 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { DataTable } from "@/components/dashboard/DataTable";
 import { Modal } from "@/components/dashboard/Modal";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GraduationCap, Award, BookOpen, User } from "lucide-react";
@@ -38,42 +44,42 @@ function AdminStudentsPage() {
 
   async function suspendUser(userId: string, reason: string) {
     const { error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update({
         is_suspended: true,
         suspended_at: new Date().toISOString(),
-        suspended_reason: reason
+        suspended_reason: reason,
       })
-      .eq('id', userId)
-    
+      .eq("id", userId);
+
     if (error) {
-      toast.error('Failed to suspend user: ' + error.message)
-      return
+      toast.error("Failed to suspend user: " + error.message);
+      return;
     }
-    
-    toast.success('User suspended successfully')
-    qc.invalidateQueries({ queryKey: ["admin-students-list"] })
-    setSelectedStudent(null)
+
+    toast.success("User suspended successfully");
+    qc.invalidateQueries({ queryKey: ["admin-students-list"] });
+    setSelectedStudent(null);
   }
 
   async function unsuspendUser(userId: string) {
     const { error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update({
         is_suspended: false,
         suspended_at: null,
-        suspended_reason: null
+        suspended_reason: null,
       })
-      .eq('id', userId)
-    
+      .eq("id", userId);
+
     if (error) {
-      toast.error('Failed to unsuspend: ' + error.message)
-      return
+      toast.error("Failed to unsuspend: " + error.message);
+      return;
     }
-    
-    toast.success('User unsuspended successfully')
-    qc.invalidateQueries({ queryKey: ["admin-students-list"] })
-    setSelectedStudent(null)
+
+    toast.success("User unsuspended successfully");
+    qc.invalidateQueries({ queryKey: ["admin-students-list"] });
+    setSelectedStudent(null);
   }
 
   const { data: students = [], isLoading } = useQuery({
@@ -104,7 +110,10 @@ function AdminStudentsPage() {
         const studentEnrollments = (enrollments ?? []).filter((e: any) => e.student_id === p.id);
         const studentAttendance = (attendance ?? []).filter((a: any) => a.student_id === p.id);
 
-        const progressSum = studentEnrollments.reduce((sum: number, e: any) => sum + (e.progress ?? 0), 0);
+        const progressSum = studentEnrollments.reduce(
+          (sum: number, e: any) => sum + (e.progress ?? 0),
+          0,
+        );
         const averageProgress = studentEnrollments.length
           ? Math.round(progressSum / studentEnrollments.length)
           : 0;
@@ -187,9 +196,21 @@ function AdminStudentsPage() {
   const columns = [
     { key: "full_name", header: "Name", render: (item: StudentStats) => item.full_name ?? "—" },
     { key: "email", header: "Email", render: (item: StudentStats) => item.email ?? "—" },
-    { key: "enrolled_count", header: "Enrolled Courses", render: (item: StudentStats) => item.enrolled_count },
-    { key: "average_progress", header: "Avg Progress", render: (item: StudentStats) => `${item.average_progress}%` },
-    { key: "attendance_rate", header: "Attendance %", render: (item: StudentStats) => `${item.attendance_rate}%` },
+    {
+      key: "enrolled_count",
+      header: "Enrolled Courses",
+      render: (item: StudentStats) => item.enrolled_count,
+    },
+    {
+      key: "average_progress",
+      header: "Avg Progress",
+      render: (item: StudentStats) => `${item.average_progress}%`,
+    },
+    {
+      key: "attendance_rate",
+      header: "Attendance %",
+      render: (item: StudentStats) => `${item.attendance_rate}%`,
+    },
   ];
 
   return (
@@ -235,15 +256,21 @@ function AdminStudentsPage() {
             <div className="grid grid-cols-3 gap-2 py-2">
               <div className="bg-[#0A0A0A] p-2.5 rounded-lg border border-white/5 text-center">
                 <p className="text-[10px] text-white/50 font-semibold uppercase">Enrolled</p>
-                <p className="text-lg font-bold text-white mt-0.5">{selectedStudent.enrolled_count}</p>
+                <p className="text-lg font-bold text-white mt-0.5">
+                  {selectedStudent.enrolled_count}
+                </p>
               </div>
               <div className="bg-[#0A0A0A] p-2.5 rounded-lg border border-white/5 text-center">
                 <p className="text-[10px] text-white/50 font-semibold uppercase">Avg Progress</p>
-                <p className="text-lg font-bold text-white mt-0.5">{selectedStudent.average_progress}%</p>
+                <p className="text-lg font-bold text-white mt-0.5">
+                  {selectedStudent.average_progress}%
+                </p>
               </div>
               <div className="bg-[#0A0A0A] p-2.5 rounded-lg border border-white/5 text-center">
                 <p className="text-[10px] text-white/50 font-semibold uppercase">Attendance</p>
-                <p className="text-lg font-bold text-white mt-0.5">{selectedStudent.attendance_rate}%</p>
+                <p className="text-lg font-bold text-white mt-0.5">
+                  {selectedStudent.attendance_rate}%
+                </p>
               </div>
             </div>
 
@@ -266,7 +293,9 @@ function AdminStudentsPage() {
                 <Button
                   className="w-full bg-green-700 hover:bg-green-800 text-white flex items-center justify-center gap-2"
                   onClick={() => {
-                    if (confirm(`Are you sure you want to unsuspend ${selectedStudent.full_name}?`)) {
+                    if (
+                      confirm(`Are you sure you want to unsuspend ${selectedStudent.full_name}?`)
+                    ) {
                       unsuspendUser(selectedStudent.id);
                     }
                   }}
@@ -306,7 +335,8 @@ function AdminStudentsPage() {
       >
         <div className="space-y-4">
           <p className="text-xs text-white/60">
-            Select a published course to enroll <strong className="text-white">{selectedStudent?.full_name}</strong> into.
+            Select a published course to enroll{" "}
+            <strong className="text-white">{selectedStudent?.full_name}</strong> into.
           </p>
           <div className="space-y-1.5">
             <label className="text-xs text-white/50">Course Title</label>
@@ -353,7 +383,8 @@ function AdminStudentsPage() {
       >
         <div className="space-y-4">
           <p className="text-xs text-white/60">
-            Issue a verified certification to <strong className="text-white">{selectedStudent?.full_name}</strong>.
+            Issue a verified certification to{" "}
+            <strong className="text-white">{selectedStudent?.full_name}</strong>.
           </p>
           <div className="space-y-1.5">
             <label className="text-xs text-white/50">Course Title</label>

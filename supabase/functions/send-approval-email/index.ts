@@ -1,9 +1,10 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+// @deno-types="npm:@types/nodemailer@6.4.14"
 import nodemailer from "npm:nodemailer@6.9.13";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY =
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 // SMTP Configuration from your environment
 const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
@@ -14,10 +15,11 @@ const SMTP_FROM = Deno.env.get("SMTP_FROM") || "tambikingdavid@gmail.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -40,8 +42,11 @@ serve(async (req) => {
     // Initialize Supabase admin client to fetch user email
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.admin.getUserById(userId);
+
     if (userError || !user || !user.email) {
       throw new Error("Could not find user email");
     }
@@ -53,7 +58,7 @@ serve(async (req) => {
       .eq("id", userId)
       .single();
 
-    const name = profile?.full_name || "User";
+    const name = (profile as { full_name: string | null } | null)?.full_name || "User";
 
     // Configure Nodemailer
     const transporter = nodemailer.createTransport({
@@ -72,7 +77,7 @@ serve(async (req) => {
         <p>Hi ${name},</p>
         <p>Great news! Your account has been reviewed and <strong>approved</strong> by our admin team.</p>
         <p>You now have full access to all features on the platform.</p>
-        <a href="https://mrsoft-pearl.vercel.app/auth" style="display: inline-block; background-color: #1A6B1A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; color: white !important;">Login to Dashboard</a>
+        <a href="https://mrsoft-pearl.vercel.app/auth" style="display: inline-block; background-color: #1A6B1A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px;">Login to Dashboard</a>
         <p style="margin-top: 30px; font-size: 12px; color: #666;">If you have any questions, feel free to reply to this email.</p>
       </div>
     `;
@@ -85,14 +90,21 @@ serve(async (req) => {
       html: htmlContent,
     });
 
-    return new Response(JSON.stringify({ success: true, messageId: info.messageId }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({ success: true, messageId: info.messageId }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      },
+    );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    const message = error instanceof Error ? error.message : String(error);
+    return new Response(
+      JSON.stringify({ error: message }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      },
+    );
   }
 });

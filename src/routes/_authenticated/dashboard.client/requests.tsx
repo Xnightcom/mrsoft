@@ -53,9 +53,21 @@ function ClientRequestsPage() {
 
   const columns = [
     { key: "service", header: "Service Requested" },
-    { key: "budget", header: "Budget Estimate", render: (item: ServiceRequest) => item.budget || "Not Specified" },
-    { key: "status", header: "Status", render: (item: ServiceRequest) => <StatusBadge status={item.status} /> },
-    { key: "created_at", header: "Date Submitted", render: (item: ServiceRequest) => new Date(item.created_at).toLocaleDateString() },
+    {
+      key: "budget",
+      header: "Budget Estimate",
+      render: (item: ServiceRequest) => item.budget || "Not Specified",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (item: ServiceRequest) => <StatusBadge status={item.status} />,
+    },
+    {
+      key: "created_at",
+      header: "Date Submitted",
+      render: (item: ServiceRequest) => new Date(item.created_at).toLocaleDateString(),
+    },
     {
       key: "actions",
       header: "Actions",
@@ -158,7 +170,8 @@ function ClientRequestsPage() {
               <h4 className="font-bold text-white text-lg mt-0.5">{selectedRequest.service}</h4>
               {selectedRequest.budget && (
                 <p className="text-xs text-white/60 mt-1">
-                  Budget allocation: <strong className="text-[#22c55e]">{selectedRequest.budget}</strong>
+                  Budget allocation:{" "}
+                  <strong className="text-[#22c55e]">{selectedRequest.budget}</strong>
                 </p>
               )}
             </div>

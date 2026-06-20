@@ -14,16 +14,18 @@ export function AnnouncementsView() {
       if (!profile?.role) return [];
       const { data, error } = await supabase
         .from("announcements")
-        .select(`
+        .select(
+          `
           *,
           created_by_profile:profiles!announcements_created_by_fkey(full_name)
-        `)
+        `,
+        )
         .contains("target_roles", [profile.role])
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
-        
+
       if (error) throw error;
-      
+
       // Filter out expired announcements (RLS should do this, but just in case)
       const now = new Date().getTime();
       return data.filter((ann: any) => !ann.expires_at || new Date(ann.expires_at).getTime() > now);
@@ -35,13 +37,18 @@ export function AnnouncementsView() {
     <div className="max-w-4xl space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Announcements</h1>
-        <p className="text-white/50 text-sm mt-1">Platform updates, notice sheets, and system news.</p>
+        <p className="text-white/50 text-sm mt-1">
+          Platform updates, notice sheets, and system news.
+        </p>
       </div>
 
       {isLoading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse border border-[rgba(26,107,26,0.3)]" />
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-32 bg-white/5 rounded-xl animate-pulse border border-[rgba(26,107,26,0.3)]"
+            />
           ))}
         </div>
       ) : announcements.length === 0 ? (
@@ -52,8 +59,8 @@ export function AnnouncementsView() {
       ) : (
         <div className="space-y-4">
           {announcements.map((ann: any, index: number) => (
-            <Card 
-              key={ann.id} 
+            <Card
+              key={ann.id}
               className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)] relative overflow-hidden animate-card-in opacity-0"
               style={{ animationDelay: `${index * 0.08}s` }}
             >
@@ -68,16 +75,18 @@ export function AnnouncementsView() {
                       <Megaphone className="h-3.5 w-3.5" /> Notice
                     </span>
                   )}
-                  <CardTitle className="text-base font-bold text-white mt-1.5">{ann.title}</CardTitle>
+                  <CardTitle className="text-base font-bold text-white mt-1.5">
+                    {ann.title}
+                  </CardTitle>
                 </div>
                 <div className="text-right text-[10px] text-white/40 shrink-0">
                   <span className="flex items-center gap-1 justify-end">
-                    <Calendar className="h-3.5 w-3.5" /> 
+                    <Calendar className="h-3.5 w-3.5" />
                     {new Date(ann.created_at).toLocaleDateString()}
                   </span>
                   <span className="flex items-center gap-1 justify-end mt-1">
-                    <User className="h-3.5 w-3.5" /> 
-                    {ann.created_by_profile?.full_name || 'Admin'}
+                    <User className="h-3.5 w-3.5" />
+                    {ann.created_by_profile?.full_name || "Admin"}
                   </span>
                 </div>
               </CardHeader>

@@ -32,19 +32,21 @@ function StudentAttendancePage() {
       if (!profile?.id) return [];
       const { data, error } = await supabase
         .from("attendance")
-        .select(`
+        .select(
+          `
           id,
           session_date,
           attended,
           course_id
-        `)
+        `,
+        )
         .eq("student_id", profile.id);
 
       if (error) throw error;
 
       // Fetch course names manually
       const courseIds = data.map((a: any) => a.course_id).filter(Boolean);
-      let coursesMap: Record<string, string> = {};
+      const coursesMap: Record<string, string> = {};
       if (courseIds.length > 0) {
         const { data: courseData } = await supabase
           .from("courses")
@@ -59,7 +61,7 @@ function StudentAttendancePage() {
 
       return data.map((a: any) => ({
         ...a,
-        course: a.course_id ? { title: coursesMap[a.course_id] || "Course" } : null
+        course: a.course_id ? { title: coursesMap[a.course_id] || "Course" } : null,
       })) as unknown as AttendanceRecord[];
     },
     enabled: !!profile?.id,
@@ -68,7 +70,8 @@ function StudentAttendancePage() {
   // Calculate stats
   const totalSessions = attendance.length;
   const attendedSessions = attendance.filter((a) => a.attended).length;
-  const attendanceRate = totalSessions > 0 ? Math.round((attendedSessions / totalSessions) * 100) : 100;
+  const attendanceRate =
+    totalSessions > 0 ? Math.round((attendedSessions / totalSessions) * 100) : 100;
 
   // Calendar dates generation
   const startMonth = startOfMonth(currentMonthDate);
@@ -76,11 +79,15 @@ function StudentAttendancePage() {
   const daysInMonth = eachDayOfInterval({ start: startMonth, end: endMonth });
 
   const prevMonth = () => {
-    setCurrentMonthDate(new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - 1, 1));
+    setCurrentMonthDate(
+      new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - 1, 1),
+    );
   };
 
   const nextMonth = () => {
-    setCurrentMonthDate(new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 1));
+    setCurrentMonthDate(
+      new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 1),
+    );
   };
 
   // Mock list of upcoming live sessions
@@ -161,19 +168,26 @@ function StudentAttendancePage() {
 
                     let dotColor = "bg-gray-700/60";
                     if (record) {
-                      dotColor = record.attended ? "bg-[#22c55e] shadow-[0_0_6px_#22c55e]" : "bg-[#ef4444] shadow-[0_0_6px_#ef4444]";
+                      dotColor = record.attended
+                        ? "bg-[#22c55e] shadow-[0_0_6px_#22c55e]"
+                        : "bg-[#ef4444] shadow-[0_0_6px_#ef4444]";
                     }
 
                     return (
-                      <div key={day.toString()} className="relative flex flex-col items-center group py-1">
+                      <div
+                        key={day.toString()}
+                        className="relative flex flex-col items-center group py-1"
+                      >
                         <span className="text-sm font-semibold text-white/95">{day.getDate()}</span>
                         <span className={`h-1.5 w-1.5 rounded-full mt-1.5 ${dotColor}`} />
-                        
+
                         {/* Hover Tooltip */}
                         {record && (
                           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden group-hover:block w-36 bg-[#060606] border border-white/10 text-[10px] text-white p-2 rounded-lg text-left shadow-lg">
                             <p className="font-bold">{record.course?.title ?? "Course Session"}</p>
-                            <p className="mt-1 text-white/50">{record.attended ? "Attended" : "Absent"}</p>
+                            <p className="mt-1 text-white/50">
+                              {record.attended ? "Attended" : "Absent"}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -190,16 +204,22 @@ function StudentAttendancePage() {
             <Card className="bg-[#0F0F0F] border border-[rgba(26,107,26,0.3)]">
               <CardContent className="p-6 space-y-4">
                 <div>
-                  <span className="text-xs text-white/50 font-medium uppercase">Overall Attendance</span>
+                  <span className="text-xs text-white/50 font-medium uppercase">
+                    Overall Attendance
+                  </span>
                   <h3 className="text-3xl font-bold text-white mt-1">{attendanceRate}%</h3>
                 </div>
                 <div className="space-y-2.5 text-xs text-white/70">
                   <div className="flex justify-between">
-                    <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#22c55e]" /> Attended Sessions</span>
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#22c55e]" /> Attended Sessions
+                    </span>
                     <strong className="text-white">{attendedSessions}</strong>
                   </div>
                   <div className="flex justify-between border-t border-white/5 pt-2">
-                    <span className="flex items-center gap-1.5"><XCircle className="h-3.5 w-3.5 text-[#ef4444]" /> Absent Sessions</span>
+                    <span className="flex items-center gap-1.5">
+                      <XCircle className="h-3.5 w-3.5 text-[#ef4444]" /> Absent Sessions
+                    </span>
                     <strong className="text-white">{totalSessions - attendedSessions}</strong>
                   </div>
                 </div>
@@ -220,7 +240,9 @@ function StudentAttendancePage() {
                         <Video className="h-3 w-3" /> Live
                       </span>
                       <h4 className="font-bold text-white text-xs mt-1.5">{live.title}</h4>
-                      <p className="text-[10px] text-white/50">{live.instructor} · {live.date}</p>
+                      <p className="text-[10px] text-white/50">
+                        {live.instructor} · {live.date}
+                      </p>
                       <p className="text-[10px] text-white/40">{live.time}</p>
                     </div>
                     <a

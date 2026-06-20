@@ -5,7 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithGooglePopup } from "@/integrations/firebase/client";
@@ -33,19 +39,24 @@ function AuthPage() {
   const { error: errorType, reason: errorReason } = Route.useSearch();
   const [loading, setLoading] = useState(false);
   // Strip any trailing slash so we never produce double-slash URIs
-  const publicBase = (
-    (import.meta.env.VITE_PUBLIC_URL as string | undefined)?.replace(/\/$/, "")
-    ?? window.location.origin
-  );
+  const publicBase =
+    (import.meta.env.VITE_PUBLIC_URL as string | undefined)?.replace(/\/$/, "") ??
+    window.location.origin;
   const [signIn, setSignIn] = useState({ email: "", password: "" });
-  const [signUp, setSignUp] = useState({ email: "", password: "", confirm_password: "", full_name: "", role: "student" });
-  
+  const [signUp, setSignUp] = useState({
+    email: "",
+    password: "",
+    confirm_password: "",
+    full_name: "",
+    role: "student",
+  });
+
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showSignUpConfirm, setShowSignUpConfirm] = useState(false);
-  
+
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
+  const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
@@ -58,7 +69,8 @@ function AuthPage() {
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault(); setLoading(true);
+    e.preventDefault();
+    setLoading(true);
     const { error } = await supabase.auth.signInWithPassword(signIn);
     setLoading(false);
     if (error) return toast.error(error.message);
@@ -67,7 +79,7 @@ function AuthPage() {
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
     if (signUp.password !== signUp.confirm_password) {
       return toast.error("Passwords do not match");
     }
@@ -80,30 +92,27 @@ function AuthPage() {
         data: { full_name: signUp.full_name, role: signUp.role },
       },
     });
-    
+
     if (error) {
       setLoading(false);
       return toast.error(error.message);
     }
 
     // Notify admins
-    const { data: admins } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'admin');
-      
+    const { data: admins } = await supabase.from("profiles").select("id").eq("role", "admin");
+
     if (admins && admins.length > 0) {
       const notifications = admins.map((admin: any) => ({
         user_id: admin.id,
-        title: 'New User Signup',
+        title: "New User Signup",
         body: `${signUp.full_name} (${signUp.role}) has signed up and is awaiting approval.`,
-        type: 'new_user',
-        action_url: '/dashboard/admin/users',
-        is_read: false
+        type: "new_user",
+        action_url: "/dashboard/admin/users",
+        is_read: false,
       }));
-      await supabase.from('notifications').insert(notifications);
+      await supabase.from("notifications").insert(notifications);
     }
-    
+
     setLoading(false);
     setPendingApproval(true);
   };
@@ -121,23 +130,23 @@ function AuthPage() {
       if (hasFirebaseConfig) {
         const result = await signInWithGooglePopup();
         setLoading(false);
-        if (!result || !result.user) return toast.error('Google sign-in failed');
+        if (!result || !result.user) return toast.error("Google sign-in failed");
         navigate({ to: "/dashboard" });
         return;
       }
 
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${publicBase}/auth/callback`,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
+            access_type: "offline",
+            prompt: "consent",
           },
         },
       } as any);
       setLoading(false);
-      if (error) return toast.error(error.message || 'Google sign-in failed');
+      if (error) return toast.error(error.message || "Google sign-in failed");
       if ((data as any)?.url) {
         window.location.assign((data as any).url);
         return;
@@ -167,82 +176,107 @@ function AuthPage() {
                   background: "transparent",
                   filter: "contrast(1.1) brightness(1.05)",
                   border: "none",
-                  boxShadow: "none"
+                  boxShadow: "none",
                 }}
               />
               <h1 className="text-2xl font-bold text-white">Welcome to MRsoft</h1>
               <p className="text-sm text-white/60 mt-1">Sign in to access your portal</p>
-            </div>            {errorType === 'suspended' && (
-              <div style={{
-                background: 'rgba(204,0,0,0.1)',
-                border: '1px solid rgba(204,0,0,0.4)',
-                borderRadius: 10,
-                padding: 16,
-                marginBottom: 20,
-                textAlign: 'center'
-              }}>
-                <p style={{ 
-                  fontSize: 24, 
-                  marginBottom: 8 
-                }}>🚫</p>
-                <p style={{ 
-                  color: '#F87171', 
-                  fontWeight: 700,
-                  fontSize: 16,
-                  marginBottom: 6
-                }}>
+            </div>{" "}
+            {errorType === "suspended" && (
+              <div
+                style={{
+                  background: "rgba(204,0,0,0.1)",
+                  border: "1px solid rgba(204,0,0,0.4)",
+                  borderRadius: 10,
+                  padding: 16,
+                  marginBottom: 20,
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 24,
+                    marginBottom: 8,
+                  }}
+                >
+                  🚫
+                </p>
+                <p
+                  style={{
+                    color: "#F87171",
+                    fontWeight: 700,
+                    fontSize: 16,
+                    marginBottom: 6,
+                  }}
+                >
                   Account Suspended
                 </p>
-                <p style={{ 
-                  color: 'rgba(255,255,255,0.6)',
-                  fontSize: 13,
-                  lineHeight: 1.5
-                }}>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                  }}
+                >
                   {errorReason}
                 </p>
-                <p style={{ 
-                  color: 'rgba(255,255,255,0.4)',
-                  fontSize: 12,
-                  marginTop: 8
-                }}>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.4)",
+                    fontSize: 12,
+                    marginTop: 8,
+                  }}
+                >
                   Contact: tambikingdavid@gmail.com
                 </p>
               </div>
             )}
-
-            {errorType === 'session_expired' && (
-              <div style={{
-                background: 'rgba(245,158,11,0.1)',
-                border: '1px solid rgba(245,158,11,0.3)',
-                borderRadius: 10,
-                padding: 16,
-                marginBottom: 20,
-                textAlign: 'center'
-              }}>
-                <p style={{ color: '#F59E0B', fontWeight: 700 }}>
-                  ⏱ Session Expired
-                </p>
-                <p style={{ 
-                  color: 'rgba(255,255,255,0.5)',
-                  fontSize: 13,
-                  marginTop: 4
-                }}>
+            {errorType === "session_expired" && (
+              <div
+                style={{
+                  background: "rgba(245,158,11,0.1)",
+                  border: "1px solid rgba(245,158,11,0.3)",
+                  borderRadius: 10,
+                  padding: 16,
+                  marginBottom: 20,
+                  textAlign: "center",
+                }}
+              >
+                <p style={{ color: "#F59E0B", fontWeight: 700 }}>⏱ Session Expired</p>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: 13,
+                    marginTop: 4,
+                  }}
+                >
                   Please sign in again to continue.
                 </p>
               </div>
             )}
-
             {pendingApproval ? (
               <div className="text-center py-6 animate-in fade-in zoom-in duration-500">
                 <div className="text-6xl mb-6 animate-pulse flex justify-center">⏳</div>
-                <h2 className="text-2xl font-bold text-white mb-3">Account Created Successfully!</h2>
-                <p className="text-white/80 mb-6 text-sm">Hi {signUp.full_name}! Your account is pending admin approval.</p>
+                <h2 className="text-2xl font-bold text-white mb-3">
+                  Account Created Successfully!
+                </h2>
+                <p className="text-white/80 mb-6 text-sm">
+                  Hi {signUp.full_name}! Your account is pending admin approval.
+                </p>
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-6 text-amber-500 text-xs text-left leading-relaxed">
-                  📧 We've sent a confirmation email to {signUp.email}. Please check your inbox and click the link to verify your email address.
-                  <br/><br/>
-                  Once verified and approved by our admin team, you'll have full access to the platform.
+                  📧 We've sent a confirmation email to {signUp.email}. Please check your inbox and
+                  click the link to verify your email address.
+                  <br />
+                  <br />
+                  Once verified and approved by our admin team, you'll have full access to the
+                  platform.
                 </div>
-                <Button onClick={() => navigate({ to: '/dashboard' })} className="btn-primary-gradient w-full">Go to Dashboard</Button>
+                <Button
+                  onClick={() => navigate({ to: "/dashboard" })}
+                  className="btn-primary-gradient w-full"
+                >
+                  Go to Dashboard
+                </Button>
               </div>
             ) : (
               <>
@@ -252,12 +286,31 @@ function AuthPage() {
                   className="w-full mb-4 text-white google-btn-glow"
                   disabled={loading}
                 >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .5 4.1 1.5l3-3C17.2 1.8 14.8.8 12 .8 7.3.8 3.3 3.5 1.4 7.5l3.5 2.7C5.8 7.2 8.7 5 12 5z"/><path fill="#34A853" d="M23 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h6.2c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.6-4.8 3.6-8.2z"/><path fill="#4A90E2" d="M5 14.2c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L1.4 7.5C.5 9 0 10.4 0 12s.5 3 1.4 4.5L5 14.2z"/><path fill="#FBBC05" d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3.3 0-6.2-2.2-7.1-5.3L1.4 16.5C3.3 20.5 7.3 23.2 12 23.2z"/></svg>
+                  <svg className="h-4 w-4" viewBox="0 0 24 24">
+                    <path
+                      fill="#EA4335"
+                      d="M12 5c1.6 0 3 .5 4.1 1.5l3-3C17.2 1.8 14.8.8 12 .8 7.3.8 3.3 3.5 1.4 7.5l3.5 2.7C5.8 7.2 8.7 5 12 5z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M23 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h6.2c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.6-4.8 3.6-8.2z"
+                    />
+                    <path
+                      fill="#4A90E2"
+                      d="M5 14.2c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L1.4 7.5C.5 9 0 10.4 0 12s.5 3 1.4 4.5L5 14.2z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3.3 0-6.2-2.2-7.1-5.3L1.4 16.5C3.3 20.5 7.3 23.2 12 23.2z"
+                    />
+                  </svg>
                   Continue with Google
                 </Button>
 
                 <div className="relative my-4 text-center text-xs text-white/40">
-                  <span className="px-2 relative z-10" style={{ background: "rgba(8,8,8,0.88)" }}>or with email</span>
+                  <span className="px-2 relative z-10" style={{ background: "rgba(8,8,8,0.88)" }}>
+                    or with email
+                  </span>
                   <span className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
                 </div>
 
@@ -278,48 +331,199 @@ function AuthPage() {
                   </TabsList>
                   <TabsContent value="signin">
                     <form onSubmit={handleSignIn} className="space-y-3 mt-3">
-                      <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signIn.email} onChange={(e) => setSignIn({ ...signIn, email: e.target.value })} /></div>
+                      <div>
+                        <Label className="text-white/80">Email</Label>
+                        <Input
+                          type="email"
+                          required
+                          className="auth-input"
+                          value={signIn.email}
+                          onChange={(e) => setSignIn({ ...signIn, email: e.target.value })}
+                        />
+                      </div>
                       <div>
                         <Label className="text-white/80">Password</Label>
                         <div className="relative">
-                          <Input type={showSignInPassword ? 'text' : 'password'} required className="auth-input pr-10" value={signIn.password} onChange={(e) => setSignIn({ ...signIn, password: e.target.value })} />
-                          <button type="button" onClick={() => setShowSignInPassword(!showSignInPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
-                            {showSignInPassword ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                          <Input
+                            type={showSignInPassword ? "text" : "password"}
+                            required
+                            className="auth-input pr-10"
+                            value={signIn.password}
+                            onChange={(e) => setSignIn({ ...signIn, password: e.target.value })}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSignInPassword(!showSignInPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                          >
+                            {showSignInPassword ? (
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                              </svg>
+                            ) : (
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                         <div className="text-right mt-1">
-                          <span onClick={() => { setResetEmail(signIn.email); setForgotOpen(true); }} className="text-[#CC0000] text-xs cursor-pointer hover:underline">Forgot password?</span>
+                          <span
+                            onClick={() => {
+                              setResetEmail(signIn.email);
+                              setForgotOpen(true);
+                            }}
+                            className="text-[#CC0000] text-xs cursor-pointer hover:underline"
+                          >
+                            Forgot password?
+                          </span>
                         </div>
                       </div>
-                      <Button type="submit" className="ripple-btn w-full btn-primary-gradient mt-2" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</Button>
+                      <Button
+                        type="submit"
+                        className="ripple-btn w-full btn-primary-gradient mt-2"
+                        disabled={loading}
+                      >
+                        {loading ? "Signing in..." : "Sign in"}
+                      </Button>
                     </form>
                   </TabsContent>
                   <TabsContent value="signup">
                     <form onSubmit={handleSignUp} className="space-y-3 mt-3">
-                      <div><Label className="text-white/80">Full name</Label><Input required className="auth-input" value={signUp.full_name} onChange={(e) => setSignUp({ ...signUp, full_name: e.target.value })} /></div>
-                      <div><Label className="text-white/80">Email</Label><Input type="email" required className="auth-input" value={signUp.email} onChange={(e) => setSignUp({ ...signUp, email: e.target.value })} /></div>
+                      <div>
+                        <Label className="text-white/80">Full name</Label>
+                        <Input
+                          required
+                          className="auth-input"
+                          value={signUp.full_name}
+                          onChange={(e) => setSignUp({ ...signUp, full_name: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-white/80">Email</Label>
+                        <Input
+                          type="email"
+                          required
+                          className="auth-input"
+                          value={signUp.email}
+                          onChange={(e) => setSignUp({ ...signUp, email: e.target.value })}
+                        />
+                      </div>
                       <div>
                         <Label className="text-white/80">Password</Label>
                         <div className="relative">
-                          <Input type={showSignUpPassword ? 'text' : 'password'} required minLength={6} className="auth-input pr-10" value={signUp.password} onChange={(e) => setSignUp({ ...signUp, password: e.target.value })} />
-                          <button type="button" onClick={() => setShowSignUpPassword(!showSignUpPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
-                            {showSignUpPassword ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                          <Input
+                            type={showSignUpPassword ? "text" : "password"}
+                            required
+                            minLength={6}
+                            className="auth-input pr-10"
+                            value={signUp.password}
+                            onChange={(e) => setSignUp({ ...signUp, password: e.target.value })}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                          >
+                            {showSignUpPassword ? (
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                              </svg>
+                            ) : (
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>
                       <div>
                         <Label className="text-white/80">Confirm Password</Label>
                         <div className="relative">
-                          <Input type={showSignUpConfirm ? 'text' : 'password'} required minLength={6} className="auth-input pr-10" value={signUp.confirm_password} onChange={(e) => setSignUp({ ...signUp, confirm_password: e.target.value })} />
-                          <button type="button" onClick={() => setShowSignUpConfirm(!showSignUpConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
-                            {showSignUpConfirm ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                          <Input
+                            type={showSignUpConfirm ? "text" : "password"}
+                            required
+                            minLength={6}
+                            className="auth-input pr-10"
+                            value={signUp.confirm_password}
+                            onChange={(e) =>
+                              setSignUp({ ...signUp, confirm_password: e.target.value })
+                            }
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSignUpConfirm(!showSignUpConfirm)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                          >
+                            {showSignUpConfirm ? (
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                              </svg>
+                            ) : (
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>
                       <div>
                         <Label className="text-white/80">I am a...</Label>
-                        <Select value={signUp.role} onValueChange={(v) => setSignUp({ ...signUp, role: v })}>
-                          <SelectTrigger className="auth-input"><SelectValue /></SelectTrigger>
+                        <Select
+                          value={signUp.role}
+                          onValueChange={(v) => setSignUp({ ...signUp, role: v })}
+                        >
+                          <SelectTrigger className="auth-input">
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent className="bg-[#111111] border-white/10 text-white">
                             <SelectItem value="student">Student</SelectItem>
                             <SelectItem value="client">Client / Business</SelectItem>
@@ -327,7 +531,13 @@ function AuthPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <Button type="submit" className="ripple-btn w-full btn-primary-gradient mt-2" disabled={loading}>{loading ? "Creating..." : "Create account"}</Button>
+                      <Button
+                        type="submit"
+                        className="ripple-btn w-full btn-primary-gradient mt-2"
+                        disabled={loading}
+                      >
+                        {loading ? "Creating..." : "Create account"}
+                      </Button>
                     </form>
                   </TabsContent>
                 </Tabs>
@@ -339,27 +549,42 @@ function AuthPage() {
                       {!resetSent ? (
                         <>
                           <h3 className="text-lg font-bold text-white mb-2">Reset your password</h3>
-                          <p className="text-xs text-white/60 mb-4">Enter your email and we'll send you a reset link.</p>
-                          <Input 
-                            type="email" 
+                          <p className="text-xs text-white/60 mb-4">
+                            Enter your email and we'll send you a reset link.
+                          </p>
+                          <Input
+                            type="email"
                             placeholder="Email address"
-                            value={resetEmail} 
-                            onChange={e => setResetEmail(e.target.value)} 
-                            className="auth-input mb-4" 
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            className="auth-input mb-4"
                           />
                           <div className="flex gap-3">
-                            <Button variant="ghost" onClick={() => { setForgotOpen(false); setResetSent(false); setResetEmail(''); }} className="flex-1 text-white/60 hover:text-white hover:bg-white/5">Cancel</Button>
-                            <Button 
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                setForgotOpen(false);
+                                setResetSent(false);
+                                setResetEmail("");
+                              }}
+                              className="flex-1 text-white/60 hover:text-white hover:bg-white/5"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
                               onClick={async () => {
                                 if (!resetEmail) return;
                                 setResetLoading(true);
-                                const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                                  redirectTo: `${publicBase}/auth/reset-password`
-                                });
+                                const { error } = await supabase.auth.resetPasswordForEmail(
+                                  resetEmail,
+                                  {
+                                    redirectTo: `${publicBase}/auth/reset-password`,
+                                  },
+                                );
                                 setResetLoading(false);
                                 if (error) toast.error(error.message);
                                 else setResetSent(true);
-                              }} 
+                              }}
                               disabled={resetLoading}
                               className="flex-1 bg-[#CC0000] hover:bg-[#CC0000]/80 text-white"
                             >
@@ -370,11 +595,35 @@ function AuthPage() {
                       ) : (
                         <div className="text-center py-4">
                           <div className="w-12 h-12 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center mx-auto mb-4">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            <svg
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
                           </div>
                           <h3 className="text-lg font-bold text-white mb-2">Check your email!</h3>
-                          <p className="text-xs text-white/60 mb-6">We sent a password reset link to {resetEmail}. Click the link in the email to set a new password.</p>
-                          <Button onClick={() => { setForgotOpen(false); setResetSent(false); setResetEmail(''); }} className="w-full bg-[#1A6B1A] hover:bg-[#1A6B1A]/80 text-white">Back to sign in</Button>
+                          <p className="text-xs text-white/60 mb-6">
+                            We sent a password reset link to {resetEmail}. Click the link in the
+                            email to set a new password.
+                          </p>
+                          <Button
+                            onClick={() => {
+                              setForgotOpen(false);
+                              setResetSent(false);
+                              setResetEmail("");
+                            }}
+                            className="w-full bg-[#1A6B1A] hover:bg-[#1A6B1A]/80 text-white"
+                          >
+                            Back to sign in
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -382,11 +631,10 @@ function AuthPage() {
                 )}
               </>
             )}
-
-
-
             <p className="mt-6 text-center text-xs text-white/40">
-              <Link to="/" className="hover:underline hover:text-white/70 transition-smooth">← Back to website</Link>
+              <Link to="/" className="hover:underline hover:text-white/70 transition-smooth">
+                ← Back to website
+              </Link>
             </p>
           </CardContent>
         </Card>
